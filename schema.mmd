@@ -1,0 +1,173 @@
+erDiagram
+    NAZIONI ||--o{ SQUADRE : "nazionalita"
+    NAZIONI ||--o{ CORRIDORI : "nazionalita"
+    SQUADRE ||--o{ CORRIDORI : "ha in rosa"
+    SQUADRE ||--o{ STAFF_TECNICO : "impiega"
+    SQUADRE ||--o{ VEICOLI_SQUADRA : "possiede"
+    SQUADRE ||--o{ SQUADRA_SPONSOR : "sponsorizzata da"
+    SPONSOR ||--o{ SQUADRA_SPONSOR : "sponsorizza"
+    SQUADRE ||--o{ HOTEL : "alloggia in"
+    TAPPE ||--o{ HOTEL : "riferita a"
+    TAPPE ||--o{ RISULTATI : "produce"
+    CORRIDORI ||--o{ RISULTATI : "ottiene"
+    TAPPE ||--o{ TAPPE_PERCORSO : "contiene"
+    TAPPE ||--o{ TRAGUARDI_VOLANTI : "genera"
+    CORRIDORI ||--o{ TRAGUARDI_VOLANTI : "conquista"
+    TAPPE ||--o{ GPM_RISULTATI : "genera"
+    CORRIDORI ||--o{ GPM_RISULTATI : "conquista"
+    CORRIDORI ||--o{ PENALITA : "riceve"
+    TAPPE ||--o{ PENALITA : "durante"
+    CORRIDORI ||--o{ CONTROLLI_ANTIDOPING : "sottoposto a"
+    TAPPE ||--o{ CONTROLLI_ANTIDOPING : "durante"
+    CORRIDORI ||--o{ BICICLETTE : "utilizza"
+    TAPPE ||--o{ METEO_TAPPA : "ha"
+    TAPPE ||--o{ MEDIA_ACCREDITATI : "accredita"
+    TAPPE ||--o{ COMUNICATI_STAMPA : "riguarda"
+
+    NAZIONI {
+        integer id PK
+        text nome
+        text codice_iso2 "usato per calcolare la bandiera lato frontend"
+    }
+    SQUADRE {
+        integer id PK
+        text nome
+        integer nazione_id FK
+        text colore
+        datetime creato_il
+    }
+    CORRIDORI {
+        integer id PK
+        text nome
+        text cognome
+        integer numero_pettorale
+        integer nazione_id FK
+        integer squadra_id FK
+        date data_nascita
+        datetime creato_il
+    }
+    STAFF_TECNICO {
+        integer id PK
+        text nome
+        text cognome
+        text ruolo
+        integer squadra_id FK
+    }
+    TAPPE {
+        integer id PK
+        integer numero_tappa
+        text nome
+        text partenza
+        text arrivo
+        real distanza_km
+        integer dislivello_m
+        text tipo
+        date data
+        text stato
+    }
+    TAPPE_PERCORSO {
+        integer id PK
+        integer tappa_id FK
+        real km
+        text tipo "sprint | gpm"
+        text nome_luogo
+        text categoria
+    }
+    RISULTATI {
+        integer id PK
+        integer tappa_id FK
+        integer corridore_id FK
+        integer posizione
+        text tempo
+        text distacco
+        integer punti
+    }
+    CLASSIFICHE_TIPO {
+        integer id PK
+        text nome
+        text descrizione
+    }
+    TRAGUARDI_VOLANTI {
+        integer id PK
+        integer tappa_id FK
+        integer corridore_id FK
+        integer posizione
+        integer punti
+    }
+    GPM_RISULTATI {
+        integer id PK
+        integer tappa_id FK
+        integer corridore_id FK
+        integer posizione
+        integer punti
+    }
+    PENALITA {
+        integer id PK
+        integer corridore_id FK
+        integer tappa_id FK
+        text motivo
+        integer secondi
+        integer punti
+    }
+    CONTROLLI_ANTIDOPING {
+        integer id PK
+        integer corridore_id FK
+        integer tappa_id FK
+        date data
+        text esito
+    }
+    BICICLETTE {
+        integer id PK
+        integer corridore_id FK
+        text marca
+        text modello
+        text telaio
+    }
+    SPONSOR {
+        integer id PK
+        text nome
+        text settore
+        text sito_web
+    }
+    SQUADRA_SPONSOR {
+        integer id PK
+        integer squadra_id FK
+        integer sponsor_id FK
+        text tipo
+    }
+    VEICOLI_SQUADRA {
+        integer id PK
+        integer squadra_id FK
+        text tipo
+        text targa
+        text modello
+    }
+    HOTEL {
+        integer id PK
+        integer tappa_id FK
+        integer squadra_id FK
+        text nome
+        text citta
+        text indirizzo
+    }
+    METEO_TAPPA {
+        integer id PK
+        integer tappa_id FK
+        real temperatura
+        text condizione
+        real vento_kmh
+    }
+    MEDIA_ACCREDITATI {
+        integer id PK
+        text nome
+        text testata
+        text tipo
+        integer tappa_id FK
+    }
+    COMUNICATI_STAMPA {
+        integer id PK
+        text titolo
+        text contenuto
+        date data
+        integer tappa_id FK
+    }
