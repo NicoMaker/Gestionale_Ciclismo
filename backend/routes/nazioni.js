@@ -31,6 +31,21 @@ module.exports = (io) => {
     });
   });
 
+  router.put('/:id', (req, res) => {
+    const { nome, codice_iso2 } = req.body;
+    if (!nome || !codice_iso2) return res.status(400).json({ errore: 'nome e codice_iso2 sono obbligatori' });
+    db.run(
+      'UPDATE nazioni SET nome = ?, codice_iso2 = ? WHERE id = ?',
+      [nome, codice_iso2.toUpperCase(), req.params.id],
+      function (err) {
+        if (err) return res.status(400).json({ errore: err.message });
+        if (this.changes === 0) return res.status(404).json({ errore: 'Nazione non trovata' });
+        io.emit('nazioni:aggiornate', { tipo: 'modificata', id: req.params.id });
+        res.json({ id: req.params.id, nome, codice_iso2: codice_iso2.toUpperCase() });
+      }
+    );
+  });
+
   router.delete('/:id', (req, res) => {
     db.run('DELETE FROM nazioni WHERE id = ?', [req.params.id], function (err) {
       if (err) return res.status(400).json({ errore: err.message });

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Giro — Gestionale Tappe</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,17 +14,46 @@
 
   <aside class="sidebar">
     <div class="brand">
-      <span class="brand-mark">GIRO</span>
-      <span class="brand-sub">gestionale tappe · 20 tabelle</span>
+      <span class="brand-icon">🚴</span>
+      <div class="brand-testo">
+        <span class="brand-mark">GIRO</span>
+        <span class="brand-sub">gestionale tappe</span>
+      </div>
     </div>
 
     <nav class="nav">
-      <button class="nav-item active" data-view="tappe">Tappe</button>
-      <button class="nav-item" data-view="corridori">Corridori</button>
-      <button class="nav-item" data-view="squadre">Squadre</button>
-      <button class="nav-item" data-view="risultati">Risultati</button>
-      <button class="nav-item" data-view="classifica">Classifica generale</button>
-      <button class="nav-item" data-view="extra">Tabelle extra</button>
+      <button class="nav-item active" data-view="tappe">
+        <svg viewBox="0 0 24 24" class="nav-icon"><path d="M4 20 L10 4 L14 4 L20 20" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 14 L16 14" stroke-linecap="round"/></svg>
+        <span>Tappe</span>
+      </button>
+      <button class="nav-item" data-view="corridori">
+        <svg viewBox="0 0 24 24" class="nav-icon"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17 L10 9 L14 9 L18 17 M10 9 L8 5 L11 5 M10 9 L14 13" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Corridori</span>
+      </button>
+      <button class="nav-item" data-view="squadre">
+        <svg viewBox="0 0 24 24" class="nav-icon"><circle cx="9" cy="8" r="3"/><circle cx="16" cy="9" r="2.5"/><path d="M3 20 C3 15.5 5.5 14 9 14 C12.5 14 15 15.5 15 20 M14.5 14.5 C17.5 14.7 20 16 20 19.5" stroke-linecap="round"/></svg>
+        <span>Squadre</span>
+      </button>
+      <button class="nav-item" data-view="risultati">
+        <svg viewBox="0 0 24 24" class="nav-icon"><path d="M6 3 V21" stroke-linecap="round"/><path d="M6 4 L18 4 L14 8 L18 12 L6 12" stroke-linejoin="round"/></svg>
+        <span>Risultati</span>
+      </button>
+      <button class="nav-item" data-view="classifiche">
+        <svg viewBox="0 0 24 24" class="nav-icon"><path d="M5 20 V13 M12 20 V6 M19 20 V10" stroke-linecap="round"/></svg>
+        <span>Classifiche</span>
+      </button>
+      <button class="nav-item" data-view="regolamento">
+        <svg viewBox="0 0 24 24" class="nav-icon"><path d="M12 3 L19 6 V11 C19 16 16 19.5 12 21 C8 19.5 5 16 5 11 V6 Z" stroke-linejoin="round"/><path d="M9 12 L11 14 L15.5 9.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Regolamento</span>
+      </button>
+      <button class="nav-item" data-view="stampa">
+        <svg viewBox="0 0 24 24" class="nav-icon"><rect x="4" y="5" width="16" height="15" rx="1.5"/><path d="M7 9 H13 M7 12.5 H17 M7 16 H17" stroke-linecap="round"/></svg>
+        <span>Stampa</span>
+      </button>
+      <button class="nav-item" data-view="nazioni">
+        <svg viewBox="0 0 24 24" class="nav-icon"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12 H20.5 M12 3.5 C15 7 15 17 12 20.5 C9 17 9 7 12 3.5" stroke-linecap="round"/></svg>
+        <span>Nazioni</span>
+      </button>
     </nav>
 
     <div class="live-box">
@@ -37,95 +66,37 @@
   </aside>
 
   <main class="content">
-
-    <!-- TAPPE -->
     <section class="view active" id="view-tappe">
-      <header class="view-head">
-        <h1>Tappe</h1>
-        <button class="btn-primary" id="btnNuovaTappa">+ nuova tappa</button>
-      </header>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>#</th><th>Nome</th><th>Percorso</th><th>Km</th><th>Dislivello</th><th>Tipo</th><th>Data</th><th>Stato</th><th></th></tr>
-          </thead>
-          <tbody id="tabellaTappe"></tbody>
-        </table>
-      </div>
+      <header class="view-head"><h1>Tappe</h1></header>
     </section>
 
-    <!-- CORRIDORI -->
     <section class="view" id="view-corridori">
-      <header class="view-head">
-        <h1>Corridori</h1>
-        <button class="btn-primary" id="btnNuovoCorridore">+ nuovo corridore</button>
-      </header>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Pett.</th><th>Nome</th><th>Nazionalità</th><th>Squadra</th><th></th></tr>
-          </thead>
-          <tbody id="tabellaCorridori"></tbody>
-        </table>
-      </div>
+      <header class="view-head"><h1>Corridori</h1></header>
     </section>
 
-    <!-- SQUADRE -->
     <section class="view" id="view-squadre">
-      <header class="view-head">
-        <h1>Squadre</h1>
-        <button class="btn-primary" id="btnNuovaSquadra">+ nuova squadra</button>
-      </header>
-      <div class="cards-wrap" id="cardsSquadre"></div>
+      <header class="view-head"><h1>Squadre</h1></header>
     </section>
 
-    <!-- RISULTATI -->
     <section class="view" id="view-risultati">
-      <header class="view-head">
-        <h1>Risultati per tappa</h1>
-        <select id="selectTappaRisultati" class="select-tappa"></select>
-      </header>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Pos.</th><th>Pett.</th><th>Corridore</th><th>Squadra</th><th>Tempo</th><th>Distacco</th><th>Punti</th><th></th></tr>
-          </thead>
-          <tbody id="tabellaRisultati"></tbody>
-        </table>
-      </div>
-      <button class="btn-secondary" id="btnAggiungiRisultato">+ aggiungi risultato</button>
+      <header class="view-head"><h1>Risultati</h1></header>
     </section>
 
-    <!-- CLASSIFICA -->
-    <section class="view" id="view-classifica">
-      <header class="view-head">
-        <h1>Classifica generale</h1>
-      </header>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Pos.</th><th>Corridore</th><th>Squadra</th><th>Tappe</th><th>Punti totali</th></tr>
-          </thead>
-          <tbody id="tabellaClassifica"></tbody>
-        </table>
-      </div>
+    <section class="view" id="view-classifiche">
+      <header class="view-head"><h1>Classifiche</h1></header>
     </section>
 
-    <!-- TABELLE EXTRA (15 tabelle secondarie, gestione generica) -->
-    <section class="view" id="view-extra">
-      <header class="view-head">
-        <h1>Tabelle extra</h1>
-        <button class="btn-primary" id="btnNuovaRigaExtra">+ nuova riga</button>
-      </header>
-      <div class="extra-chooser" id="extraChooser"></div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr id="extraHead"></tr></thead>
-          <tbody id="tabellaExtra"></tbody>
-        </table>
-      </div>
+    <section class="view" id="view-regolamento">
+      <header class="view-head"><h1>Regolamento</h1></header>
     </section>
 
+    <section class="view" id="view-stampa">
+      <header class="view-head"><h1>Stampa</h1></header>
+    </section>
+
+    <section class="view" id="view-nazioni">
+      <header class="view-head"><h1>Nazioni</h1></header>
+    </section>
   </main>
 </div>
 
@@ -136,6 +107,6 @@
 <div class="toast" id="toast"></div>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="app.js"></script>
+<script type="module" src="js/main.js"></script>
 </body>
 </html>
