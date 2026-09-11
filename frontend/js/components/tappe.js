@@ -181,7 +181,12 @@ function renderPercorso(corpo) {
     colonne: [
       { key: "tappa_id", label: "Tappa", type: "tappa" },
       { key: "km", label: "Km", type: "number" },
-      { key: "tipo", label: "Tipo", type: "select", opzioni: ["sprint", "gpm"] },
+      {
+        key: "tipo",
+        label: "Tipo",
+        type: "select",
+        opzioni: ["sprint", "gpm"],
+      },
       { key: "nome_luogo", label: "Luogo", type: "text" },
       { key: "categoria", label: "Categoria", type: "text" },
     ],

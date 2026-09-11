@@ -37,7 +37,8 @@ module.exports = (io) => {
       [req.params.id],
       (err, row) => {
         if (err) return res.status(500).json({ errore: err.message });
-        if (!row) return res.status(404).json({ errore: "Nazione non trovata" });
+        if (!row)
+          return res.status(404).json({ errore: "Nazione non trovata" });
         res.json(row);
       },
     );
@@ -61,7 +62,11 @@ module.exports = (io) => {
       [nome.trim(), codicePulito],
       function (err) {
         if (err) return res.status(400).json({ errore: err.message });
-        const nuova = { id: this.lastID, nome: nome.trim(), codice_iso2: codicePulito };
+        const nuova = {
+          id: this.lastID,
+          nome: nome.trim(),
+          codice_iso2: codicePulito,
+        };
         io.emit("nazioni:aggiornate", { tipo: "creata", dato: nuova });
         res.status(201).json(nuova);
       },

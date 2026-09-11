@@ -31,11 +31,9 @@ module.exports = (io) => {
       stato,
     } = req.body;
     if (!numero_tappa || !nome || !partenza || !arrivo) {
-      return res
-        .status(400)
-        .json({
-          errore: "numero_tappa, nome, partenza e arrivo sono obbligatori",
-        });
+      return res.status(400).json({
+        errore: "numero_tappa, nome, partenza e arrivo sono obbligatori",
+      });
     }
     db.run(
       `INSERT INTO tappe (numero_tappa, nome, partenza, arrivo, distanza_km, dislivello_m, tipo, data, stato)
