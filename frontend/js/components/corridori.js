@@ -1,21 +1,24 @@
 import { apiPost, apiPut, apiDelete } from '../api.js';
-import { apriModal, chiudiModal, mostraToast, bandiera, creaSottoSchede } from '../utils.js';
+import { apriModal, chiudiModal, mostraToast, bandiera, creaSottoSchede, htmlCampoRicerca, attivaCampoRicerca } from '../utils.js';
 import { cache, caricaCorridori, garantisciSquadre, garantisciNazioni } from '../state.js';
 import { socket } from '../socket.js';
 import { montaListaConForm } from './tabella-dati.js';
 import { htmlCampoNazione, attivaCampoNazione } from './nazione-autocomplete.js';
+import { icona } from '../icone.js';
 
 let sottoTabAttiva = 'elenco';
+let queryCorrente = '';
 
 function renderElenco(corpo) {
   sottoTabAttiva = 'elenco';
   corpo.innerHTML = `
     <div class="subtab-head">
-      <button class="btn-secondary btn-piccolo" id="btnNuovoCorridore">+ nuovo corridore</button>
+      ${htmlCampoRicerca('cerca corridore, nazione o squadra...')}
+      <button class="btn-secondary btn-piccolo" id="btnNuovoCorridore">${icona('aggiungi')}nuovo corridore</button>
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Pett.</th><th>Nome</th><th>Nazionalità</th><th>Squadra</th><th></th></tr></thead>
+        <thead><tr><th>Pett.</th><th>Nome</th><th>Nazionalità</th><th>Squadra</th><th class="th-azioni"></th></tr></thead>
         <tbody id="tabellaCorridori"></tbody>
       </table>
     </div>
@@ -24,25 +27,30 @@ function renderElenco(corpo) {
     await garantisciSquadre(); await garantisciNazioni();
     apriFormCorridore(null);
   });
+  attivaCampoRicerca(corpo, q => { queryCorrente = q; disegnaElenco(); });
   ricaricaElenco();
 }
 
-async function ricaricaElenco() {
-  await caricaCorridori();
+function disegnaElenco() {
   const tbody = document.getElementById('tabellaCorridori');
   if (!tbody) return;
-  tbody.innerHTML = cache.corridori.map(c => `
+  const filtrati = cache.corridori.filter(c => {
+    if (!queryCorrente) return true;
+    const testo = `${c.nome} ${c.cognome} ${c.nazione_nome ?? ''} ${c.squadra_nome ?? ''} ${c.numero_pettorale ?? ''}`.toLowerCase();
+    return testo.includes(queryCorrente);
+  });
+  tbody.innerHTML = filtrati.map(c => `
     <tr>
-      <td>${c.numero_pettorale ?? '—'}</td>
+      <td><span class="badge badge-pettorale">${c.numero_pettorale ?? '—'}</span></td>
       <td><strong>${c.nome} ${c.cognome}</strong></td>
       <td>${c.nazione_codice ? `<span class="bandiera">${bandiera(c.nazione_codice)}</span>${c.nazione_nome}` : '—'}</td>
-      <td>${c.squadra_nome ?? '—'}</td>
-      <td>
-        <button class="btn-icon" data-modifica="${c.id}">modifica</button>
-        <button class="btn-icon danger" data-elimina="${c.id}">elimina</button>
+      <td>${c.squadra_nome ? `<span class="dot-colore" style="background:${c.squadra_colore || '#999'}"></span>${c.squadra_nome}` : '—'}</td>
+      <td class="td-azioni">
+        <button class="btn-icon" title="modifica" data-modifica="${c.id}">${icona('modifica')}</button>
+        <button class="btn-icon danger" title="elimina" data-elimina="${c.id}">${icona('elimina')}</button>
       </td>
     </tr>
-  `).join('') || '<tr><td colspan="5" style="text-align:center;color:#999;padding:24px;">Nessun corridore inserito</td></tr>';
+  `).join('') || `<tr><td colspan="5" style="text-align:center;color:#999;padding:24px;">${queryCorrente ? 'Nessun corridore trovato' : 'Nessun corridore inserito'}</td></tr>`;
 
   tbody.querySelectorAll('[data-modifica]').forEach(b => b.addEventListener('click', async () => {
     await garantisciSquadre(); await garantisciNazioni();
@@ -50,6 +58,11 @@ async function ricaricaElenco() {
     if (c) apriFormCorridore(c);
   }));
   tbody.querySelectorAll('[data-elimina]').forEach(b => b.addEventListener('click', () => eliminaCorridore(+b.dataset.elimina)));
+}
+
+async function ricaricaElenco() {
+  await caricaCorridori();
+  disegnaElenco();
 }
 
 function apriFormCorridore(corridoreEsistente) {

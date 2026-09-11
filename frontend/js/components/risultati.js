@@ -1,8 +1,9 @@
 import { apiGet, apiPost, apiDelete } from '../api.js';
-import { apriModal, chiudiModal, mostraToast, creaSottoSchede } from '../utils.js';
+import { apriModal, chiudiModal, mostraToast, creaSottoSchede, htmlCampoRicerca, attivaCampoRicerca } from '../utils.js';
 import { cache, caricaTappe, caricaCorridori, garantisciTappe, garantisciCorridori } from '../state.js';
 import { socket } from '../socket.js';
 import { montaListaConForm } from './tabella-dati.js';
+import { icona, medaglia } from '../icone.js';
 
 let sottoTabAttiva = 'arrivo';
 let tappaSelezionataId = null;
@@ -21,11 +22,12 @@ async function renderArrivo(corpo) {
   corpo.innerHTML = `
     <div class="subtab-head">
       ${htmlSelectTappe('selRisultatiTappa')}
-      <button class="btn-secondary btn-piccolo" id="btnAggiungiRisultato">+ aggiungi risultato</button>
+      ${htmlCampoRicerca('cerca corridore o squadra...')}
+      <button class="btn-secondary btn-piccolo" id="btnAggiungiRisultato">${icona('aggiungi')}aggiungi risultato</button>
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Pos.</th><th>Pett.</th><th>Corridore</th><th>Squadra</th><th>Tempo</th><th>Distacco</th><th>Punti</th><th></th></tr></thead>
+        <thead><tr><th>Pos.</th><th>Pett.</th><th>Corridore</th><th>Squadra</th><th>Tempo</th><th>Distacco</th><th>Punti</th><th class="th-azioni"></th></tr></thead>
         <tbody id="tabellaRisultati"></tbody>
       </table>
     </div>
@@ -38,29 +40,40 @@ async function renderArrivo(corpo) {
     await garantisciCorridori();
     apriFormRisultato(null);
   });
+  attivaCampoRicerca(corpo, q => { queryCorrente = q; ricaricaArrivo(); });
 
   ricaricaArrivo();
 }
 
+let queryCorrente = '';
+let risultatiCorrenti = [];
+
 async function ricaricaArrivo() {
   const tbody = document.getElementById('tabellaRisultati');
   if (!tbody || !tappaSelezionataId) return;
-  const risultati = await apiGet('/api/risultati/tappa/' + tappaSelezionataId);
-  tbody.innerHTML = risultati.map(r => `
+  risultatiCorrenti = await apiGet('/api/risultati/tappa/' + tappaSelezionataId);
+  const filtrati = risultatiCorrenti.filter(r => {
+    if (!queryCorrente) return true;
+    return `${r.nome} ${r.cognome} ${r.squadra_nome ?? ''}`.toLowerCase().includes(queryCorrente);
+  });
+  tbody.innerHTML = filtrati.map(r => {
+    const m = medaglia(r.posizione);
+    return `
     <tr>
-      <td>${r.posizione ?? '—'}</td>
+      <td>${m ? `<span class="medaglia-podio">${m}</span>` : (r.posizione ?? '—')}</td>
       <td>${r.numero_pettorale ?? '—'}</td>
       <td><strong>${r.nome} ${r.cognome}</strong></td>
       <td>${r.squadra_nome ?? '—'}</td>
       <td>${r.tempo ?? '—'}</td>
       <td>${r.distacco}</td>
-      <td>${r.punti}</td>
-      <td>
-        <button class="btn-icon" data-modifica='${JSON.stringify({id:r.id, corridore_id:r.corridore_id, posizione:r.posizione, tempo:r.tempo, distacco:r.distacco, punti:r.punti})}'>modifica</button>
-        <button class="btn-icon danger" data-elimina="${r.id}">elimina</button>
+      <td><span class="badge badge-punti">${r.punti}</span></td>
+      <td class="td-azioni">
+        <button class="btn-icon" title="modifica" data-modifica='${JSON.stringify({id:r.id, corridore_id:r.corridore_id, posizione:r.posizione, tempo:r.tempo, distacco:r.distacco, punti:r.punti})}'>${icona('modifica')}</button>
+        <button class="btn-icon danger" title="elimina" data-elimina="${r.id}">${icona('elimina')}</button>
       </td>
     </tr>
-  `).join('') || '<tr><td colspan="8" style="text-align:center;color:#999;padding:24px;">Nessun risultato per questa tappa</td></tr>';
+  `;
+  }).join('') || `<tr><td colspan="8" style="text-align:center;color:#999;padding:24px;">${queryCorrente ? 'Nessun risultato trovato' : 'Nessun risultato per questa tappa'}</td></tr>`;
 
   tbody.querySelectorAll('[data-modifica]').forEach(b => b.addEventListener('click', async () => {
     await garantisciCorridori();

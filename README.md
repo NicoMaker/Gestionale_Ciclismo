@@ -86,6 +86,32 @@ ricerca con autocomplete tra le nazioni già presenti in `nazioni` (40
 precaricate col seed). La bandiera è calcolata dal codice ISO2 a runtime
 nel frontend (nessuna immagine, funziona offline).
 
+## Icone e ricerca ovunque
+
+Ogni sezione dell'interfaccia usa una libreria di icone SVG inline condivisa
+(`frontend/js/icone.js`): icone per modifica/elimina/aggiungi, per il meteo,
+per il tipo di tappa, per l'esito antidoping, per il tipo di media/sponsor/
+veicolo, e le medaglie 🥇🥈🥉 sul podio di tappa e in classifica generale.
+Ogni tabella — sia quelle con schermata dedicata (Nazioni, Corridori, Squadre,
+Tappe, Risultati, Classifica generale) sia le 15 tabelle collegate che usano
+il blocco riusabile `tabella-dati.js` — ha un campo di ricerca live che filtra
+le righe mentre si digita.
+
+## Dati di esempio (seed)
+
+`node seed.js` è **idempotente**: ripulisce tutte le 20 tabelle e le
+ripopola da zero, quindi può essere rilanciato quante volte serve senza
+errori di duplicati. Genera dati inventati ma coerenti tra loro:
+
+- 40 nazioni con bandiera preimpostata
+- 10 squadre con colori sociali distinti
+- 60 corridori (6 per squadra) ciascuno con la propria bicicletta
+- 20 membri di staff tecnico e 30 veicoli squadra
+- 8 sponsor con le relative sponsorizzazioni per squadra
+- 12 tappe (pianura, collina, montagna, cronometro) con percorso e meteo
+- risultati di tappa, traguardi volanti e GPM per le prime 6 tappe
+- penalità, controlli antidoping, alloggi, media accreditati e comunicati stampa
+
 ## Come avviare il progetto
 
 ```bash

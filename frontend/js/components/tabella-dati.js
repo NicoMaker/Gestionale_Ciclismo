@@ -3,9 +3,10 @@
 // modifica ed eliminazione. Non è un pannello "generico" lato utente: ogni chiamante
 // definisce titolo, colonne ed etichette specifiche della propria sezione.
 import { apiGet, apiPost, apiPut, apiDelete } from '../api.js';
-import { mostraToast, apriModal, chiudiModal } from '../utils.js';
+import { mostraToast, apriModal, chiudiModal, htmlCampoRicerca, attivaCampoRicerca } from '../utils.js';
 import { cache } from '../state.js';
 import { socket } from '../socket.js';
+import { icona, iconaValore } from '../icone.js';
 
 function opzioniPer(tipo) {
   if (tipo === 'squadra') return cache.squadre.map(s => ({ value: s.id, label: s.nome }));
@@ -21,7 +22,9 @@ function risolviValore(colonna, valore) {
   if (colonna.type === 'corridore') { const c = cache.corridori.find(c => c.id === valore); return c ? `${c.nome} ${c.cognome}` : valore; }
   if (colonna.type === 'tappa') { const t = cache.tappe.find(t => t.id === valore); return t ? `Tappa ${t.numero_tappa}` : valore; }
   if (colonna.type === 'sponsor') return cache.sponsor.find(s => s.id === valore)?.nome ?? valore;
-  if (colonna.type === 'select') return String(valore).replace(/_/g, ' ');
+  if (colonna.type === 'select') {
+    return `<span class="badge badge-${valore}">${iconaValore(valore)}${String(valore).replace(/_/g, ' ')}</span>`;
+  }
   return valore;
 }
 
@@ -52,31 +55,45 @@ function campoHtml(c, id, valore) {
 export function montaListaConForm(contenitore, cfg) {
   contenitore.innerHTML = `
     <div class="subtab-head">
-      <button class="btn-secondary btn-piccolo" data-azione="nuovo">+ aggiungi</button>
+      ${htmlCampoRicerca('cerca in ' + cfg.titolo.toLowerCase() + '...')}
+      <button class="btn-secondary btn-piccolo" data-azione="nuovo">${icona('aggiungi')}aggiungi</button>
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr>${cfg.colonne.map(c => `<th>${c.label}</th>`).join('')}<th></th></tr></thead>
+        <thead><tr>${cfg.colonne.map(c => `<th>${c.label}</th>`).join('')}<th class="th-azioni"></th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
   `;
   const tbody = contenitore.querySelector('tbody');
   let righeCorrenti = [];
+  let query = '';
+
+  function corrisponde(r) {
+    if (!query) return true;
+    return cfg.colonne.some(c => String(risolviValore(c, r[c.key]) ?? '').replace(/<[^>]*>/g, '').toLowerCase().includes(query));
+  }
+
+  function disegna() {
+    const righe = righeCorrenti.filter(corrisponde);
+    tbody.innerHTML = righe.map(r => `
+      <tr>
+        ${cfg.colonne.map(c => `<td>${risolviValore(c, r[c.key])}</td>`).join('')}
+        <td class="td-azioni">
+          <button class="btn-icon" title="modifica" data-azione="modifica" data-id="${r.id}">${icona('modifica')}</button>
+          <button class="btn-icon danger" title="elimina" data-azione="elimina" data-id="${r.id}">${icona('elimina')}</button>
+        </td>
+      </tr>
+    `).join('') || `<tr><td colspan="${cfg.colonne.length + 1}" style="text-align:center;color:#999;padding:20px;">${query ? 'Nessun risultato per la ricerca' : 'Nessun dato'}</td></tr>`;
+  }
 
   async function ricarica() {
     righeCorrenti = await apiGet(cfg.apiPath);
     if (cfg.filtro) righeCorrenti = righeCorrenti.filter(cfg.filtro);
-    tbody.innerHTML = righeCorrenti.map(r => `
-      <tr>
-        ${cfg.colonne.map(c => `<td>${risolviValore(c, r[c.key])}</td>`).join('')}
-        <td>
-          <button class="btn-icon" data-azione="modifica" data-id="${r.id}">modifica</button>
-          <button class="btn-icon danger" data-azione="elimina" data-id="${r.id}">elimina</button>
-        </td>
-      </tr>
-    `).join('') || `<tr><td colspan="${cfg.colonne.length + 1}" style="text-align:center;color:#999;padding:20px;">Nessun dato</td></tr>`;
+    disegna();
   }
+
+  attivaCampoRicerca(contenitore, q => { query = q; disegna(); });
 
   function apriForm(rigaEsistente) {
     const campiVisibili = cfg.colonne.filter(c => !(rigaEsistente ? false : (cfg.valoriFissi && c.key in cfg.valoriFissi)));

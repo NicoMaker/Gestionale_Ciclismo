@@ -167,11 +167,25 @@ body{
   flex-wrap:wrap;
 }
 .view-head h1{
+  display:flex;
+  align-items:center;
+  gap:13px;
   font-family:'Archivo Black', sans-serif;
   font-size:28px;
   font-weight:400;
   letter-spacing:-0.3px;
   color:var(--testo);
+}
+.view-icon{
+  width:26px; height:26px;
+  flex-shrink:0;
+  fill:none;
+  stroke:var(--rosa-maglia);
+  stroke-width:1.8;
+  padding:5px;
+  box-sizing:content-box;
+  background:linear-gradient(135deg, rgba(236,31,128,0.12), rgba(124,58,237,0.12));
+  border-radius:10px;
 }
 
 .btn-primary, .btn-secondary{
@@ -195,13 +209,59 @@ body{
 .btn-primary:active, .btn-secondary:active{ transform:scale(0.98); }
 
 .btn-icon{
+  display:inline-flex; align-items:center; justify-content:center;
   background:none; border:none; cursor:pointer;
   color:var(--testo-soft); font-size:12.5px; font-weight:600;
-  padding:5px 9px; border-radius:6px;
-  transition:background 0.15s, color 0.15s;
+  padding:7px; border-radius:8px;
+  transition:background 0.15s, color 0.15s, transform 0.12s;
 }
-.btn-icon:hover{ background:#f1effa; color:var(--testo); }
+.btn-icon:hover{ background:#f1effa; color:var(--rosa-maglia); transform:translateY(-1px); }
 .btn-icon.danger:hover{ color:#d92c4b; background:#fdecef; }
+.btn-icon:active{ transform:scale(0.92); }
+.td-azioni, .th-azioni{ white-space:nowrap; text-align:right; }
+.td-azioni{ display:table-cell; }
+
+/* ---- ICONE SVG ---- */
+.icona{
+  width:15px; height:15px;
+  flex-shrink:0;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:2;
+  vertical-align:-3px;
+}
+.btn-primary .icona, .btn-secondary .icona{ width:14px; height:14px; margin-right:6px; vertical-align:-2.5px; }
+.badge .icona{ width:12px; height:12px; margin-right:5px; vertical-align:-2px; }
+
+/* ---- RICERCA ---- */
+.search-box{
+  position:relative;
+  display:flex;
+  align-items:center;
+  flex:1 1 220px;
+  min-width:180px;
+  max-width:320px;
+}
+.search-box .icona{
+  position:absolute;
+  left:13px;
+  color:var(--testo-soft);
+  width:15px; height:15px;
+  pointer-events:none;
+}
+.search-input{
+  width:100%;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  padding:10px 14px 10px 36px;
+  border:1.5px solid var(--bordo);
+  border-radius:20px;
+  background:var(--carta);
+  transition:border-color 0.15s, box-shadow 0.15s;
+}
+.search-input:focus{ outline:none; border-color:var(--rosa-maglia); box-shadow:0 0 0 3.5px var(--rosa-glow); }
+.search-input::placeholder{ color:#b6b5c8; }
 
 /* ---- TABLE ---- */
 .table-wrap{
@@ -236,12 +296,14 @@ tbody tr:last-child td{ border-bottom:none; }
 tbody tr:hover{ background:#fdf3f8; }
 
 .badge{
-  display:inline-block;
+  display:inline-flex;
+  align-items:center;
   padding:4px 11px;
   border-radius:20px;
   font-size:11px;
   font-weight:700;
   letter-spacing:0.2px;
+  white-space:nowrap;
 }
 .badge-pianura{ background:#e6f1ff; color:#1565c0; }
 .badge-collina{ background:#fff2e0; color:#c25c00; }
@@ -250,6 +312,47 @@ tbody tr:hover{ background:#fdf3f8; }
 .badge-programmata{ background:#f0eff7; color:#68697d; }
 .badge-in_corso{ background:#ffe6ec; color:#d92c4b; }
 .badge-conclusa{ background:#e3f7ec; color:#17a06b; }
+
+/* stati / enum aggiuntivi, usati da tutte le tabelle collegate */
+.badge-negativo{ background:#e3f7ec; color:#17a06b; }
+.badge-positivo{ background:#ffe1e6; color:#c81743; }
+.badge-in_attesa{ background:#fff4d9; color:#b07a00; }
+.badge-stampa{ background:#f0eff7; color:#4c4d63; }
+.badge-tv{ background:#e6f1ff; color:#1565c0; }
+.badge-radio{ background:#f1e8fd; color:#7327c9; }
+.badge-foto{ background:#fff2e0; color:#c25c00; }
+.badge-online{ background:#e3f7ec; color:var(--verde-montagna); }
+.badge-ammiraglia{ background:#ffe6ec; color:#d92c4b; }
+.badge-furgone{ background:#e6f1ff; color:#1565c0; }
+.badge-bus{ background:#f1e8fd; color:#7327c9; }
+.badge-camper{ background:#fff2e0; color:#c25c00; }
+.badge-main_sponsor{ background:#fff4d9; color:#b07a00; }
+.badge-co_sponsor{ background:#f0eff7; color:#68697d; }
+.badge-fornitore_tecnico{ background:#e6f1ff; color:#1565c0; }
+.badge-direttore_sportivo{ background:#ffe6ec; color:#d92c4b; }
+.badge-meccanico{ background:#e6f1ff; color:#1565c0; }
+.badge-medico{ background:#e3f7ec; color:var(--verde-montagna); }
+.badge-massaggiatore{ background:#f1e8fd; color:#7327c9; }
+.badge-preparatore_atletico{ background:#fff2e0; color:#c25c00; }
+.badge-sprint{ background:#e6f1ff; color:#1565c0; }
+.badge-gpm{ background:#e3f7ec; color:var(--verde-montagna); }
+.badge-codice, .badge-pettorale, .badge-numero{ background:#f0eff7; color:#4c4d63; font-variant-numeric:tabular-nums; }
+.badge-punti{ background:linear-gradient(135deg, #fff4d9, #ffe9b3); color:#8a5a00; }
+
+.dot-colore{
+  display:inline-block;
+  width:9px; height:9px;
+  border-radius:50%;
+  margin-right:7px;
+  vertical-align:1px;
+  box-shadow:0 0 0 2px rgba(0,0,0,0.04);
+}
+
+.medaglia-podio{ font-size:17px; }
+.riga-podio td:first-child{ font-weight:800; }
+tbody tr.riga-podio:nth-child(1){ background:linear-gradient(90deg, rgba(255,214,102,0.16), transparent); }
+tbody tr.riga-podio:nth-child(2){ background:linear-gradient(90deg, rgba(192,192,207,0.18), transparent); }
+tbody tr.riga-podio:nth-child(3){ background:linear-gradient(90deg, rgba(205,140,80,0.14), transparent); }
 
 .select-tappa{
   font-family:inherit;

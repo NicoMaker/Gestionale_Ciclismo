@@ -1,50 +1,57 @@
 import { apiPost, apiPut, apiDelete } from '../api.js';
-import { apriModal, chiudiModal, mostraToast, creaSottoSchede } from '../utils.js';
+import { apriModal, chiudiModal, mostraToast, creaSottoSchede, htmlCampoRicerca, attivaCampoRicerca } from '../utils.js';
 import { cache, caricaTappe } from '../state.js';
 import { socket } from '../socket.js';
 import { montaListaConForm } from './tabella-dati.js';
+import { icona, iconaValore } from '../icone.js';
 
 let sottoTabAttiva = 'elenco';
+let queryCorrente = '';
 
 function renderElenco(corpo) {
   sottoTabAttiva = 'elenco';
   corpo.innerHTML = `
     <div class="subtab-head">
-      <button class="btn-secondary btn-piccolo" id="btnNuovaTappa">+ nuova tappa</button>
+      ${htmlCampoRicerca('cerca tappa, città o tipo...')}
+      <button class="btn-secondary btn-piccolo" id="btnNuovaTappa">${icona('aggiungi')}nuova tappa</button>
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>#</th><th>Nome</th><th>Percorso</th><th>Km</th><th>Dislivello</th><th>Tipo</th><th>Data</th><th>Stato</th><th></th></tr></thead>
+        <thead><tr><th>#</th><th>Nome</th><th>Percorso</th><th>Km</th><th>Dislivello</th><th>Tipo</th><th>Data</th><th>Stato</th><th class="th-azioni"></th></tr></thead>
         <tbody id="tabellaTappe"></tbody>
       </table>
     </div>
   `;
 
   document.getElementById('btnNuovaTappa').addEventListener('click', () => apriFormTappa(null));
+  attivaCampoRicerca(corpo, q => { queryCorrente = q; disegnaElenco(); });
   ricaricaElenco();
 }
 
-async function ricaricaElenco() {
-  await caricaTappe();
+function disegnaElenco() {
   const tbody = document.getElementById('tabellaTappe');
   if (!tbody) return; // l'utente è passato ad un'altra sotto-scheda
-  tbody.innerHTML = cache.tappe.map(t => `
+  const filtrate = cache.tappe.filter(t => {
+    if (!queryCorrente) return true;
+    return `${t.nome} ${t.partenza} ${t.arrivo} ${t.tipo} ${t.stato}`.toLowerCase().includes(queryCorrente);
+  });
+  tbody.innerHTML = filtrate.map(t => `
     <tr>
-      <td>${t.numero_tappa}</td>
+      <td><span class="badge badge-numero">${t.numero_tappa}</span></td>
       <td><strong>${t.nome}</strong></td>
       <td>${t.partenza} → ${t.arrivo}</td>
-      <td>${t.distanza_km ?? '—'}</td>
+      <td>${t.distanza_km ?? '—'} km</td>
       <td>${t.dislivello_m ?? '—'} m</td>
-      <td><span class="badge badge-${t.tipo}">${t.tipo}</span></td>
+      <td><span class="badge badge-${t.tipo}">${iconaValore(t.tipo)}${t.tipo}</span></td>
       <td>${t.data ?? '—'}</td>
-      <td><span class="badge badge-${t.stato}">${t.stato.replace('_',' ')}</span></td>
-      <td>
-        <button class="btn-icon" data-diretta="${t.id}">📡 diretta</button>
-        <button class="btn-icon" data-modifica="${t.id}">modifica</button>
-        <button class="btn-icon danger" data-elimina="${t.id}">elimina</button>
+      <td><span class="badge badge-${t.stato}">${iconaValore(t.stato)}${t.stato.replace('_',' ')}</span></td>
+      <td class="td-azioni">
+        <button class="btn-icon" title="avvia diretta" data-diretta="${t.id}">${icona('diretta')}</button>
+        <button class="btn-icon" title="modifica" data-modifica="${t.id}">${icona('modifica')}</button>
+        <button class="btn-icon danger" title="elimina" data-elimina="${t.id}">${icona('elimina')}</button>
       </td>
     </tr>
-  `).join('') || '<tr><td colspan="9" style="text-align:center;color:#999;padding:24px;">Nessuna tappa inserita</td></tr>';
+  `).join('') || `<tr><td colspan="9" style="text-align:center;color:#999;padding:24px;">${queryCorrente ? 'Nessuna tappa trovata' : 'Nessuna tappa inserita'}</td></tr>`;
 
   tbody.querySelectorAll('[data-diretta]').forEach(b => b.addEventListener('click', () => avviaDiretta(+b.dataset.diretta)));
   tbody.querySelectorAll('[data-modifica]').forEach(b => b.addEventListener('click', () => {
@@ -52,6 +59,11 @@ async function ricaricaElenco() {
     if (t) apriFormTappa(t);
   }));
   tbody.querySelectorAll('[data-elimina]').forEach(b => b.addEventListener('click', () => eliminaTappa(+b.dataset.elimina)));
+}
+
+async function ricaricaElenco() {
+  await caricaTappe();
+  disegnaElenco();
 }
 
 function apriFormTappa(tappaEsistente) {

@@ -1,17 +1,20 @@
 import { apiPost, apiPut, apiDelete } from '../api.js';
-import { apriModal, chiudiModal, mostraToast, bandiera, creaSottoSchede } from '../utils.js';
+import { apriModal, chiudiModal, mostraToast, bandiera, creaSottoSchede, htmlCampoRicerca, attivaCampoRicerca } from '../utils.js';
 import { cache, caricaSquadre, garantisciNazioni, garantisciSponsor } from '../state.js';
 import { socket } from '../socket.js';
 import { montaListaConForm } from './tabella-dati.js';
 import { htmlCampoNazione, attivaCampoNazione } from './nazione-autocomplete.js';
+import { icona } from '../icone.js';
 
 let sottoTabAttiva = 'elenco';
+let queryCorrente = '';
 
 function renderElenco(corpo) {
   sottoTabAttiva = 'elenco';
   corpo.innerHTML = `
     <div class="subtab-head">
-      <button class="btn-secondary btn-piccolo" id="btnNuovaSquadra">+ nuova squadra</button>
+      ${htmlCampoRicerca('cerca squadra o nazione...')}
+      <button class="btn-secondary btn-piccolo" id="btnNuovaSquadra">${icona('aggiungi')}nuova squadra</button>
     </div>
     <div class="cards-wrap" id="cardsSquadre"></div>
   `;
@@ -19,23 +22,27 @@ function renderElenco(corpo) {
     await garantisciNazioni();
     apriFormSquadra(null);
   });
+  attivaCampoRicerca(corpo, q => { queryCorrente = q; disegnaElenco(); });
   ricaricaElenco();
 }
 
-async function ricaricaElenco() {
-  await caricaSquadre();
+function disegnaElenco() {
   const wrap = document.getElementById('cardsSquadre');
   if (!wrap) return;
-  wrap.innerHTML = cache.squadre.map(s => `
+  const filtrate = cache.squadre.filter(s => {
+    if (!queryCorrente) return true;
+    return `${s.nome} ${s.nazione_nome ?? ''}`.toLowerCase().includes(queryCorrente);
+  });
+  wrap.innerHTML = filtrate.map(s => `
     <div class="squadra-card" style="border-top-color:${s.colore || '#e6197f'}">
-      <h3>${s.nome}</h3>
+      <h3><span class="dot-colore" style="background:${s.colore || '#e6197f'}"></span>${s.nome}</h3>
       <p>${s.nazione_codice ? `<span class="bandiera">${bandiera(s.nazione_codice)}</span>${s.nazione_nome}` : 'nazione non specificata'}</p>
       <div class="row">
-        <button class="btn-icon" data-modifica="${s.id}">modifica</button>
-        <button class="btn-icon danger" data-elimina="${s.id}">elimina</button>
+        <button class="btn-icon" title="modifica" data-modifica="${s.id}">${icona('modifica')}</button>
+        <button class="btn-icon danger" title="elimina" data-elimina="${s.id}">${icona('elimina')}</button>
       </div>
     </div>
-  `).join('') || '<p style="color:#999;">Nessuna squadra inserita</p>';
+  `).join('') || `<p style="color:#999;">${queryCorrente ? 'Nessuna squadra trovata' : 'Nessuna squadra inserita'}</p>`;
 
   wrap.querySelectorAll('[data-modifica]').forEach(b => b.addEventListener('click', async () => {
     await garantisciNazioni();
@@ -43,6 +50,11 @@ async function ricaricaElenco() {
     if (s) apriFormSquadra(s);
   }));
   wrap.querySelectorAll('[data-elimina]').forEach(b => b.addEventListener('click', () => eliminaSquadra(+b.dataset.elimina)));
+}
+
+async function ricaricaElenco() {
+  await caricaSquadre();
+  disegnaElenco();
 }
 
 function apriFormSquadra(squadraEsistente) {

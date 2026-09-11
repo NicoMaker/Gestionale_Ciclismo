@@ -1,4 +1,5 @@
-// Utility condivise da tutti i componenti: bandiere, notifiche, modale.
+// Utility condivise da tutti i componenti: bandiere, notifiche, modale, ricerca.
+import { icona } from './icone.js';
 
 /** Calcola l'emoji bandiera da un codice ISO2 — nessuna immagine esterna. */
 export function bandiera(iso2) {
@@ -49,4 +50,26 @@ export function creaSottoSchede(container, schede, ontab) {
 
   ontab(schede[0].key, corpo);
   return corpo;
+}
+
+/**
+ * Crea un campo di ricerca con icona, riusato in ogni tabella dell'app ("ricerca dappertutto").
+ * @param {string} placeholder - testo placeholder
+ * @param {(query: string) => void} onCerca - richiamata ad ogni digitazione
+ * @returns {string} html del campo — da inserire nel markup, poi va attivato con attivaCampoRicerca
+ */
+export function htmlCampoRicerca(placeholder = 'cerca...') {
+  return `
+    <div class="search-box">
+      ${icona('cerca')}
+      <input type="text" class="search-input" placeholder="${placeholder}" autocomplete="off">
+    </div>
+  `;
+}
+
+/** Collega l'input di un campo generato con htmlCampoRicerca al callback di filtro. */
+export function attivaCampoRicerca(contenitore, onCerca) {
+  const input = contenitore.querySelector('.search-input');
+  if (!input) return;
+  input.addEventListener('input', () => onCerca(input.value.trim().toLowerCase()));
 }
