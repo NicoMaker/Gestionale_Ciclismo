@@ -1,14 +1,14 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+const sqlite3 = require("sqlite3").verbose();
+const path = require("path");
 
-const DB_PATH = path.join(__dirname, 'gestionale.db');
+const DB_PATH = path.join(__dirname, "gestionale.db");
 const db = new sqlite3.Database(DB_PATH, (err) => {
-  if (err) console.error('Errore apertura database:', err.message);
-  else console.log('✓ Connesso al database SQLite:', DB_PATH);
+  if (err) console.error("Errore apertura database:", err.message);
+  else console.log("✓ Connesso al database SQLite:", DB_PATH);
 });
 
 db.serialize(() => {
-  db.run('PRAGMA foreign_keys = ON');
+  db.run("PRAGMA foreign_keys = ON");
 
   // 1. Nazioni (anagrafica per la ricerca con bandiera)
   db.run(`
@@ -274,7 +274,7 @@ db.serialize(() => {
     )
   `);
 
-  console.log('✓ Schema database verificato/creato (20 tabelle)');
+  console.log("✓ Schema database verificato/creato (20 tabelle)");
 });
 
 module.exports = db;

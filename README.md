@@ -63,16 +63,16 @@ Ogni voce del menu è un dominio reale della corsa; le tabelle collegate
 compaiono come sotto-schede dentro la sezione a cui appartengono
 logicamente — non in un elenco piatto di "tabelle extra":
 
-| Sezione | Sotto-schede | Tabelle coinvolte |
-|---|---|---|
-| **Tappe** | Elenco · Percorso · Meteo | `tappe`, `tappe_percorso`, `meteo_tappa` |
-| **Corridori** | Elenco · Biciclette | `corridori`, `biciclette` |
-| **Squadre** | Elenco · Staff tecnico · Veicoli · Sponsor · Alloggi | `squadre`, `staff_tecnico`, `veicoli_squadra`, `sponsor`, `squadra_sponsor`, `hotel` |
-| **Risultati** | Arrivo di tappa · Traguardi volanti · GPM | `risultati`, `traguardi_volanti`, `gpm_risultati` |
-| **Classifiche** | Generale · Tipi di classifica | `classifiche_tipo` (+ calcolo su `risultati`) |
-| **Regolamento** | Penalità · Antidoping | `penalita`, `controlli_antidoping` |
-| **Stampa** | Media accreditati · Comunicati | `media_accreditati`, `comunicati_stampa` |
-| **Nazioni** | Anagrafica | `nazioni` (alimenta l'autocomplete di Corridori/Squadre) |
+| Sezione         | Sotto-schede                                         | Tabelle coinvolte                                                                    |
+| --------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| **Tappe**       | Elenco · Percorso · Meteo                            | `tappe`, `tappe_percorso`, `meteo_tappa`                                             |
+| **Corridori**   | Elenco · Biciclette                                  | `corridori`, `biciclette`                                                            |
+| **Squadre**     | Elenco · Staff tecnico · Veicoli · Sponsor · Alloggi | `squadre`, `staff_tecnico`, `veicoli_squadra`, `sponsor`, `squadra_sponsor`, `hotel` |
+| **Risultati**   | Arrivo di tappa · Traguardi volanti · GPM            | `risultati`, `traguardi_volanti`, `gpm_risultati`                                    |
+| **Classifiche** | Generale · Tipi di classifica                        | `classifiche_tipo` (+ calcolo su `risultati`)                                        |
+| **Regolamento** | Penalità · Antidoping                                | `penalita`, `controlli_antidoping`                                                   |
+| **Stampa**      | Media accreditati · Comunicati                       | `media_accreditati`, `comunicati_stampa`                                             |
+| **Nazioni**     | Anagrafica                                           | `nazioni` (alimenta l'autocomplete di Corridori/Squadre)                             |
 
 Tutte le 20 tabelle hanno **creazione, modifica ed eliminazione** —
 compresi corridori, squadre, tappe e nazioni, che hanno una scheda di
