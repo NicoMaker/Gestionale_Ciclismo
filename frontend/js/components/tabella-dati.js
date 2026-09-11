@@ -1,7 +1,3 @@
-// Mattone riusabile "elenco + modulo", usato internamente dai componenti di dominio
-// (Tappe, Squadre, Risultati, ...) per le loro sotto-sezioni collegate — con creazione,
-// modifica ed eliminazione. Non è un pannello "generico" lato utente: ogni chiamante
-// definisce titolo, colonne ed etichette specifiche della propria sezione.
 import { apiGet, apiPost, apiPut, apiDelete } from "../api.js";
 import {
   mostraToast,
@@ -70,13 +66,6 @@ function campoHtml(c, id, valore) {
   return `<div class="field"><label>${c.label}</label><input type="${tipoInput}" id="${id}" value="${valore ?? ""}"></div>`;
 }
 
-/**
- * @param {HTMLElement} contenitore - dove renderizzare
- * @param {object} cfg - { titolo, titoloForm, apiPath, eventoSocket, colonne, filtro?, valoriFissi? }
- *   colonne: [{ key, label, type: 'text'|'number'|'date'|'select'|'squadra'|'corridore'|'tappa'|'sponsor', opzioni? }]
- *   filtro: (riga) => bool — per mostrare solo le righe pertinenti (es. di una tappa specifica)
- *   valoriFissi: valori pre-compilati e nascosti nel form di creazione (es. { tappa_id: 3 })
- */
 export function montaListaConForm(contenitore, cfg) {
   contenitore.innerHTML = `
     <div class="subtab-head">

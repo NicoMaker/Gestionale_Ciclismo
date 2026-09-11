@@ -509,9 +509,11 @@ async function main() {
   for (const [nome, codice] of nazioni)
     await run("INSERT INTO nazioni (nome, codice_iso2) VALUES (?, ?)", [
       nome,
-      codice,
+      codice.toUpperCase().trim(),
     ]);
-  const righeNazioni = await all("SELECT id, codice_iso2 FROM nazioni");
+  const righeNazioni = await all(
+    "SELECT id, UPPER(TRIM(codice_iso2)) AS codice_iso2 FROM nazioni",
+  );
   const idNazione = {};
   righeNazioni.forEach((r) => (idNazione[r.codice_iso2] = r.id));
 
@@ -878,6 +880,36 @@ async function main() {
         idTappa[Math.min(i, idTappa.length - 1)].id,
       ],
     );
+  }
+
+  // ---- 12) Normalizzazione finale codici ISO2 ------------------------------
+  // Difensivo: assicura che tutti i codici nel DB siano maiuscoli e senza spazi,
+  // anche se per qualche motivo fossero stati inseriti diversamente.
+  const normalizzazione = await run(
+    "UPDATE nazioni SET codice_iso2 = UPPER(TRIM(codice_iso2))",
+  );
+  if (normalizzazione.changes > 0) {
+    console.log(
+      `🔤 Normalizzati ${normalizzazione.changes} codici ISO2 in maiuscolo`,
+    );
+  }
+
+  // Verifica finale: nessun codice ISO2 nullo o malformato
+  const codiciInvalidi = await all(
+    `SELECT id, nome, codice_iso2 FROM nazioni
+     WHERE codice_iso2 IS NULL
+        OR LENGTH(TRIM(codice_iso2)) != 2
+        OR codice_iso2 != UPPER(codice_iso2)`,
+  );
+  if (codiciInvalidi.length > 0) {
+    console.warn(
+      `⚠️  Attenzione: ${codiciInvalidi.length} nazioni con codice ISO2 non valido:`,
+    );
+    codiciInvalidi.forEach((n) =>
+      console.warn(`   • id=${n.id} "${n.nome}" → "${n.codice_iso2}"`),
+    );
+  } else {
+    console.log("✅ Tutti i codici ISO2 sono validi (2 lettere maiuscole)");
   }
 
   console.log("\n✅ Seed completato:");

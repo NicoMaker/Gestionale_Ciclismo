@@ -42,7 +42,7 @@ function renderElenco(corpo) {
 
 function disegnaElenco() {
   const tbody = document.getElementById("tabellaTappe");
-  if (!tbody) return; // l'utente è passato ad un'altra sotto-scheda
+  if (!tbody) return;
   const filtrate = cache.tappe.filter((t) => {
     if (!queryCorrente) return true;
     return `${t.nome} ${t.partenza} ${t.arrivo} ${t.tipo} ${t.stato}`
@@ -146,9 +146,7 @@ async function salvaTappa(tappaEsistente) {
     dislivello_m: +document.getElementById("f_dislivello").value || null,
     tipo: document.getElementById("f_tipo").value,
     data: document.getElementById("f_data").value || null,
-    stato: document.getElementById("f_stato")
-      ? document.getElementById("f_stato").value
-      : undefined,
+    stato: document.getElementById("f_stato").value,
   };
   if (!body.numero_tappa || !body.nome || !body.partenza || !body.arrivo) {
     mostraToast("Compila numero, nome, partenza e arrivo");
@@ -183,12 +181,7 @@ function renderPercorso(corpo) {
     colonne: [
       { key: "tappa_id", label: "Tappa", type: "tappa" },
       { key: "km", label: "Km", type: "number" },
-      {
-        key: "tipo",
-        label: "Tipo",
-        type: "select",
-        opzioni: ["sprint", "gpm"],
-      },
+      { key: "tipo", label: "Tipo", type: "select", opzioni: ["sprint", "gpm"] },
       { key: "nome_luogo", label: "Luogo", type: "text" },
       { key: "categoria", label: "Categoria", type: "text" },
     ],

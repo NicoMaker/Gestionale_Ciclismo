@@ -39,8 +39,10 @@ function mostraSezione(key) {
 
   if (!inizializzate.has(key)) {
     const container = document.getElementById("view-" + key);
-    sezioni[key].init(container);
-    inizializzate.add(key);
+    if (sezioni[key]) {
+      sezioni[key].init(container);
+      inizializzate.add(key);
+    }
   }
 }
 
@@ -48,11 +50,12 @@ document.querySelectorAll(".nav-item").forEach((btn) => {
   btn.addEventListener("click", () => mostraSezione(btn.dataset.view));
 });
 
-// ---------- Stato live (in memoria sul server, sincronizzato via socket) ----------
+// ---------- Stato live ----------
 socket.on("stato-live:aggiornato", (stato) => {
   const dot = document.getElementById("liveDot");
   const label = document.getElementById("liveLabel");
   const spettatori = document.getElementById("liveSpettatori");
+  if (!dot || !label || !spettatori) return;
   if (stato.tappaInCorsoId) {
     dot.classList.add("on");
     const t = cache.tappe.find((t) => t.id === stato.tappaInCorsoId);

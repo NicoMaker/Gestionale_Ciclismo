@@ -1,6 +1,9 @@
-// Campo di ricerca con bandiera per scegliere una nazione tra quelle già censite.
 import { bandiera } from "../utils.js";
 import { cache } from "../state.js";
+
+function codicePulito(iso2) {
+  return (iso2 || "").toString().trim().toUpperCase();
+}
 
 export function htmlCampoNazione(idPrefix, label) {
   return `
@@ -15,6 +18,8 @@ export function htmlCampoNazione(idPrefix, label) {
 
 export function attivaCampoNazione(idPrefix, valoreIniziale) {
   const wrapEl = document.getElementById(idPrefix + "_wrap");
+  if (!wrapEl) return () => null;
+
   const input = wrapEl.querySelector(".autocomplete-input");
   const hidden = wrapEl.querySelector(".autocomplete-hidden");
   const lista = wrapEl.querySelector(".autocomplete-list");
@@ -22,7 +27,7 @@ export function attivaCampoNazione(idPrefix, valoreIniziale) {
   if (valoreIniziale) {
     const n = cache.nazioni.find((n) => n.id === valoreIniziale);
     if (n) {
-      input.value = `${bandiera(n.codice_iso2)} ${n.nome}`;
+      input.value = `${bandiera(n.codice_iso2)} ${n.nome}`.trim();
       hidden.value = n.id;
     }
   }
@@ -31,9 +36,14 @@ export function attivaCampoNazione(idPrefix, valoreIniziale) {
     const q = query.trim().toLowerCase();
     const risultati = q
       ? cache.nazioni
-          .filter((n) => n.nome.toLowerCase().includes(q))
+          .filter(
+            (n) =>
+              n.nome.toLowerCase().includes(q) ||
+              codicePulito(n.codice_iso2).toLowerCase().includes(q),
+          )
           .slice(0, 12)
       : cache.nazioni.slice(0, 12);
+
     lista.innerHTML = risultati.length
       ? risultati
           .map(

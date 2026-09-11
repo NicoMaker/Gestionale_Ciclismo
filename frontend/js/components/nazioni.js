@@ -17,7 +17,7 @@ function disegna(tbody) {
     (n) =>
       !queryCorrente ||
       n.nome.toLowerCase().includes(queryCorrente) ||
-      n.codice_iso2.toLowerCase().includes(queryCorrente),
+      (n.codice_iso2 || "").toLowerCase().includes(queryCorrente),
   );
   tbody.innerHTML =
     filtrate
@@ -25,7 +25,7 @@ function disegna(tbody) {
         (n) => `
     <tr>
       <td><span class="bandiera">${bandiera(n.codice_iso2)}</span>${n.nome}</td>
-      <td><span class="badge badge-codice">${n.codice_iso2}</span></td>
+      <td><span class="badge badge-codice">${(n.codice_iso2 || "").toUpperCase()}</span></td>
       <td class="td-azioni">
         <button class="btn-icon" title="modifica" data-modifica='${JSON.stringify(n)}'>${icona("modifica")}</button>
         <button class="btn-icon danger" title="elimina" data-elimina="${n.id}">${icona("elimina")}</button>
@@ -57,15 +57,36 @@ async function ricarica(tbody) {
 
 function apriForm(nazioneEsistente) {
   const n = nazioneEsistente || {};
+  const codiceIniziale = (n.codice_iso2 || "").toUpperCase();
   apriModal(`
     <h2>${nazioneEsistente ? "Modifica nazione" : "Nuova nazione"}</h2>
     <div class="field"><label>Nome</label><input id="n_nome" value="${n.nome ?? ""}"></div>
-    <div class="field"><label>Codice ISO2</label><input id="n_codice" maxlength="2" placeholder="es. IT" value="${n.codice_iso2 ?? ""}"></div>
+    <div class="field">
+      <label>Codice ISO2</label>
+      <input id="n_codice" maxlength="2" placeholder="es. IT" value="${codiceIniziale}" style="text-transform:uppercase">
+      <small style="color:#74758a;font-size:12px;display:block;margin-top:4px;">Due lettere maiuscole (es. IT, FR, ES). La bandiera viene generata automaticamente.</small>
+    </div>
+    <div class="field" id="n_anteprima" style="display:${codiceIniziale.length === 2 ? "block" : "none"};">
+      <label>Anteprima bandiera</label>
+      <div style="font-size:32px;line-height:1;">${bandiera(codiceIniziale)}</div>
+    </div>
     <div class="modal-actions">
       <button class="btn-secondary" id="n_annulla">annulla</button>
       <button class="btn-primary" id="n_salva">${nazioneEsistente ? "salva modifiche" : "salva"}</button>
     </div>
   `);
+  const inputCodice = document.getElementById("n_codice");
+  const anteprima = document.getElementById("n_anteprima");
+  inputCodice.addEventListener("input", () => {
+    const val = inputCodice.value.trim().toUpperCase();
+    inputCodice.value = val;
+    if (val.length === 2) {
+      anteprima.style.display = "block";
+      anteprima.querySelector("div").textContent = bandiera(val);
+    } else {
+      anteprima.style.display = "none";
+    }
+  });
   document.getElementById("n_annulla").addEventListener("click", chiudiModal);
   document
     .getElementById("n_salva")
@@ -74,8 +95,8 @@ function apriForm(nazioneEsistente) {
 
 async function salvaNazione(nazioneEsistente) {
   const body = {
-    nome: document.getElementById("n_nome").value,
-    codice_iso2: document.getElementById("n_codice").value,
+    nome: document.getElementById("n_nome").value.trim(),
+    codice_iso2: document.getElementById("n_codice").value.trim().toUpperCase(),
   };
   if (!body.nome || body.codice_iso2.length !== 2) {
     mostraToast("Nome e codice ISO2 (2 lettere) sono obbligatori");

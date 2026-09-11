@@ -1,5 +1,3 @@
-// Cache condivise tra i componenti (evita di rifare le stesse fetch da ogni sezione)
-// e i relativi loader "carica se vuoto".
 import { apiGet } from "./api.js";
 
 export const cache = {
@@ -9,6 +7,13 @@ export const cache = {
   nazioni: [],
   sponsor: [],
 };
+
+function normalizzaNazioni(rows) {
+  return (rows || []).map((n) => ({
+    ...n,
+    codice_iso2: (n.codice_iso2 || "").toString().trim().toUpperCase(),
+  }));
+}
 
 export async function caricaSquadre() {
   cache.squadre = await apiGet("/api/squadre");
@@ -23,7 +28,7 @@ export async function caricaTappe() {
   return cache.tappe;
 }
 export async function caricaNazioni() {
-  cache.nazioni = await apiGet("/api/nazioni");
+  cache.nazioni = normalizzaNazioni(await apiGet("/api/nazioni"));
   return cache.nazioni;
 }
 export async function caricaSponsor() {

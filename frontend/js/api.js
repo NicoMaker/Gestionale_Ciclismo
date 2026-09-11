@@ -1,4 +1,3 @@
-// Helper centralizzati per le chiamate REST verso il backend.
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
 export async function apiGet(percorso) {
