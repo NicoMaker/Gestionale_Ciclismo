@@ -24,8 +24,8 @@ function disegna(tbody) {
       .map(
         (n) => `
     <tr>
-      <td><span class="bandiera">${bandiera(n.codice_iso2)}</span>${n.nome}</td>
-      <td><span class="badge badge-codice">${(n.codice_iso2 || "").toUpperCase()}</span></td>
+      <td>${n.nome}</td>
+      <td><span class="bandiera">${bandiera(n.codice_iso2, 28)}</span></td>
       <td class="td-azioni">
         <button class="btn-icon" title="modifica" data-modifica='${JSON.stringify(n)}'>${icona("modifica")}</button>
         <button class="btn-icon danger" title="elimina" data-elimina="${n.id}">${icona("elimina")}</button>
@@ -68,7 +68,7 @@ function apriForm(nazioneEsistente) {
     </div>
     <div class="field" id="n_anteprima" style="display:${codiceIniziale.length === 2 ? "block" : "none"};">
       <label>Anteprima bandiera</label>
-      <div style="font-size:32px;line-height:1;">${bandiera(codiceIniziale)}</div>
+      <div>${bandiera(codiceIniziale, 56)}</div>
     </div>
     <div class="modal-actions">
       <button class="btn-secondary" id="n_annulla">annulla</button>
@@ -82,7 +82,7 @@ function apriForm(nazioneEsistente) {
     inputCodice.value = val;
     if (val.length === 2) {
       anteprima.style.display = "block";
-      anteprima.querySelector("div").textContent = bandiera(val);
+      anteprima.querySelector("div").innerHTML = bandiera(val, 56);
     } else {
       anteprima.style.display = "none";
     }
@@ -131,7 +131,7 @@ export function init(container) {
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Nazione</th><th>Codice</th><th class="th-azioni"></th></tr></thead>
+        <thead><tr><th>Nazione</th><th>Bandiera</th><th class="th-azioni"></th></tr></thead>
         <tbody id="tabellaNazioni"></tbody>
       </table>
     </div>

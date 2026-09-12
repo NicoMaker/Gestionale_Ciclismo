@@ -40,15 +40,17 @@ export function mostraToast(messaggio) {
   toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
 }
 
-/* ---------- BANDIERA (emoji da codice ISO2) ---------- */
-export function bandiera(codiceIso2) {
+/* ---------- BANDIERA (immagine SVG da codice ISO2) ----------
+   Le bandiere-emoji Unicode (es. 🇮🇹) dipendono dai font del sistema
+   operativo: su Windows, molte distribuzioni Linux e browser meno recenti
+   non vengono renderizzate affatto (restano invisibili o mostrano solo le
+   due lettere). Per essere visibili SEMPRE, indipendentemente dal
+   dispositivo, usiamo delle vere immagini SVG (via flagcdn.com). */
+export function bandiera(codiceIso2, larghezzaPx = 20) {
   const codice = (codiceIso2 || "").toString().trim().toUpperCase();
-  if (codice.length !== 2 || !/^[A-Z]{2}$/.test(codice)) return "🏳️";
-  const base = 0x1f1e6;
-  return String.fromCodePoint(
-    base + (codice.charCodeAt(0) - 65),
-    base + (codice.charCodeAt(1) - 65),
-  );
+  if (codice.length !== 2 || !/^[A-Z]{2}$/.test(codice)) return "";
+  const altezzaPx = Math.round(larghezzaPx * 0.75);
+  return `<img class="bandiera-img" src="https://flagcdn.com/${codice.toLowerCase()}.svg" width="${larghezzaPx}" height="${altezzaPx}" alt="${codice}" title="${codice}" loading="lazy" onerror="this.style.visibility='hidden'">`;
 }
 
 /* ---------- CAMPO DI RICERCA ---------- */

@@ -9,6 +9,7 @@
   --rosa-glow: rgba(236, 31, 128, 0.35);
   --viola: #7c3aed;
   --verde-montagna: #17a06b;
+  --bianca-maglia: #ffffff;
   --testo: #1c1d24;
   --testo-soft: #74758a;
   --bordo: #e9e8f2;
@@ -605,6 +606,36 @@ tbody tr:hover {
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.04);
 }
 
+.banner-maglia {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  background: var(--carta);
+  border: 1px solid var(--bordo);
+  border-left: 5px solid var(--colore-maglia, var(--rosa-maglia));
+  box-shadow: var(--ombra);
+  margin-bottom: 14px;
+}
+.banner-maglia .maglia-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--colore-maglia, var(--rosa-maglia));
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+.banner-maglia strong {
+  font-size: 14.5px;
+}
+.banner-maglia .maglia-label {
+  display: block;
+  font-size: 12px;
+  color: var(--testo-soft);
+  margin-top: 2px;
+}
+
 .medaglia-podio {
   font-size: 17px;
 }
@@ -633,8 +664,17 @@ tbody tr.riga-podio:nth-child(3) {
 }
 
 .bandiera {
-  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
   margin-right: 7px;
+}
+.bandiera-img {
+  display: inline-block;
+  vertical-align: -3px;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(20, 20, 30, 0.1);
+  object-fit: cover;
+  background: #eceeff;
 }
 
 /* ---- SQUADRE CARDS ---- */
@@ -740,6 +780,21 @@ tbody tr.riga-podio:nth-child(3) {
 /* ---- AUTOCOMPLETE NAZIONI ---- */
 .autocomplete-wrap {
   position: relative;
+}
+.autocomplete-input-row {
+  position: relative;
+}
+.autocomplete-flag {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  pointer-events: none;
+}
+.autocomplete-input--con-bandiera {
+  padding-left: 40px !important;
 }
 .autocomplete-list {
   position: absolute;

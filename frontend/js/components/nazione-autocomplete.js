@@ -9,7 +9,10 @@ export function htmlCampoNazione(idPrefix, label) {
   return `
     <div class="field autocomplete-wrap" id="${idPrefix}_wrap">
       <label>${label}</label>
-      <input type="text" class="autocomplete-input" id="${idPrefix}_input" placeholder="cerca una nazione..." autocomplete="off">
+      <div class="autocomplete-input-row">
+        <span class="autocomplete-flag" id="${idPrefix}_flag"></span>
+        <input type="text" class="autocomplete-input" id="${idPrefix}_input" placeholder="cerca una nazione..." autocomplete="off">
+      </div>
       <input type="hidden" class="autocomplete-hidden" id="${idPrefix}_hidden">
       <div class="autocomplete-list" id="${idPrefix}_list"></div>
     </div>
@@ -23,12 +26,26 @@ export function attivaCampoNazione(idPrefix, valoreIniziale) {
   const input = wrapEl.querySelector(".autocomplete-input");
   const hidden = wrapEl.querySelector(".autocomplete-hidden");
   const lista = wrapEl.querySelector(".autocomplete-list");
+  const flagEl = wrapEl.querySelector(".autocomplete-flag");
+
+  // mostra accanto al campo la bandiera esatta della nazione selezionata
+  // (non solo un'anteprima temporanea nel menu a tendina)
+  function mostraBandiera(nazione) {
+    if (nazione && nazione.codice_iso2) {
+      flagEl.innerHTML = bandiera(nazione.codice_iso2, 20);
+      input.classList.add("autocomplete-input--con-bandiera");
+    } else {
+      flagEl.innerHTML = "";
+      input.classList.remove("autocomplete-input--con-bandiera");
+    }
+  }
 
   if (valoreIniziale) {
     const n = cache.nazioni.find((n) => n.id === valoreIniziale);
     if (n) {
-      input.value = `${bandiera(n.codice_iso2)} ${n.nome}`.trim();
+      input.value = n.nome;
       hidden.value = n.id;
+      mostraBandiera(n);
     }
   }
 
@@ -48,7 +65,7 @@ export function attivaCampoNazione(idPrefix, valoreIniziale) {
       ? risultati
           .map(
             (n) => `
-          <div class="autocomplete-item" data-id="${n.id}" data-testo="${bandiera(n.codice_iso2)} ${n.nome}">
+          <div class="autocomplete-item" data-id="${n.id}" data-testo="${n.nome}">
             <span class="bandiera">${bandiera(n.codice_iso2)}</span> ${n.nome}
           </div>
         `,
@@ -61,6 +78,7 @@ export function attivaCampoNazione(idPrefix, valoreIniziale) {
   input.addEventListener("focus", () => renderRisultati(""));
   input.addEventListener("input", () => {
     hidden.value = "";
+    mostraBandiera(null);
     renderRisultati(input.value);
   });
   input.addEventListener("blur", () =>
@@ -71,6 +89,7 @@ export function attivaCampoNazione(idPrefix, valoreIniziale) {
     if (!item) return;
     input.value = item.dataset.testo;
     hidden.value = item.dataset.id;
+    mostraBandiera(cache.nazioni.find((n) => n.id === +item.dataset.id));
     lista.classList.remove("open");
   });
 
