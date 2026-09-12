@@ -166,9 +166,7 @@ module.exports = (io) => {
           if (err) return res.status(500).json({ errore: err.message });
           const giovani = corridori
             .filter((c) => c.tappe_disputate > 0 && c.data_nascita)
-            .filter(
-              (c) => new Date(c.data_nascita).getFullYear() >= annoLimite,
-            )
+            .filter((c) => new Date(c.data_nascita).getFullYear() >= annoLimite)
             .map((c) => ({
               ...c,
               eta: annoRiferimento - new Date(c.data_nascita).getFullYear(),

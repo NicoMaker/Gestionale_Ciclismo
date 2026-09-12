@@ -73,7 +73,11 @@ function disegnaTempo() {
   if (!tbody) return;
   const { dati, query } = stato.tempo;
   if (banner)
-    banner.innerHTML = bannerMaglia(dati[0], "var(--rosa-maglia)", "maglia rosa");
+    banner.innerHTML = bannerMaglia(
+      dati[0],
+      "var(--rosa-maglia)",
+      "maglia rosa",
+    );
   const filtrati = dati.filter((r) => {
     if (!query) return true;
     return `${r.nome} ${r.cognome} ${r.squadra_nome ?? ""}`
@@ -133,7 +137,11 @@ function disegnaPunti() {
   if (!tbody) return;
   const { dati, query } = stato.punti;
   if (banner)
-    banner.innerHTML = bannerMaglia(dati[0], "var(--viola)", "maglia ciclamino");
+    banner.innerHTML = bannerMaglia(
+      dati[0],
+      "var(--viola)",
+      "maglia ciclamino",
+    );
   const filtrati = dati.filter((r) => {
     if (!query) return true;
     return `${r.nome} ${r.cognome} ${r.squadra_nome ?? ""}`
@@ -192,7 +200,12 @@ function disegnaGiovani() {
   if (!tbody) return;
   const { dati, query } = stato.giovani;
   if (banner)
-    banner.innerHTML = bannerMaglia(dati[0], "var(--bianca-maglia)", "maglia bianca", true);
+    banner.innerHTML = bannerMaglia(
+      dati[0],
+      "var(--bianca-maglia)",
+      "maglia bianca",
+      true,
+    );
   const filtrati = dati.filter((r) => {
     if (!query) return true;
     return `${r.nome} ${r.cognome} ${r.squadra_nome ?? ""}`
@@ -315,10 +328,16 @@ function disegnaSquadre() {
   if (!tbody) return;
   const { dati, query } = stato.squadre;
   if (banner)
-    banner.innerHTML = bannerMaglia(dati[0], dati[0]?.squadra_colore ?? "var(--rosa-maglia)", "classifica a squadre");
+    banner.innerHTML = bannerMaglia(
+      dati[0],
+      dati[0]?.squadra_colore ?? "var(--rosa-maglia)",
+      "classifica a squadre",
+    );
   const filtrati = dati.filter((r) => {
     if (!query) return true;
-    return `${r.squadra_nome} ${r.nazione_nome ?? ""}`.toLowerCase().includes(query);
+    return `${r.squadra_nome} ${r.nazione_nome ?? ""}`
+      .toLowerCase()
+      .includes(query);
   });
   tbody.innerHTML =
     filtrati
