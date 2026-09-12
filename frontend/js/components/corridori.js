@@ -177,6 +177,7 @@ function renderBiciclette(corpo) {
   sottoTabAttiva = "biciclette";
   montaListaConForm(corpo, {
     titolo: "Biciclette",
+    placeholderRicerca: "cerca corridore, marca o telaio...",
     apiPath: "/api/biciclette",
     colonne: [
       { key: "corridore_id", label: "Corridore", type: "corridore" },

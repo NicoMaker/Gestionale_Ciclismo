@@ -20,7 +20,9 @@ function renderPenalita(corpo) {
 function renderAntidoping(corpo) {
   montaListaConForm(corpo, {
     titolo: "Controllo antidoping",
+    placeholderRicerca: "cerca corridore, esito o tappa...",
     apiPath: "/api/controlli-antidoping",
+    filtroSelect: { tipo: "tappa", key: "tappa_id", tutte: "tutte le tappe" },
     colonne: [
       { key: "corridore_id", label: "Corridore", type: "corridore" },
       { key: "tappa_id", label: "Tappa", type: "tappa" },

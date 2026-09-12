@@ -4,7 +4,9 @@ import { montaListaConForm } from "./tabella-dati.js";
 function renderMedia(corpo) {
   montaListaConForm(corpo, {
     titolo: "Accredito media",
+    placeholderRicerca: "cerca nome, testata o tappa...",
     apiPath: "/api/media-accreditati",
+    filtroSelect: { tipo: "tappa", key: "tappa_id", tutte: "tutte le tappe" },
     colonne: [
       { key: "nome", label: "Nome", type: "text" },
       { key: "testata", label: "Testata", type: "text" },
@@ -22,7 +24,9 @@ function renderMedia(corpo) {
 function renderComunicati(corpo) {
   montaListaConForm(corpo, {
     titolo: "Comunicato stampa",
+    placeholderRicerca: "cerca titolo o tappa...",
     apiPath: "/api/comunicati-stampa",
+    filtroSelect: { tipo: "tappa", key: "tappa_id", tutte: "tutte le tappe" },
     colonne: [
       { key: "titolo", label: "Titolo", type: "text" },
       { key: "contenuto", label: "Contenuto", type: "text" },

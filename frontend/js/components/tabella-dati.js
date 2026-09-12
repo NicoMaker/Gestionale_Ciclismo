@@ -11,7 +11,7 @@ import {
   htmlNomeSquadra,
   erroreDaResponse,
 } from "../utils.js";
-import { cache, garantisciTappe, garantisciSquadre, garantisciCorridori } from "../state.js";
+import { cache, garantisciTappe, garantisciSquadre, garantisciCorridori, garantisciSponsor } from "../state.js";
 import { socket } from "../socket.js";
 import { icona, iconaValore } from "../icone.js";
 
@@ -123,9 +123,12 @@ export function montaListaConForm(contenitore, cfg) {
   const filtri = normalizzaFiltri(cfg);
   const idBase = "filtro_" + String(cfg.apiPath).replace(/\W/g, "_");
 
-  Promise.all([garantisciTappe(), garantisciSquadre(), garantisciCorridori()]).then(
-    () => avvia(),
-  );
+  Promise.all([
+    garantisciTappe(),
+    garantisciSquadre(),
+    garantisciCorridori(),
+    garantisciSponsor(),
+  ]).then(() => avvia());
 
   function htmlFiltri() {
     return filtri
