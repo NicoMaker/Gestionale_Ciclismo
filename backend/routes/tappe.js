@@ -159,35 +159,6 @@ module.exports = (io) => {
               "Impossibile eliminare: la tappa ha penalità registrate.",
           },
           {
-            sql: "SELECT COUNT(*) AS n FROM controlli_antidoping WHERE tappa_id = ?",
-            parametri: [id],
-            messaggio:
-              "Impossibile eliminare: la tappa ha controlli antidoping registrati.",
-          },
-          {
-            sql: "SELECT COUNT(*) AS n FROM hotel WHERE tappa_id = ?",
-            parametri: [id],
-            messaggio: "Impossibile eliminare: la tappa ha alloggi registrati.",
-          },
-          {
-            sql: "SELECT COUNT(*) AS n FROM meteo_tappa WHERE tappa_id = ?",
-            parametri: [id],
-            messaggio:
-              "Impossibile eliminare: la tappa ha un meteo registrato.",
-          },
-          {
-            sql: "SELECT COUNT(*) AS n FROM media_accreditati WHERE tappa_id = ?",
-            parametri: [id],
-            messaggio:
-              "Impossibile eliminare: la tappa ha media accreditati collegati.",
-          },
-          {
-            sql: "SELECT COUNT(*) AS n FROM comunicati_stampa WHERE tappa_id = ?",
-            parametri: [id],
-            messaggio:
-              "Impossibile eliminare: la tappa ha comunicati stampa collegati.",
-          },
-          {
             sql: "SELECT COUNT(*) AS n FROM ritiri WHERE tappa_id = ?",
             parametri: [id],
             messaggio:

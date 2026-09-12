@@ -9,7 +9,6 @@ const ETICHETTE = {
   corridori: "Corridore",
   tappe: "Tappa",
   nazioni: "Nazione",
-  sponsor: "Sponsor",
 };
 
 // Estrae una descrizione leggibile dai dati salvati, per entità
@@ -23,8 +22,6 @@ function descrizione(entita, dati) {
       return `Tappa ${dati.numero_tappa} — ${dati.nome}`;
     case "nazioni":
       return `${dati.nome} (${dati.codice_iso2})`;
-    case "sponsor":
-      return dati.nome;
     default:
       return `#${dati.id}`;
   }
@@ -155,10 +152,6 @@ function validaRipristino(entita, dati, cb) {
     return;
   }
 
-  if (entita === "sponsor") {
-    return cb(null, null);
-  }
-
   cb(null, "Tipo di elemento del cestino non riconosciuto.");
 }
 
@@ -221,19 +214,6 @@ function eseguiRipristino(entita, dati, cb) {
     return db.run(
       `INSERT INTO nazioni (id, nome, codice_iso2) VALUES (?, ?, ?)`,
       [dati.id, dati.nome, dati.codice_iso2],
-      cb,
-    );
-  }
-  if (entita === "sponsor") {
-    return db.run(
-      `INSERT INTO sponsor (id, nome, settore, sito_web, creato_il) VALUES (?, ?, ?, ?, ?)`,
-      [
-        dati.id,
-        dati.nome,
-        dati.settore || null,
-        dati.sito_web || null,
-        dati.creato_il || new Date().toISOString(),
-      ],
       cb,
     );
   }

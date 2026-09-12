@@ -151,18 +151,6 @@ module.exports = (io) => {
               "Impossibile eliminare: il corridore ha penalità registrate.",
           },
           {
-            sql: "SELECT COUNT(*) AS n FROM controlli_antidoping WHERE corridore_id = ?",
-            parametri: [id],
-            messaggio:
-              "Impossibile eliminare: il corridore ha controlli antidoping registrati.",
-          },
-          {
-            sql: "SELECT COUNT(*) AS n FROM biciclette WHERE corridore_id = ?",
-            parametri: [id],
-            messaggio:
-              "Impossibile eliminare: il corridore ha biciclette collegate.",
-          },
-          {
             sql: "SELECT COUNT(*) AS n FROM ritiri WHERE corridore_id = ?",
             parametri: [id],
             messaggio:
