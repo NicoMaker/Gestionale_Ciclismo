@@ -26,17 +26,17 @@ erDiagram
 
     CESTINO {
         integer id PK
-        text entita "squadre | corridori | tappe | nazioni | sponsor"
-        integer entita_id "id originale della riga eliminata"
-        text dati "snapshot JSON completo della riga, per il ripristino"
+        text entita
+        integer entita_id
+        text dati
         datetime eliminato_il
-        datetime scade_il "eliminato_il + 15 giorni: eliminazione definitiva automatica (cron notturno)"
+        datetime scade_il
     }
 
     NAZIONI {
         integer id PK
         text nome
-        text codice_iso2 "usato per calcolare la bandiera lato frontend"
+        text codice_iso2
     }
     SQUADRE {
         integer id PK
@@ -78,7 +78,7 @@ erDiagram
         integer id PK
         integer tappa_id FK
         real km
-        text tipo "sprint | gpm"
+        text tipo
         text nome_luogo
         text categoria
     }
