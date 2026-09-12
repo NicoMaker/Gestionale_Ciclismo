@@ -4,7 +4,9 @@ import { montaListaConForm } from "./tabella-dati.js";
 function renderPenalita(corpo) {
   montaListaConForm(corpo, {
     titolo: "Penalità",
+    placeholderRicerca: "cerca corridore, motivo o tappa...",
     apiPath: "/api/penalita",
+    filtroSelect: { tipo: "tappa", key: "tappa_id", tutte: "tutte le tappe" },
     colonne: [
       { key: "corridore_id", label: "Corridore", type: "corridore" },
       { key: "tappa_id", label: "Tappa", type: "tappa" },

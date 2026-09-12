@@ -274,7 +274,22 @@ db.serialize(() => {
     )
   `);
 
-  // 21. Cestino (soft-delete): conserva una copia JSON della riga eliminata
+  // 21. Ritiri / infortuni: il corridore esce dalla corsa
+  // - infortunio: non può più partecipare da questa tappa in poi
+  // - non_partecipa: ha chiuso questa tappa, dalla successiva è fuori
+  db.run(`
+    CREATE TABLE IF NOT EXISTS ritiri (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tappa_id INTEGER NOT NULL,
+      corridore_id INTEGER NOT NULL UNIQUE,
+      motivo TEXT NOT NULL CHECK(motivo IN ('infortunio','non_partecipa')),
+      creato_il DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tappa_id) REFERENCES tappe(id) ON DELETE CASCADE,
+      FOREIGN KEY (corridore_id) REFERENCES corridori(id) ON DELETE CASCADE
+    )
+  `);
+
+  // 22. Cestino (soft-delete): conserva una copia JSON della riga eliminata
   // così da poterla ripristinare entro il periodo di ritenzione, oppure
   // farla scadere ed eliminarla definitivamente in automatico (cron).
   db.run(`
@@ -288,7 +303,7 @@ db.serialize(() => {
     )
   `);
 
-  console.log("✓ Schema database verificato/creato (21 tabelle)");
+  console.log("✓ Schema database verificato/creato (22 tabelle)");
 });
 
 module.exports = db;

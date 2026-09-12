@@ -4,6 +4,7 @@ import {
   htmlCampoRicerca,
   attivaCampoRicerca,
   bandiera,
+  htmlNomeSquadra,
 } from "../utils.js";
 import { socket } from "../socket.js";
 import { montaListaConForm } from "./tabella-dati.js";
@@ -27,10 +28,13 @@ function bandieraInline(codiceIso2) {
 
 function bannerMaglia(leader, coloreVar, etichetta, bordoExtra) {
   if (!leader) return "";
-  const nomeSquadra = leader.squadra_nome ?? "—";
+  const nomeSquadra = htmlNomeSquadra(
+    leader.squadra_nome,
+    leader.squadra_nazione_codice,
+  );
   const nomeCompleto = leader.nome
-    ? `${leader.nome} ${leader.cognome}`
-    : leader.squadra_nome;
+    ? `${bandieraInline(leader.nazione_codice)}${leader.nome} ${leader.cognome}`
+    : htmlNomeSquadra(leader.squadra_nome, leader.nazione_codice);
   const sottotitolo = leader.nome
     ? nomeSquadra
     : `${leader.corridori_contati ?? 0} corridori in classifica`;
@@ -38,7 +42,7 @@ function bannerMaglia(leader, coloreVar, etichetta, bordoExtra) {
     <div class="banner-maglia" style="--colore-maglia:${coloreVar};">
       <span class="maglia-dot"${bordoExtra ? ' style="border:2px solid var(--bordo);"' : ""}></span>
       <div>
-        <strong>${bandieraInline(leader.nazione_codice)}${nomeCompleto}</strong>
+        <strong>${nomeCompleto}</strong>
         <span class="maglia-label">indossa la ${etichetta} — ${sottotitolo}</span>
       </div>
     </div>
@@ -93,7 +97,7 @@ function disegnaTempo() {
     <tr class="${pos <= 3 ? "riga-podio" : ""}">
       <td>${m ? `<span class="medaglia-podio">${m}</span>` : pos}</td>
       <td><strong>${bandieraInline(r.nazione_codice)}${r.nome} ${r.cognome}</strong></td>
-      <td>${r.squadra_nome ?? "—"}</td>
+      <td>${htmlNomeSquadra(r.squadra_nome, r.squadra_nazione_codice)}</td>
       <td>${r.tappe_disputate}</td>
       <td><span class="badge badge-codice">${r.tempo_totale}</span></td>
       <td>${r.distacco}</td>
@@ -157,7 +161,7 @@ function disegnaPunti() {
     <tr class="${pos <= 3 ? "riga-podio" : ""}">
       <td>${m ? `<span class="medaglia-podio">${m}</span>` : pos}</td>
       <td><strong>${bandieraInline(r.nazione_codice)}${r.nome} ${r.cognome}</strong></td>
-      <td>${r.squadra_nome ?? "—"}</td>
+      <td>${htmlNomeSquadra(r.squadra_nome, r.squadra_nazione_codice)}</td>
       <td>${r.tappe_disputate}</td>
       <td><span class="badge badge-punti">${r.punti_totali ?? 0}</span></td>
     </tr>
@@ -221,7 +225,7 @@ function disegnaGiovani() {
     <tr class="${pos <= 3 ? "riga-podio" : ""}">
       <td>${m ? `<span class="medaglia-podio">${m}</span>` : pos}</td>
       <td><strong>${bandieraInline(r.nazione_codice)}${r.nome} ${r.cognome}</strong></td>
-      <td>${r.squadra_nome ?? "—"}</td>
+      <td>${htmlNomeSquadra(r.squadra_nome, r.squadra_nazione_codice)}</td>
       <td>${r.eta}</td>
       <td><span class="badge badge-codice">${r.tempo_totale}</span></td>
       <td>${r.distacco}</td>
@@ -285,7 +289,7 @@ function disegnaMontagna() {
     <tr class="${pos <= 3 ? "riga-podio" : ""}">
       <td>${m ? `<span class="medaglia-podio">${m}</span>` : pos}</td>
       <td><strong>${bandieraInline(r.nazione_codice)}${r.nome} ${r.cognome}</strong></td>
-      <td>${r.squadra_nome ?? "—"}</td>
+      <td>${htmlNomeSquadra(r.squadra_nome, r.squadra_nazione_codice)}</td>
       <td>${r.gpm_disputati}</td>
       <td><span class="badge badge-gpm">${r.punti_totali ?? 0}</span></td>
     </tr>
@@ -348,8 +352,7 @@ function disegnaSquadre() {
     <tr class="${pos <= 3 ? "riga-podio" : ""}">
       <td>${m ? `<span class="medaglia-podio">${m}</span>` : pos}</td>
       <td>
-        <span class="dot-colore" style="background:${r.squadra_colore}"></span>
-        <strong>${bandieraInline(r.nazione_codice)}${r.squadra_nome}</strong>
+        <strong>${htmlNomeSquadra(r.squadra_nome, r.nazione_codice, r.squadra_colore)}</strong>
       </td>
       <td>${r.corridori_contati}</td>
       <td><span class="badge badge-codice">${r.tempo_totale}</span></td>
@@ -413,4 +416,5 @@ export function init(container) {
   socket.on("risultati:aggiornati", ricaricaAttiva);
   socket.on("gpm-risultati:aggiornati", ricaricaAttiva);
   socket.on("penalita:aggiornati", ricaricaAttiva);
+  socket.on("ritiri:aggiornati", ricaricaAttiva);
 }

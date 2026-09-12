@@ -46,6 +46,15 @@ export function mostraToast(messaggio) {
    non vengono renderizzate affatto (restano invisibili o mostrano solo le
    due lettere). Per essere visibili SEMPRE, indipendentemente dal
    dispositivo, usiamo delle vere immagini SVG (via flagcdn.com). */
+export function htmlNomeSquadra(nome, codiceIso2, colore) {
+  if (!nome) return "—";
+  const flag = codiceIso2 ? `${bandiera(codiceIso2, 16)} ` : "";
+  const dot = colore
+    ? `<span class="dot-colore" style="background:${colore}"></span>`
+    : "";
+  return `${dot}${flag}${nome}`;
+}
+
 export function bandiera(codiceIso2, larghezzaPx = 20) {
   const codice = (codiceIso2 || "").toString().trim().toUpperCase();
   if (codice.length !== 2 || !/^[A-Z]{2}$/.test(codice)) return "";
@@ -81,7 +90,7 @@ export function htmlCampoRicerca(placeholder) {
 }
 
 export function attivaCampoRicerca(contenitore, onInput) {
-  const input = contenitore.querySelector(".search-input");
+  const input = contenitore.querySelector(".search-box .search-input");
   if (!input) return;
   let timer = null;
   input.addEventListener("input", () => {
@@ -89,6 +98,53 @@ export function attivaCampoRicerca(contenitore, onInput) {
     timer = setTimeout(() => {
       onInput(input.value.trim().toLowerCase());
     }, 120);
+  });
+}
+
+/* ---------- SELECT TAPPA/SQUADRA CON RICERCA ---------- */
+export function htmlSelectConRicerca({
+  id,
+  opzioni,
+  tutteLabel,
+  placeholderRicerca,
+  classeSelect,
+  valore,
+}) {
+  const tutte = tutteLabel ? `<option value="">${tutteLabel}</option>` : "";
+  const opts = (opzioni || [])
+    .map((o) => {
+      const cerca = String(o.cerca || o.label)
+        .toLowerCase()
+        .replace(/"/g, "");
+      const sel = String(valore) === String(o.value) ? "selected" : "";
+      return `<option value="${o.value}" data-cerca="${cerca}" ${sel}>${o.label}</option>`;
+    })
+    .join("");
+  return `
+    <div class="select-filtrato">
+      <input type="search" class="filtro-select-cerca" data-filtra-select="${id}" placeholder="${placeholderRicerca}" autocomplete="off">
+      <select id="${id}" class="${classeSelect || "select-tappa"}">
+        ${tutte}${opts}
+      </select>
+    </div>
+  `;
+}
+
+export function attivaSelectConRicerca(contenitore) {
+  contenitore.querySelectorAll("[data-filtra-select]").forEach((input) => {
+    const sel = document.getElementById(input.dataset.filtraSelect);
+    if (!sel) return;
+    input.addEventListener("input", () => {
+      const q = input.value.trim().toLowerCase();
+      for (const opt of sel.options) {
+        if (!opt.value) {
+          opt.hidden = false;
+          continue;
+        }
+        const testo = (opt.dataset.cerca || opt.textContent).toLowerCase();
+        opt.hidden = Boolean(q) && !testo.includes(q);
+      }
+    });
   });
 }
 

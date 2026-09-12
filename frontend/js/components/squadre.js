@@ -62,7 +62,7 @@ function disegnaElenco() {
       .map(
         (s) => `
     <div class="squadra-card" style="border-top-color:${s.colore || "#e6197f"}">
-      <h3><span class="dot-colore" style="background:${s.colore || "#e6197f"}"></span>${s.nome}</h3>
+      <h3><span class="dot-colore" style="background:${s.colore || "#e6197f"}"></span>${s.nazione_codice ? bandiera(s.nazione_codice, 18) + " " : ""}${s.nome}</h3>
       <p>${s.nazione_codice ? `<span class="bandiera">${bandiera(s.nazione_codice)}</span>${s.nazione_nome}` : "nazione non specificata"}</p>
       <div class="row">
         <button class="btn-icon" title="modifica" data-modifica="${s.id}">${icona("modifica")}</button>
@@ -154,7 +154,9 @@ function renderStaff(corpo) {
   sottoTabAttiva = "staff";
   montaListaConForm(corpo, {
     titolo: "Staff tecnico",
+    placeholderRicerca: "cerca nome, ruolo o squadra...",
     apiPath: "/api/staff-tecnico",
+    filtroSelect: { tipo: "squadra", key: "squadra_id", tutte: "tutte le squadre" },
     colonne: [
       { key: "nome", label: "Nome", type: "text" },
       { key: "cognome", label: "Cognome", type: "text" },
@@ -179,7 +181,9 @@ function renderVeicoli(corpo) {
   sottoTabAttiva = "veicoli";
   montaListaConForm(corpo, {
     titolo: "Veicoli squadra",
+    placeholderRicerca: "cerca targa, modello o squadra...",
     apiPath: "/api/veicoli-squadra",
+    filtroSelect: { tipo: "squadra", key: "squadra_id", tutte: "tutte le squadre" },
     colonne: [
       { key: "squadra_id", label: "Squadra", type: "squadra" },
       {
@@ -210,7 +214,9 @@ function renderSponsor(corpo) {
   garantisciSponsor().then(() => {
     montaListaConForm(document.getElementById("listaSponsorSquadra"), {
       titolo: "Sponsor per squadra",
+      placeholderRicerca: "cerca sponsor o squadra...",
       apiPath: "/api/squadra-sponsor",
+      filtroSelect: { tipo: "squadra", key: "squadra_id", tutte: "tutte le squadre" },
       colonne: [
         { key: "squadra_id", label: "Squadra", type: "squadra" },
         { key: "sponsor_id", label: "Sponsor", type: "sponsor" },
@@ -229,7 +235,12 @@ function renderAlloggi(corpo) {
   sottoTabAttiva = "alloggi";
   montaListaConForm(corpo, {
     titolo: "Alloggi",
+    placeholderRicerca: "cerca hotel, città, tappa o squadra...",
     apiPath: "/api/hotel",
+    filtriSelect: [
+      { tipo: "tappa", key: "tappa_id", tutte: "tutte le tappe" },
+      { tipo: "squadra", key: "squadra_id", tutte: "tutte le squadre" },
+    ],
     colonne: [
       { key: "tappa_id", label: "Tappa", type: "tappa" },
       { key: "squadra_id", label: "Squadra", type: "squadra" },

@@ -7,10 +7,12 @@ module.exports = (io) => {
   router.get("/", (req, res) => {
     const sql = `
       SELECT c.*, s.nome AS squadra_nome, s.colore AS squadra_colore,
-             n.nome AS nazione_nome, n.codice_iso2 AS nazione_codice
+             n.nome AS nazione_nome, n.codice_iso2 AS nazione_codice,
+             ns.codice_iso2 AS squadra_nazione_codice
       FROM corridori c
       LEFT JOIN squadre s ON c.squadra_id = s.id
       LEFT JOIN nazioni n ON c.nazione_id = n.id
+      LEFT JOIN nazioni ns ON s.nazione_id = ns.id
       ORDER BY c.cognome, c.nome
     `;
     db.all(sql, [], (err, rows) => {
@@ -159,6 +161,12 @@ module.exports = (io) => {
             parametri: [id],
             messaggio:
               "Impossibile eliminare: il corridore ha biciclette collegate.",
+          },
+          {
+            sql: "SELECT COUNT(*) AS n FROM ritiri WHERE corridore_id = ?",
+            parametri: [id],
+            messaggio:
+              "Impossibile eliminare: il corridore è registrato tra i ritiri.",
           },
         ],
         (errVerifica, motivoBlocco) => {

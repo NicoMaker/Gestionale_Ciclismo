@@ -11,6 +11,7 @@ import {
 import { cache, caricaTappe } from "../state.js";
 import { socket } from "../socket.js";
 import { montaListaConForm } from "./tabella-dati.js";
+import { montaGestioneRitiri } from "./ritiri-ui.js";
 import { icona, iconaValore } from "../icone.js";
 
 let sottoTabAttiva = "elenco";
@@ -46,7 +47,7 @@ function disegnaElenco() {
   if (!tbody) return;
   const filtrate = cache.tappe.filter((t) => {
     if (!queryCorrente) return true;
-    return `${t.nome} ${t.partenza} ${t.arrivo} ${t.tipo} ${t.stato}`
+    return `${t.numero_tappa} ${t.nome} ${t.partenza} ${t.arrivo} ${t.tipo} ${t.stato} ${t.data ?? ""}`
       .toLowerCase()
       .includes(queryCorrente);
   });
@@ -185,7 +186,9 @@ function renderPercorso(corpo) {
   sottoTabAttiva = "percorso";
   montaListaConForm(corpo, {
     titolo: "Percorso di tappa",
+    placeholderRicerca: "cerca luogo, tipo o tappa...",
     apiPath: "/api/tappe-percorso",
+    filtroSelect: { tipo: "tappa", key: "tappa_id", tutte: "tutte le tappe" },
     colonne: [
       { key: "tappa_id", label: "Tappa", type: "tappa" },
       { key: "km", label: "Km", type: "number" },
@@ -205,7 +208,9 @@ function renderMeteo(corpo) {
   sottoTabAttiva = "meteo";
   montaListaConForm(corpo, {
     titolo: "Meteo di tappa",
+    placeholderRicerca: "cerca condizione o tappa...",
     apiPath: "/api/meteo-tappa",
+    filtroSelect: { tipo: "tappa", key: "tappa_id", tutte: "tutte le tappe" },
     colonne: [
       { key: "tappa_id", label: "Tappa", type: "tappa" },
       { key: "temperatura", label: "Temperatura (°C)", type: "number" },
@@ -220,6 +225,11 @@ function renderMeteo(corpo) {
   });
 }
 
+function renderRitiri(corpo) {
+  sottoTabAttiva = "ritiri";
+  montaGestioneRitiri(corpo);
+}
+
 export function init(container) {
   creaSottoSchede(
     container,
@@ -227,11 +237,13 @@ export function init(container) {
       { key: "elenco", label: "Elenco tappe" },
       { key: "percorso", label: "Percorso (sprint / GPM)" },
       { key: "meteo", label: "Meteo" },
+      { key: "ritiri", label: "Ritiri per tappa" },
     ],
     (key, corpo) => {
       if (key === "elenco") renderElenco(corpo);
       else if (key === "percorso") renderPercorso(corpo);
-      else renderMeteo(corpo);
+      else if (key === "meteo") renderMeteo(corpo);
+      else renderRitiri(corpo);
     },
   );
 

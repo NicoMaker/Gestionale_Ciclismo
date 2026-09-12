@@ -1,6 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db/database");
+const {
+  trovaEsclusione,
+  idsRitirati,
+  messaggioEsclusione,
+} = require("../db/esclusioni");
 
 /* ---------------------------------------------------------------------
  * Helper per convertire i tempi "HH:MM:SS" (colonna risultati.tempo,
@@ -40,10 +45,12 @@ module.exports = (io) => {
       SELECT c.id, c.nome, c.cognome, c.numero_pettorale, c.data_nascita,
              s.id AS squadra_id, s.nome AS squadra_nome, s.colore AS squadra_colore,
              n.nome AS nazione_nome, n.codice_iso2 AS nazione_codice,
+             ns.codice_iso2 AS squadra_nazione_codice,
              r.tempo
       FROM corridori c
       LEFT JOIN squadre s ON c.squadra_id = s.id
       LEFT JOIN nazioni n ON c.nazione_id = n.id
+      LEFT JOIN nazioni ns ON s.nazione_id = ns.id
       LEFT JOIN risultati r ON r.corridore_id = c.id
     `;
     db.all(sqlRisultati, [], (err, righe) => {
@@ -70,6 +77,7 @@ module.exports = (io) => {
                 squadra_colore: r.squadra_colore,
                 nazione_nome: r.nazione_nome,
                 nazione_codice: r.nazione_codice,
+                squadra_nazione_codice: r.squadra_nazione_codice,
                 tappe_disputate: 0,
                 secondi_totali: 0,
               });
@@ -83,7 +91,13 @@ module.exports = (io) => {
           for (const voce of mappa.values()) {
             voce.secondi_totali += secondiPenalita.get(voce.id) || 0;
           }
-          callback(null, Array.from(mappa.values()));
+          idsRitirati((err3, ritirati) => {
+            if (err3) return callback(err3);
+            callback(
+              null,
+              Array.from(mappa.values()).filter((v) => !ritirati.has(v.id)),
+            );
+          });
         },
       );
     });
@@ -109,11 +123,14 @@ module.exports = (io) => {
   router.get("/tappa/:tappaId", (req, res) => {
     const sql = `
       SELECT r.*, c.nome, c.cognome, c.numero_pettorale, s.nome AS squadra_nome,
-             n.nome AS nazione_nome, n.codice_iso2 AS nazione_codice
+             s.colore AS squadra_colore,
+             n.nome AS nazione_nome, n.codice_iso2 AS nazione_codice,
+             ns.codice_iso2 AS squadra_nazione_codice
       FROM risultati r
       JOIN corridori c ON r.corridore_id = c.id
       LEFT JOIN squadre s ON c.squadra_id = s.id
       LEFT JOIN nazioni n ON c.nazione_id = n.id
+      LEFT JOIN nazioni ns ON s.nazione_id = ns.id
       WHERE r.tappa_id = ?
       ORDER BY r.posizione ASC
     `;
@@ -127,7 +144,9 @@ module.exports = (io) => {
   router.get("/classifica-generale", (req, res) => {
     const sql = `
       SELECT c.id, c.nome, c.cognome, c.numero_pettorale, s.nome AS squadra_nome,
+             s.colore AS squadra_colore,
              n.nome AS nazione_nome, n.codice_iso2 AS nazione_codice,
+             ns.codice_iso2 AS squadra_nazione_codice,
              COALESCE((SELECT SUM(r.punti) FROM risultati r WHERE r.corridore_id = c.id), 0)
                - COALESCE((SELECT SUM(p.punti) FROM penalita p WHERE p.corridore_id = c.id), 0)
                AS punti_totali,
@@ -135,6 +154,8 @@ module.exports = (io) => {
       FROM corridori c
       LEFT JOIN squadre s ON c.squadra_id = s.id
       LEFT JOIN nazioni n ON c.nazione_id = n.id
+      LEFT JOIN nazioni ns ON s.nazione_id = ns.id
+      WHERE c.id NOT IN (SELECT corridore_id FROM ritiri)
       GROUP BY c.id
       ORDER BY punti_totali DESC
     `;
@@ -186,12 +207,15 @@ module.exports = (io) => {
       SELECT c.id, c.nome, c.cognome, c.numero_pettorale,
              s.nome AS squadra_nome, s.colore AS squadra_colore,
              n.nome AS nazione_nome, n.codice_iso2 AS nazione_codice,
+             ns.codice_iso2 AS squadra_nazione_codice,
              SUM(g.punti) AS punti_totali,
              COUNT(g.id) AS gpm_disputati
       FROM gpm_risultati g
       JOIN corridori c ON g.corridore_id = c.id
       LEFT JOIN squadre s ON c.squadra_id = s.id
       LEFT JOIN nazioni n ON c.nazione_id = n.id
+      LEFT JOIN nazioni ns ON s.nazione_id = ns.id
+      WHERE c.id NOT IN (SELECT corridore_id FROM ritiri)
       GROUP BY c.id
       ORDER BY punti_totali DESC
     `;
@@ -255,7 +279,14 @@ module.exports = (io) => {
         .status(400)
         .json({ errore: "tappa_id e corridore_id sono obbligatori" });
     }
-    const sql = `
+    trovaEsclusione(corridore_id, tappa_id, (errE, esclusione) => {
+      if (errE) return res.status(500).json({ errore: errE.message });
+      if (esclusione) {
+        return res.status(400).json({
+          errore: messaggioEsclusione(esclusione.motivo),
+        });
+      }
+      const sql = `
       INSERT INTO risultati (tappa_id, corridore_id, posizione, tempo, distacco, punti)
       VALUES (?, ?, ?, ?, ?, ?)
       ON CONFLICT(tappa_id, corridore_id) DO UPDATE SET
@@ -264,30 +295,31 @@ module.exports = (io) => {
         distacco = excluded.distacco,
         punti = excluded.punti
     `;
-    db.run(
-      sql,
-      [
-        tappa_id,
-        corridore_id,
-        posizione || null,
-        tempo || null,
-        distacco || "00:00:00",
-        punti || 0,
-      ],
-      function (err) {
-        if (err) return res.status(400).json({ errore: err.message });
-        const risultato = {
+      db.run(
+        sql,
+        [
           tappa_id,
           corridore_id,
-          posizione,
-          tempo,
-          distacco,
-          punti,
-        };
-        io.emit("risultati:aggiornati", { tipo: "salvato", dato: risultato });
-        res.status(201).json(risultato);
-      },
-    );
+          posizione || null,
+          tempo || null,
+          distacco || "00:00:00",
+          punti || 0,
+        ],
+        function (err) {
+          if (err) return res.status(400).json({ errore: err.message });
+          const risultato = {
+            tappa_id,
+            corridore_id,
+            posizione,
+            tempo,
+            distacco,
+            punti,
+          };
+          io.emit("risultati:aggiornati", { tipo: "salvato", dato: risultato });
+          res.status(201).json(risultato);
+        },
+      );
+    });
   });
 
   router.delete("/:id", (req, res) => {

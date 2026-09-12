@@ -187,6 +187,12 @@ module.exports = (io) => {
             messaggio:
               "Impossibile eliminare: la tappa ha comunicati stampa collegati.",
           },
+          {
+            sql: "SELECT COUNT(*) AS n FROM ritiri WHERE tappa_id = ?",
+            parametri: [id],
+            messaggio:
+              "Impossibile eliminare: la tappa ha ritiri o infortuni registrati.",
+          },
         ],
         (errVerifica, motivoBlocco) => {
           if (errVerifica)

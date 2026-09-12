@@ -10,6 +10,7 @@ const { Server } = require("socket.io");
 
 require("./db/database"); // inizializza lo schema al boot
 const { eliminaScaduti } = require("./db/cestino");
+const { validaPartecipazione } = require("./db/esclusioni");
 const creaRouterGenerico = require("./routes/generic");
 
 const app = express();
@@ -36,6 +37,7 @@ app.use("/api/squadre", require("./routes/squadre")(io));
 app.use("/api/corridori", require("./routes/corridori")(io));
 app.use("/api/tappe", require("./routes/tappe")(io));
 app.use("/api/risultati", require("./routes/risultati")(io));
+app.use("/api/ritiri", require("./routes/ritiri")(io));
 app.use("/api/sponsor", require("./routes/sponsor")(io));
 app.use("/api/cestino", require("./routes/cestino")(io));
 
@@ -78,6 +80,7 @@ app.use(
     io,
     "traguardi-volanti",
     "posizione",
+    validaPartecipazione,
   ),
 );
 app.use(
@@ -88,6 +91,7 @@ app.use(
     io,
     "gpm-risultati",
     "posizione",
+    validaPartecipazione,
   ),
 );
 app.use(
@@ -98,6 +102,7 @@ app.use(
     io,
     "penalita",
     "id",
+    validaPartecipazione,
   ),
 );
 app.use(

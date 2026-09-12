@@ -6,7 +6,10 @@ import {
   creaSottoSchede,
   htmlCampoRicerca,
   attivaCampoRicerca,
+  htmlSelectConRicerca,
+  attivaSelectConRicerca,
   bandiera,
+  htmlNomeSquadra,
   erroreDaResponse,
 } from "../utils.js";
 import {
@@ -17,16 +20,26 @@ import {
   garantisciCorridori,
 } from "../state.js";
 import { socket } from "../socket.js";
-import { montaListaConForm } from "./tabella-dati.js";
+import { montaListaConForm, opzioniSelectTappe } from "./tabella-dati.js";
+import { montaGestioneRitiri } from "./ritiri-ui.js";
 import { icona, medaglia } from "../icone.js";
 
 let sottoTabAttiva = "arrivo";
 let tappaSelezionataId = null;
 
 function htmlSelectTappe(idSelect) {
-  return `<select id="${idSelect}" class="select-tappa">
-    ${cache.tappe.map((t) => `<option value="${t.id}">Tappa ${t.numero_tappa} — ${t.nome}</option>`).join("")}
-  </select>`;
+  return htmlSelectConRicerca({
+    id: idSelect,
+    opzioni: opzioniSelectTappe(),
+    placeholderRicerca: "cerca tappa...",
+    valore: tappaSelezionataId,
+  });
+}
+
+function etichettaMotivo(motivo) {
+  if (motivo === "infortunio") return "infortunio in tappa";
+  if (motivo === "non_partecipa") return "non parteciperà dalla tappa dopo";
+  return motivo;
 }
 
 async function renderArrivo(corpo) {
@@ -47,10 +60,24 @@ async function renderArrivo(corpo) {
         <tbody id="tabellaRisultati"></tbody>
       </table>
     </div>
+    <div class="subtab-sezione sezione-ritiri">
+      <div class="subtab-head">
+        <h4>Ritiri e infortuni a fine tappa</h4>
+        <button class="btn-secondary btn-piccolo" id="btnAggiungiRitiro">${icona("aggiungi")}inserisci ritiro</button>
+      </div>
+      <p class="hint-ritiri">Chi si infortuna in questa tappa, o chi non parteciperà più dalla tappa successiva, va inserito qui. Da quel momento non compare più nelle classifiche e non può gareggiare nelle tappe seguenti.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Pett.</th><th>Corridore</th><th>Squadra</th><th>Motivo</th><th class="th-azioni"></th></tr></thead>
+          <tbody id="tabellaRitiri"></tbody>
+        </table>
+      </div>
+    </div>
   `;
 
   const sel = document.getElementById("selRisultatiTappa");
   sel.value = tappaSelezionataId;
+  attivaSelectConRicerca(corpo);
   sel.addEventListener("change", () => {
     tappaSelezionataId = +sel.value;
     ricaricaArrivo();
@@ -60,6 +87,12 @@ async function renderArrivo(corpo) {
     .addEventListener("click", async () => {
       await garantisciCorridori();
       apriFormRisultato(null);
+    });
+  document
+    .getElementById("btnAggiungiRitiro")
+    .addEventListener("click", async () => {
+      await garantisciCorridori();
+      apriFormRitiro();
     });
   attivaCampoRicerca(corpo, (q) => {
     queryCorrente = q;
@@ -71,13 +104,24 @@ async function renderArrivo(corpo) {
 
 let queryCorrente = "";
 let risultatiCorrenti = [];
+let ritiriCorrenti = [];
+let esclusiCorrenti = [];
+
+function idsEsclusi() {
+  return new Set(esclusiCorrenti.map((e) => e.corridore_id));
+}
 
 async function ricaricaArrivo() {
   const tbody = document.getElementById("tabellaRisultati");
   if (!tbody || !tappaSelezionataId) return;
-  risultatiCorrenti = await apiGet(
-    "/api/risultati/tappa/" + tappaSelezionataId,
-  );
+  const [risultati, ritiri, esclusi] = await Promise.all([
+    apiGet("/api/risultati/tappa/" + tappaSelezionataId),
+    apiGet("/api/ritiri/tappa/" + tappaSelezionataId),
+    apiGet("/api/ritiri/esclusi/" + tappaSelezionataId),
+  ]);
+  risultatiCorrenti = risultati;
+  ritiriCorrenti = ritiri;
+  esclusiCorrenti = esclusi;
   const filtrati = risultatiCorrenti.filter((r) => {
     if (!queryCorrente) return true;
     return `${r.nome} ${r.cognome} ${r.squadra_nome ?? ""}`
@@ -93,7 +137,7 @@ async function ricaricaArrivo() {
       <td>${m ? `<span class="medaglia-podio">${m}</span>` : (r.posizione ?? "—")}</td>
       <td>${r.numero_pettorale ?? "—"}</td>
       <td><strong>${r.nazione_codice ? bandiera(r.nazione_codice, 16) + " " : ""}${r.nome} ${r.cognome}</strong></td>
-      <td>${r.squadra_nome ?? "—"}</td>
+      <td>${htmlNomeSquadra(r.squadra_nome, r.squadra_nazione_codice)}</td>
       <td>${r.tempo ?? "—"}</td>
       <td>${r.distacco}</td>
       <td><span class="badge badge-punti">${r.punti}</span></td>
@@ -118,15 +162,77 @@ async function ricaricaArrivo() {
     .forEach((b) =>
       b.addEventListener("click", () => eliminaRisultato(+b.dataset.elimina)),
     );
+
+  disegnaRitiri();
+}
+
+function disegnaRitiri() {
+  const tbody = document.getElementById("tabellaRitiri");
+  if (!tbody) return;
+  const filtrati = ritiriCorrenti.filter((r) => {
+    if (!queryCorrente) return true;
+    return `${r.nome} ${r.cognome} ${r.squadra_nome ?? ""} ${etichettaMotivo(r.motivo)}`
+      .toLowerCase()
+      .includes(queryCorrente);
+  });
+  tbody.innerHTML =
+    filtrati
+      .map(
+        (r) => `
+    <tr>
+      <td>${r.numero_pettorale ?? "—"}</td>
+      <td><strong>${r.nazione_codice ? bandiera(r.nazione_codice, 16) + " " : ""}${r.nome} ${r.cognome}</strong></td>
+      <td>${htmlNomeSquadra(r.squadra_nome, r.squadra_nazione_codice)}</td>
+      <td><span class="badge badge-${r.motivo}">${etichettaMotivo(r.motivo)}</span></td>
+      <td class="td-azioni">
+        <button class="btn-icon danger" title="elimina" data-elimina-ritiro="${r.id}">${icona("elimina")}</button>
+      </td>
+    </tr>
+  `,
+      )
+      .join("") ||
+    `<tr><td colspan="5" style="text-align:center;color:#999;padding:24px;">Nessun ritiro per questa tappa</td></tr>`;
+
+  tbody
+    .querySelectorAll("[data-elimina-ritiro]")
+    .forEach((b) =>
+      b.addEventListener("click", () =>
+        eliminaRitiro(+b.dataset.eliminaRitiro),
+      ),
+    );
+}
+
+function corridoriDisponibiliPerRisultato(corridoreIdFisso) {
+  const fuori = idsEsclusi();
+  const giaArrivati = new Set(risultatiCorrenti.map((r) => r.corridore_id));
+  return cache.corridori.filter((c) => {
+    if (corridoreIdFisso && c.id === corridoreIdFisso) return true;
+    if (fuori.has(c.id)) return false;
+    if (giaArrivati.has(c.id)) return false;
+    return true;
+  });
+}
+
+function corridoriDisponibiliPerRitiro() {
+  const giaRitirati = new Set(ritiriCorrenti.map((r) => r.corridore_id));
+  const fuori = idsEsclusi();
+  return cache.corridori.filter(
+    (c) => !giaRitirati.has(c.id) && !fuori.has(c.id),
+  );
 }
 
 function apriFormRisultato(risultatoEsistente) {
   const r = risultatoEsistente || {};
+  const elenco = corridoriDisponibiliPerRisultato(r.corridore_id);
+  if (!elenco.length) {
+    mostraToast("Non ci sono corridori ancora in gara per questa tappa");
+    return;
+  }
   apriModal(`
     <h2>${risultatoEsistente ? "Modifica risultato" : "Aggiungi risultato"}</h2>
     <div class="field"><label>Corridore</label>
       <select id="r_corridore" ${risultatoEsistente ? "disabled" : ""}>
-        ${cache.corridori.map((c) => `<option value="${c.id}" ${r.corridore_id === c.id ? "selected" : ""}>${c.nome} ${c.cognome}</option>`).join("")}
+        ${elenco.map((c) => `<option value="${c.id}" ${r.corridore_id === c.id ? "selected" : ""}>${c.nome} ${c.cognome}</option>`).join("")}
       </select>
     </div>
     <div class="field-row">
@@ -148,6 +254,35 @@ function apriFormRisultato(risultatoEsistente) {
     .addEventListener("click", () => salvaRisultato(risultatoEsistente));
 }
 
+function apriFormRitiro() {
+  const elenco = corridoriDisponibiliPerRitiro();
+  if (!elenco.length) {
+    mostraToast("Non ci sono corridori da ritirare per questa tappa");
+    return;
+  }
+  apriModal(`
+    <h2>Ritiro a fine tappa</h2>
+    <div class="field"><label>Corridore</label>
+      <select id="rit_corridore">
+        ${elenco.map((c) => `<option value="${c.id}">${c.nome} ${c.cognome}</option>`).join("")}
+      </select>
+    </div>
+    <div class="field"><label>Motivo</label>
+      <select id="rit_motivo">
+        <option value="infortunio">infortunio in questa tappa (fuori da ora)</option>
+        <option value="non_partecipa">non parteciperà più dalla tappa successiva</option>
+      </select>
+    </div>
+    <p class="hint-ritiri">L'infortunato non deve avere un arrivo in questa tappa. Chi non parte più dalla tappa dopo può comunque avere il risultato di oggi; dalla prossima non potrà più essere inserito e sparisce dalle classifiche.</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="rit_annulla">annulla</button>
+      <button class="btn-primary" id="rit_salva">salva ritiro</button>
+    </div>
+  `);
+  document.getElementById("rit_annulla").addEventListener("click", chiudiModal);
+  document.getElementById("rit_salva").addEventListener("click", salvaRitiro);
+}
+
 async function salvaRisultato(risultatoEsistente) {
   const body = {
     tappa_id: tappaSelezionataId,
@@ -157,13 +292,25 @@ async function salvaRisultato(risultatoEsistente) {
     tempo: document.getElementById("r_tempo").value,
     distacco: document.getElementById("r_distacco").value,
   };
-  // La route risultati fa upsert su (tappa_id, corridore_id): stesso endpoint per crea e modifica
   const res = await apiPost("/api/risultati", body);
   if (res.ok) {
     chiudiModal();
     mostraToast(
       risultatoEsistente ? "Risultato modificato" : "Risultato salvato",
     );
+  } else mostraToast(await erroreDaResponse(res, "Errore nel salvataggio"));
+}
+
+async function salvaRitiro() {
+  const body = {
+    tappa_id: tappaSelezionataId,
+    corridore_id: +document.getElementById("rit_corridore").value,
+    motivo: document.getElementById("rit_motivo").value,
+  };
+  const res = await apiPost("/api/ritiri", body);
+  if (res.ok) {
+    chiudiModal();
+    mostraToast("Ritiro registrato: il corridore esce dalle classifiche");
   } else mostraToast(await erroreDaResponse(res, "Errore nel salvataggio"));
 }
 
@@ -174,11 +321,21 @@ async function eliminaRisultato(id) {
   else mostraToast(await erroreDaResponse(res, "Impossibile eliminare"));
 }
 
+async function eliminaRitiro(id) {
+  if (!confirm("Eliminare questo ritiro? Il corridore tornerà in classifica."))
+    return;
+  const res = await apiDelete("/api/ritiri/" + id);
+  if (res.ok) mostraToast("Ritiro eliminato");
+  else mostraToast(await erroreDaResponse(res, "Impossibile eliminare"));
+}
+
 function renderTraguardiVolanti(corpo) {
   sottoTabAttiva = "traguardi";
   montaListaConForm(corpo, {
     titolo: "Traguardi volanti",
+    placeholderRicerca: "cerca corridore, squadra o tappa...",
     apiPath: "/api/traguardi-volanti",
+    filtroSelect: { tipo: "tappa", key: "tappa_id", tutte: "tutte le tappe" },
     colonne: [
       { key: "tappa_id", label: "Tappa", type: "tappa" },
       { key: "corridore_id", label: "Corridore", type: "corridore" },
@@ -192,7 +349,9 @@ function renderGpm(corpo) {
   sottoTabAttiva = "gpm";
   montaListaConForm(corpo, {
     titolo: "Risultati GPM",
+    placeholderRicerca: "cerca corridore, squadra o tappa...",
     apiPath: "/api/gpm-risultati",
+    filtroSelect: { tipo: "tappa", key: "tappa_id", tutte: "tutte le tappe" },
     colonne: [
       { key: "tappa_id", label: "Tappa", type: "tappa" },
       { key: "corridore_id", label: "Corridore", type: "corridore" },
@@ -202,22 +361,32 @@ function renderGpm(corpo) {
   });
 }
 
+function renderRitiri(corpo) {
+  sottoTabAttiva = "ritiri";
+  montaGestioneRitiri(corpo);
+}
+
 export function init(container) {
   creaSottoSchede(
     container,
     [
       { key: "arrivo", label: "Arrivo di tappa" },
+      { key: "ritiri", label: "Ritiri per tappa" },
       { key: "traguardi", label: "Traguardi volanti" },
       { key: "gpm", label: "Gran Premi Montagna" },
     ],
     (key, corpo) => {
       if (key === "arrivo") renderArrivo(corpo);
+      else if (key === "ritiri") renderRitiri(corpo);
       else if (key === "traguardi") renderTraguardiVolanti(corpo);
       else renderGpm(corpo);
     },
   );
 
   socket.on("risultati:aggiornati", () => {
+    if (sottoTabAttiva === "arrivo") ricaricaArrivo();
+  });
+  socket.on("ritiri:aggiornati", () => {
     if (sottoTabAttiva === "arrivo") ricaricaArrivo();
   });
 }

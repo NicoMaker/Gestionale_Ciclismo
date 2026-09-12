@@ -4,6 +4,7 @@ import {
   chiudiModal,
   mostraToast,
   bandiera,
+  htmlNomeSquadra,
   creaSottoSchede,
   htmlCampoRicerca,
   attivaCampoRicerca,
@@ -71,7 +72,7 @@ function disegnaElenco() {
       <td><span class="badge badge-pettorale">${c.numero_pettorale ?? "—"}</span></td>
       <td><strong>${c.nome} ${c.cognome}</strong></td>
       <td>${c.nazione_codice ? `<span class="bandiera">${bandiera(c.nazione_codice)}</span>${c.nazione_nome}` : "—"}</td>
-      <td>${c.squadra_nome ? `<span class="dot-colore" style="background:${c.squadra_colore || "#999"}"></span>${c.squadra_nome}` : "—"}</td>
+      <td>${htmlNomeSquadra(c.squadra_nome, c.squadra_nazione_codice, c.squadra_colore)}</td>
       <td class="td-azioni">
         <button class="btn-icon" title="modifica" data-modifica="${c.id}">${icona("modifica")}</button>
         <button class="btn-icon danger" title="elimina" data-elimina="${c.id}">${icona("elimina")}</button>
