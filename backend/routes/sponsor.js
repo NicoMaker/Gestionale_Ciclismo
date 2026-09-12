@@ -12,11 +12,16 @@ module.exports = (io) => {
   });
 
   router.get("/:id", (req, res) => {
-    db.get("SELECT * FROM sponsor WHERE id = ?", [req.params.id], (err, row) => {
-      if (err) return res.status(500).json({ errore: err.message });
-      if (!row) return res.status(404).json({ errore: "Sponsor non trovato" });
-      res.json(row);
-    });
+    db.get(
+      "SELECT * FROM sponsor WHERE id = ?",
+      [req.params.id],
+      (err, row) => {
+        if (err) return res.status(500).json({ errore: err.message });
+        if (!row)
+          return res.status(404).json({ errore: "Sponsor non trovato" });
+        res.json(row);
+      },
+    );
   });
 
   router.post("/", (req, res) => {
@@ -44,7 +49,10 @@ module.exports = (io) => {
         if (err) return res.status(400).json({ errore: err.message });
         if (this.changes === 0)
           return res.status(404).json({ errore: "Sponsor non trovato" });
-        io.emit("sponsor:aggiornati", { tipo: "modificata", id: req.params.id });
+        io.emit("sponsor:aggiornati", {
+          tipo: "modificata",
+          id: req.params.id,
+        });
         res.json({ id: req.params.id, nome, settore, sito_web });
       },
     );
@@ -70,13 +78,15 @@ module.exports = (io) => {
         (errVerifica, motivoBlocco) => {
           if (errVerifica)
             return res.status(500).json({ errore: errVerifica.message });
-          if (motivoBlocco) return res.status(409).json({ errore: motivoBlocco });
+          if (motivoBlocco)
+            return res.status(409).json({ errore: motivoBlocco });
 
           spostaInCestino("sponsor", riga, (errCestino) => {
             if (errCestino)
               return res.status(500).json({ errore: errCestino.message });
             db.run("DELETE FROM sponsor WHERE id = ?", [id], function (errDel) {
-              if (errDel) return res.status(400).json({ errore: errDel.message });
+              if (errDel)
+                return res.status(400).json({ errore: errDel.message });
               io.emit("sponsor:aggiornati", { tipo: "eliminata", id });
               io.emit("cestino:aggiornato", { tipo: "creato" });
               res.json({ ok: true, cestino: true });

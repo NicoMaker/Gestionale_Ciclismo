@@ -115,7 +115,9 @@ function validaRipristino(entita, dati, cb) {
         },
       );
     };
-    controllaSquadra(() => controllaNazione(() => controllaPettorale(() => cb(null, null))));
+    controllaSquadra(() =>
+      controllaNazione(() => controllaPettorale(() => cb(null, null))),
+    );
     return;
   }
 
@@ -275,52 +277,58 @@ module.exports = (io) => {
 
   // Ripristina un elemento, solo se non genera conflitti/riferimenti rotti
   router.post("/:id/ripristina", (req, res) => {
-    db.get("SELECT * FROM cestino WHERE id = ?", [req.params.id], (err, riga) => {
-      if (err) return res.status(500).json({ errore: err.message });
-      if (!riga)
-        return res.status(404).json({ errore: "Elemento del cestino non trovato" });
+    db.get(
+      "SELECT * FROM cestino WHERE id = ?",
+      [req.params.id],
+      (err, riga) => {
+        if (err) return res.status(500).json({ errore: err.message });
+        if (!riga)
+          return res
+            .status(404)
+            .json({ errore: "Elemento del cestino non trovato" });
 
-      const dati = JSON.parse(riga.dati);
+        const dati = JSON.parse(riga.dati);
 
-      validaRipristino(riga.entita, dati, (errValida, motivoBlocco) => {
-        if (errValida) return res.status(500).json({ errore: errValida.message });
-        if (motivoBlocco)
-          return res.status(409).json({ errore: motivoBlocco });
+        validaRipristino(riga.entita, dati, (errValida, motivoBlocco) => {
+          if (errValida)
+            return res.status(500).json({ errore: errValida.message });
+          if (motivoBlocco)
+            return res.status(409).json({ errore: motivoBlocco });
 
-        eseguiRipristino(riga.entita, dati, function (errIns) {
-          if (errIns)
-            return res.status(409).json({
-              errore:
-                "Impossibile ripristinare: " +
-                errIns.message +
-                ". Probabilmente esiste già un elemento con lo stesso identificativo.",
+          eseguiRipristino(riga.entita, dati, function (errIns) {
+            if (errIns)
+              return res.status(409).json({
+                errore:
+                  "Impossibile ripristinare: " +
+                  errIns.message +
+                  ". Probabilmente esiste già un elemento con lo stesso identificativo.",
+              });
+
+            db.run("DELETE FROM cestino WHERE id = ?", [riga.id], (errDel) => {
+              if (errDel)
+                return res.status(500).json({ errore: errDel.message });
+              io.emit(`${riga.entita}:aggiornate`, { tipo: "creata" });
+              io.emit(`${riga.entita}:aggiornati`, { tipo: "creata" });
+              io.emit("cestino:aggiornato", { tipo: "ripristinato" });
+              res.json({ ok: true, entita: riga.entita, dati });
             });
-
-          db.run("DELETE FROM cestino WHERE id = ?", [riga.id], (errDel) => {
-            if (errDel) return res.status(500).json({ errore: errDel.message });
-            io.emit(`${riga.entita}:aggiornate`, { tipo: "creata" });
-            io.emit(`${riga.entita}:aggiornati`, { tipo: "creata" });
-            io.emit("cestino:aggiornato", { tipo: "ripristinato" });
-            res.json({ ok: true, entita: riga.entita, dati });
           });
         });
-      });
-    });
+      },
+    );
   });
 
   // Elimina definitivamente e in modo permanente un singolo elemento del cestino
   router.delete("/:id", (req, res) => {
-    db.run(
-      "DELETE FROM cestino WHERE id = ?",
-      [req.params.id],
-      function (err) {
-        if (err) return res.status(400).json({ errore: err.message });
-        if (this.changes === 0)
-          return res.status(404).json({ errore: "Elemento del cestino non trovato" });
-        io.emit("cestino:aggiornato", { tipo: "eliminato_definitivo" });
-        res.json({ ok: true });
-      },
-    );
+    db.run("DELETE FROM cestino WHERE id = ?", [req.params.id], function (err) {
+      if (err) return res.status(400).json({ errore: err.message });
+      if (this.changes === 0)
+        return res
+          .status(404)
+          .json({ errore: "Elemento del cestino non trovato" });
+      io.emit("cestino:aggiornato", { tipo: "eliminato_definitivo" });
+      res.json({ ok: true });
+    });
   });
 
   // Svuota completamente e definitivamente il cestino

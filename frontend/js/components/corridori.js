@@ -158,10 +158,18 @@ async function salvaCorridore(corridoreEsistente, leggiNazioneId) {
 }
 
 async function eliminaCorridore(id) {
-  if (!confirm("Eliminare questo corridore? Verrà spostato nel cestino per 15 giorni.")) return;
+  if (
+    !confirm(
+      "Eliminare questo corridore? Verrà spostato nel cestino per 15 giorni.",
+    )
+  )
+    return;
   const res = await apiDelete("/api/corridori/" + id);
   if (res.ok) mostraToast("Corridore spostato nel cestino");
-  else mostraToast(await erroreDaResponse(res, "Impossibile eliminare il corridore"));
+  else
+    mostraToast(
+      await erroreDaResponse(res, "Impossibile eliminare il corridore"),
+    );
 }
 
 function renderBiciclette(corpo) {

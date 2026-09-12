@@ -28,12 +28,24 @@ const RICARICA_PER_ENTITA = {
 function formattaData(iso) {
   if (!iso) return "—";
   const d = new Date(iso);
-  return d.toLocaleDateString("it-IT") + " " + d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+  return (
+    d.toLocaleDateString("it-IT") +
+    " " +
+    d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })
+  );
 }
 
 function badgeScadenza(giorni) {
-  const classe = giorni <= 3 ? "badge-positivo" : giorni <= 7 ? "badge-cronometro" : "badge-pianura";
-  const testo = giorni <= 0 ? "scade oggi" : `scade tra ${giorni} giorn${giorni === 1 ? "o" : "i"}`;
+  const classe =
+    giorni <= 3
+      ? "badge-positivo"
+      : giorni <= 7
+        ? "badge-cronometro"
+        : "badge-pianura";
+  const testo =
+    giorni <= 0
+      ? "scade oggi"
+      : `scade tra ${giorni} giorn${giorni === 1 ? "o" : "i"}`;
   return `<span class="badge ${classe}">${testo}</span>`;
 }
 
@@ -41,7 +53,9 @@ function disegna() {
   if (!tbodyGlobale) return;
   const filtrate = vociCorrenti.filter((v) => {
     if (!queryCorrente) return true;
-    return `${v.etichetta} ${v.descrizione}`.toLowerCase().includes(queryCorrente);
+    return `${v.etichetta} ${v.descrizione}`
+      .toLowerCase()
+      .includes(queryCorrente);
   });
   tbodyGlobale.innerHTML =
     filtrate
@@ -65,12 +79,18 @@ function disegna() {
   if (contatoreGlobale)
     contatoreGlobale.textContent = `${vociCorrenti.length} element${vociCorrenti.length === 1 ? "o" : "i"} nel cestino`;
 
-  tbodyGlobale.querySelectorAll("[data-ripristina]").forEach((b) =>
-    b.addEventListener("click", () => ripristina(+b.dataset.ripristina)),
-  );
-  tbodyGlobale.querySelectorAll("[data-elimina-def]").forEach((b) =>
-    b.addEventListener("click", () => eliminaDefinitivo(+b.dataset.eliminaDef)),
-  );
+  tbodyGlobale
+    .querySelectorAll("[data-ripristina]")
+    .forEach((b) =>
+      b.addEventListener("click", () => ripristina(+b.dataset.ripristina)),
+    );
+  tbodyGlobale
+    .querySelectorAll("[data-elimina-def]")
+    .forEach((b) =>
+      b.addEventListener("click", () =>
+        eliminaDefinitivo(+b.dataset.eliminaDef),
+      ),
+    );
 }
 
 async function ricarica() {

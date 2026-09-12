@@ -164,7 +164,8 @@ module.exports = (io) => {
         (errVerifica, motivoBlocco) => {
           if (errVerifica)
             return res.status(500).json({ errore: errVerifica.message });
-          if (motivoBlocco) return res.status(409).json({ errore: motivoBlocco });
+          if (motivoBlocco)
+            return res.status(409).json({ errore: motivoBlocco });
 
           spostaInCestino("corridori", riga, (errCestino) => {
             if (errCestino)

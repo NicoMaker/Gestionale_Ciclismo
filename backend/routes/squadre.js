@@ -108,13 +108,15 @@ module.exports = (io) => {
         (errVerifica, motivoBlocco) => {
           if (errVerifica)
             return res.status(500).json({ errore: errVerifica.message });
-          if (motivoBlocco) return res.status(409).json({ errore: motivoBlocco });
+          if (motivoBlocco)
+            return res.status(409).json({ errore: motivoBlocco });
 
           spostaInCestino("squadre", riga, (errCestino) => {
             if (errCestino)
               return res.status(500).json({ errore: errCestino.message });
             db.run("DELETE FROM squadre WHERE id = ?", [id], function (errDel) {
-              if (errDel) return res.status(400).json({ errore: errDel.message });
+              if (errDel)
+                return res.status(400).json({ errore: errDel.message });
               io.emit("squadre:aggiornate", { tipo: "eliminata", id });
               io.emit("cestino:aggiornato", { tipo: "creato" });
               res.json({ ok: true, cestino: true });

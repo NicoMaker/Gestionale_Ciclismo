@@ -163,10 +163,16 @@ async function salvaTappa(tappaEsistente) {
 }
 
 async function eliminaTappa(id) {
-  if (!confirm("Eliminare questa tappa? Verrà spostata nel cestino per 15 giorni.")) return;
+  if (
+    !confirm(
+      "Eliminare questa tappa? Verrà spostata nel cestino per 15 giorni.",
+    )
+  )
+    return;
   const res = await apiDelete("/api/tappe/" + id);
   if (res.ok) mostraToast("Tappa spostata nel cestino");
-  else mostraToast(await erroreDaResponse(res, "Impossibile eliminare la tappa"));
+  else
+    mostraToast(await erroreDaResponse(res, "Impossibile eliminare la tappa"));
 }
 
 function avviaDiretta(tappaId) {

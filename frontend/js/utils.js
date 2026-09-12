@@ -55,7 +55,10 @@ export function bandiera(codiceIso2, larghezzaPx = 20) {
 
 /* ---------- ERRORI API ---------- */
 // Estrae il messaggio di errore da una Response non-ok (o testo generico)
-export async function erroreDaResponse(res, generico = "Si è verificato un errore") {
+export async function erroreDaResponse(
+  res,
+  generico = "Si è verificato un errore",
+) {
   try {
     const corpo = await res.json();
     return corpo?.errore || generico;

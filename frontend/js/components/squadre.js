@@ -136,10 +136,18 @@ async function salvaSquadra(squadraEsistente, leggiNazioneId) {
 }
 
 async function eliminaSquadra(id) {
-  if (!confirm("Eliminare questa squadra? Verrà spostata nel cestino per 15 giorni.")) return;
+  if (
+    !confirm(
+      "Eliminare questa squadra? Verrà spostata nel cestino per 15 giorni.",
+    )
+  )
+    return;
   const res = await apiDelete("/api/squadre/" + id);
   if (res.ok) mostraToast("Squadra spostata nel cestino");
-  else mostraToast(await erroreDaResponse(res, "Impossibile eliminare la squadra"));
+  else
+    mostraToast(
+      await erroreDaResponse(res, "Impossibile eliminare la squadra"),
+    );
 }
 
 function renderStaff(corpo) {

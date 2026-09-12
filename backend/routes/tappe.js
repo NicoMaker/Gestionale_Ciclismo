@@ -155,7 +155,8 @@ module.exports = (io) => {
           {
             sql: "SELECT COUNT(*) AS n FROM penalita WHERE tappa_id = ?",
             parametri: [id],
-            messaggio: "Impossibile eliminare: la tappa ha penalità registrate.",
+            messaggio:
+              "Impossibile eliminare: la tappa ha penalità registrate.",
           },
           {
             sql: "SELECT COUNT(*) AS n FROM controlli_antidoping WHERE tappa_id = ?",
@@ -171,7 +172,8 @@ module.exports = (io) => {
           {
             sql: "SELECT COUNT(*) AS n FROM meteo_tappa WHERE tappa_id = ?",
             parametri: [id],
-            messaggio: "Impossibile eliminare: la tappa ha un meteo registrato.",
+            messaggio:
+              "Impossibile eliminare: la tappa ha un meteo registrato.",
           },
           {
             sql: "SELECT COUNT(*) AS n FROM media_accreditati WHERE tappa_id = ?",
@@ -189,13 +191,15 @@ module.exports = (io) => {
         (errVerifica, motivoBlocco) => {
           if (errVerifica)
             return res.status(500).json({ errore: errVerifica.message });
-          if (motivoBlocco) return res.status(409).json({ errore: motivoBlocco });
+          if (motivoBlocco)
+            return res.status(409).json({ errore: motivoBlocco });
 
           spostaInCestino("tappe", riga, (errCestino) => {
             if (errCestino)
               return res.status(500).json({ errore: errCestino.message });
             db.run("DELETE FROM tappe WHERE id = ?", [id], function (errDel) {
-              if (errDel) return res.status(400).json({ errore: errDel.message });
+              if (errDel)
+                return res.status(400).json({ errore: errDel.message });
               io.emit("tappe:aggiornate", { tipo: "eliminata", id });
               io.emit("cestino:aggiornato", { tipo: "creato" });
               res.json({ ok: true, cestino: true });

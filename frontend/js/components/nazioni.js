@@ -109,7 +109,13 @@ async function salvaNazione(nazioneEsistente) {
   if (res.ok) {
     chiudiModal();
     mostraToast(nazioneEsistente ? "Nazione modificata" : "Nazione aggiunta");
-  } else mostraToast(await erroreDaResponse(res, "Errore nel salvataggio (nome o codice già usati?)"));
+  } else
+    mostraToast(
+      await erroreDaResponse(
+        res,
+        "Errore nel salvataggio (nome o codice già usati?)",
+      ),
+    );
 }
 
 async function eliminaNazione(id) {
@@ -121,7 +127,10 @@ async function eliminaNazione(id) {
     return;
   const res = await apiDelete("/api/nazioni/" + id);
   if (res.ok) mostraToast("Nazione spostata nel cestino");
-  else mostraToast(await erroreDaResponse(res, "Impossibile eliminare la nazione"));
+  else
+    mostraToast(
+      await erroreDaResponse(res, "Impossibile eliminare la nazione"),
+    );
 }
 
 export function init(container) {
