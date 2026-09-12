@@ -22,10 +22,7 @@ import {
   htmlCampoNazione,
   attivaCampoNazione,
 } from "./nazione-autocomplete.js";
-import {
-  htmlCampoEntita,
-  attivaCampoEntita,
-} from "./entita-autocomplete.js";
+import { htmlCampoEntita, attivaCampoEntita } from "./entita-autocomplete.js";
 import { icona } from "../icone.js";
 
 const MOTIVI_RITIRO = {
@@ -175,7 +172,11 @@ function apriFormCorridore(corridoreEsistente) {
     );
 }
 
-async function salvaCorridore(corridoreEsistente, leggiNazioneId, leggiSquadraId) {
+async function salvaCorridore(
+  corridoreEsistente,
+  leggiNazioneId,
+  leggiSquadraId,
+) {
   const body = {
     nome: document.getElementById("c_nome").value,
     cognome: document.getElementById("c_cognome").value,
@@ -263,18 +264,15 @@ function apriFormRitiro(corridore) {
       <button class="btn-primary" id="rit_conferma">conferma ritiro</button>
     </div>
   `);
+  document.getElementById("rit_annulla").addEventListener("click", chiudiModal);
   document
-    .getElementById("rit_annulla")
-    .addEventListener("click", chiudiModal);
-  document.getElementById("rit_conferma").addEventListener("click", () =>
-    confermaRitiro(c.id),
-  );
+    .getElementById("rit_conferma")
+    .addEventListener("click", () => confermaRitiro(c.id));
 }
 
 async function confermaRitiro(corridoreId) {
   const body = {
-    ritirato_tappa_numero:
-      +document.getElementById("rit_tappa").value || null,
+    ritirato_tappa_numero: +document.getElementById("rit_tappa").value || null,
     motivo_ritiro: document.getElementById("rit_motivo").value,
     note_ritiro: document.getElementById("rit_note").value || null,
   };

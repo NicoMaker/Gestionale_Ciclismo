@@ -71,12 +71,16 @@ socket.on("stato-live:aggiornato", (stato) => {
 });
 
 // ---------- Avvio ----------
-Promise.all([caricaNazioni(), caricaTappe(), caricaCorridori(), caricaSquadre()])
-  .catch((err) => {
-    console.error("Avvio: impossibile caricare i dati iniziali —", err);
-    mostraToast(
-      err?.message ||
-        "Impossibile contattare il server. Avvia il backend con 'npm start' sulla porta 3000.",
-    );
-  });
+Promise.all([
+  caricaNazioni(),
+  caricaTappe(),
+  caricaCorridori(),
+  caricaSquadre(),
+]).catch((err) => {
+  console.error("Avvio: impossibile caricare i dati iniziali —", err);
+  mostraToast(
+    err?.message ||
+      "Impossibile contattare il server. Avvia il backend con 'npm start' sulla porta 3000.",
+  );
+});
 mostraSezione("tappe");

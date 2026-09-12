@@ -11,10 +11,7 @@ import {
 import { cache } from "../state.js";
 import { socket } from "../socket.js";
 import { icona, iconaValore } from "../icone.js";
-import {
-  htmlCampoEntita,
-  attivaCampoEntita,
-} from "./entita-autocomplete.js";
+import { htmlCampoEntita, attivaCampoEntita } from "./entita-autocomplete.js";
 
 const TIPI_ENTITA = ["squadra", "corridore", "tappa", "sponsor"];
 

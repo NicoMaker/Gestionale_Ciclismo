@@ -21,10 +21,7 @@ async function leggiJsonSicuro(res) {
     if (contentType.includes("application/json")) {
       try {
         const corpo = JSON.parse(testo);
-        throw new ApiError(
-          corpo?.errore || `Errore ${res.status}`,
-          res.status,
-        );
+        throw new ApiError(corpo?.errore || `Errore ${res.status}`, res.status);
       } catch (e) {
         if (e instanceof ApiError) throw e;
       }
