@@ -369,18 +369,6 @@ async function ricaricaSquadre() {
   disegnaSquadre();
 }
 
-function renderTipiClassifica(corpo) {
-  sottoTabAttiva = "tipi";
-  montaListaConForm(corpo, {
-    titolo: "Tipo di classifica",
-    apiPath: "/api/classifiche-tipo",
-    colonne: [
-      { key: "nome", label: "Nome", type: "text" },
-      { key: "descrizione", label: "Descrizione", type: "text" },
-    ],
-  });
-}
-
 function ricaricaAttiva() {
   if (sottoTabAttiva === "tempo") ricaricaTempo();
   else if (sottoTabAttiva === "punti") ricaricaPunti();
@@ -398,15 +386,13 @@ export function init(container) {
       { key: "giovani", label: "Giovani (maglia bianca)" },
       { key: "montagna", label: "Scalatori GPM (maglia verde)" },
       { key: "squadre", label: "Classifica squadre" },
-      { key: "tipi", label: "Tipi di classifica" },
     ],
     (key, corpo) => {
       if (key === "tempo") renderTempo(corpo);
       else if (key === "punti") renderPunti(corpo);
       else if (key === "giovani") renderGiovani(corpo);
       else if (key === "montagna") renderMontagna(corpo);
-      else if (key === "squadre") renderSquadre(corpo);
-      else renderTipiClassifica(corpo);
+      else renderSquadre(corpo);
     },
   );
 

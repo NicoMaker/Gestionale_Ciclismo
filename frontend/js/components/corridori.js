@@ -173,31 +173,12 @@ async function eliminaCorridore(id) {
     );
 }
 
-function renderBiciclette(corpo) {
-  sottoTabAttiva = "biciclette";
-  montaListaConForm(corpo, {
-    titolo: "Biciclette",
-    placeholderRicerca: "cerca corridore, marca o telaio...",
-    apiPath: "/api/biciclette",
-    colonne: [
-      { key: "corridore_id", label: "Corridore", type: "corridore" },
-      { key: "marca", label: "Marca", type: "text" },
-      { key: "modello", label: "Modello", type: "text" },
-      { key: "telaio", label: "N. telaio", type: "text" },
-    ],
-  });
-}
-
 export function init(container) {
   creaSottoSchede(
     container,
-    [
-      { key: "elenco", label: "Elenco corridori" },
-      { key: "biciclette", label: "Biciclette" },
-    ],
+    [{ key: "elenco", label: "Elenco corridori" }],
     (key, corpo) => {
       if (key === "elenco") renderElenco(corpo);
-      else renderBiciclette(corpo);
     },
   );
 

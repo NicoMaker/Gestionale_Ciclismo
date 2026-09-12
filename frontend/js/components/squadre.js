@@ -150,123 +150,12 @@ async function eliminaSquadra(id) {
     );
 }
 
-function renderStaff(corpo) {
-  sottoTabAttiva = "staff";
-  montaListaConForm(corpo, {
-    titolo: "Staff tecnico",
-    placeholderRicerca: "cerca nome, ruolo o squadra...",
-    apiPath: "/api/staff-tecnico",
-    filtroSelect: { tipo: "squadra", key: "squadra_id", tutte: "tutte le squadre" },
-    colonne: [
-      { key: "nome", label: "Nome", type: "text" },
-      { key: "cognome", label: "Cognome", type: "text" },
-      {
-        key: "ruolo",
-        label: "Ruolo",
-        type: "select",
-        opzioni: [
-          "direttore_sportivo",
-          "meccanico",
-          "medico",
-          "massaggiatore",
-          "preparatore_atletico",
-        ],
-      },
-      { key: "squadra_id", label: "Squadra", type: "squadra" },
-    ],
-  });
-}
-
-function renderVeicoli(corpo) {
-  sottoTabAttiva = "veicoli";
-  montaListaConForm(corpo, {
-    titolo: "Veicoli squadra",
-    placeholderRicerca: "cerca targa, modello o squadra...",
-    apiPath: "/api/veicoli-squadra",
-    filtroSelect: { tipo: "squadra", key: "squadra_id", tutte: "tutte le squadre" },
-    colonne: [
-      { key: "squadra_id", label: "Squadra", type: "squadra" },
-      {
-        key: "tipo",
-        label: "Tipo",
-        type: "select",
-        opzioni: ["ammiraglia", "furgone", "bus", "camper"],
-      },
-      { key: "targa", label: "Targa", type: "text" },
-      { key: "modello", label: "Modello", type: "text" },
-    ],
-  });
-}
-
-function renderSponsor(corpo) {
-  sottoTabAttiva = "sponsor";
-  corpo.innerHTML = `<div class="subtab-sezione"><h4>Anagrafica sponsor</h4><div id="listaSponsorAnagrafica"></div></div>
-                      <div class="subtab-sezione"><h4>Sponsor per squadra</h4><div id="listaSponsorSquadra"></div></div>`;
-  montaListaConForm(document.getElementById("listaSponsorAnagrafica"), {
-    titolo: "Sponsor",
-    apiPath: "/api/sponsor",
-    colonne: [
-      { key: "nome", label: "Nome", type: "text" },
-      { key: "settore", label: "Settore", type: "text" },
-      { key: "sito_web", label: "Sito web", type: "text" },
-    ],
-  });
-  garantisciSponsor().then(() => {
-    montaListaConForm(document.getElementById("listaSponsorSquadra"), {
-      titolo: "Sponsor per squadra",
-      placeholderRicerca: "cerca sponsor o squadra...",
-      apiPath: "/api/squadra-sponsor",
-      filtroSelect: { tipo: "squadra", key: "squadra_id", tutte: "tutte le squadre" },
-      colonne: [
-        { key: "squadra_id", label: "Squadra", type: "squadra" },
-        { key: "sponsor_id", label: "Sponsor", type: "sponsor" },
-        {
-          key: "tipo",
-          label: "Tipo",
-          type: "select",
-          opzioni: ["main_sponsor", "co_sponsor", "fornitore_tecnico"],
-        },
-      ],
-    });
-  });
-}
-
-function renderAlloggi(corpo) {
-  sottoTabAttiva = "alloggi";
-  montaListaConForm(corpo, {
-    titolo: "Alloggi",
-    placeholderRicerca: "cerca hotel, città, tappa o squadra...",
-    apiPath: "/api/hotel",
-    filtriSelect: [
-      { tipo: "tappa", key: "tappa_id", tutte: "tutte le tappe" },
-      { tipo: "squadra", key: "squadra_id", tutte: "tutte le squadre" },
-    ],
-    colonne: [
-      { key: "tappa_id", label: "Tappa", type: "tappa" },
-      { key: "squadra_id", label: "Squadra", type: "squadra" },
-      { key: "nome", label: "Nome hotel", type: "text" },
-      { key: "citta", label: "Città", type: "text" },
-      { key: "indirizzo", label: "Indirizzo", type: "text" },
-    ],
-  });
-}
-
 export function init(container) {
   creaSottoSchede(
     container,
-    [
-      { key: "elenco", label: "Elenco squadre" },
-      { key: "staff", label: "Staff tecnico" },
-      { key: "veicoli", label: "Veicoli" },
-      { key: "sponsor", label: "Sponsor" },
-      { key: "alloggi", label: "Alloggi" },
-    ],
+    [{ key: "elenco", label: "Elenco squadre" }],
     (key, corpo) => {
       if (key === "elenco") renderElenco(corpo);
-      else if (key === "staff") renderStaff(corpo);
-      else if (key === "veicoli") renderVeicoli(corpo);
-      else if (key === "sponsor") renderSponsor(corpo);
-      else renderAlloggi(corpo);
     },
   );
 

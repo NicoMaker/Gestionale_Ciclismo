@@ -204,27 +204,6 @@ function renderPercorso(corpo) {
   });
 }
 
-function renderMeteo(corpo) {
-  sottoTabAttiva = "meteo";
-  montaListaConForm(corpo, {
-    titolo: "Meteo di tappa",
-    placeholderRicerca: "cerca condizione o tappa...",
-    apiPath: "/api/meteo-tappa",
-    filtroSelect: { tipo: "tappa", key: "tappa_id", tutte: "tutte le tappe" },
-    colonne: [
-      { key: "tappa_id", label: "Tappa", type: "tappa" },
-      { key: "temperatura", label: "Temperatura (°C)", type: "number" },
-      {
-        key: "condizione",
-        label: "Condizione",
-        type: "select",
-        opzioni: ["sereno", "nuvoloso", "pioggia", "vento_forte", "neve"],
-      },
-      { key: "vento_kmh", label: "Vento (km/h)", type: "number" },
-    ],
-  });
-}
-
 function renderRitiri(corpo) {
   sottoTabAttiva = "ritiri";
   montaGestioneRitiri(corpo);
@@ -236,13 +215,11 @@ export function init(container) {
     [
       { key: "elenco", label: "Elenco tappe" },
       { key: "percorso", label: "Percorso (sprint / GPM)" },
-      { key: "meteo", label: "Meteo" },
       { key: "ritiri", label: "Ritiri per tappa" },
     ],
     (key, corpo) => {
       if (key === "elenco") renderElenco(corpo);
       else if (key === "percorso") renderPercorso(corpo);
-      else if (key === "meteo") renderMeteo(corpo);
       else renderRitiri(corpo);
     },
   );
