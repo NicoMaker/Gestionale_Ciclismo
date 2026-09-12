@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db/database");
+const { verificaEliminabile, spostaInCestino } = require("../db/cestino");
 
 module.exports = (io) => {
   router.get("/", (req, res) => {
@@ -63,13 +64,64 @@ module.exports = (io) => {
     );
   });
 
+  // Eliminazione (soft-delete): la squadra finisce nel cestino solo se non
+  // ha corridori o veicoli/staff/hotel/sponsor ancora collegati.
   router.delete("/:id", (req, res) => {
-    db.run("DELETE FROM squadre WHERE id = ?", [req.params.id], function (err) {
-      if (err) return res.status(400).json({ errore: err.message });
-      if (this.changes === 0)
-        return res.status(404).json({ errore: "Squadra non trovata" });
-      io.emit("squadre:aggiornate", { tipo: "eliminata", id: req.params.id });
-      res.json({ ok: true });
+    const id = req.params.id;
+    db.get("SELECT * FROM squadre WHERE id = ?", [id], (err, riga) => {
+      if (err) return res.status(500).json({ errore: err.message });
+      if (!riga) return res.status(404).json({ errore: "Squadra non trovata" });
+
+      verificaEliminabile(
+        [
+          {
+            sql: "SELECT COUNT(*) AS n FROM corridori WHERE squadra_id = ?",
+            parametri: [id],
+            messaggio:
+              "Impossibile eliminare: ci sono corridori collegati a questa squadra. Riassegnali o eliminali prima.",
+          },
+          {
+            sql: "SELECT COUNT(*) AS n FROM staff_tecnico WHERE squadra_id = ?",
+            parametri: [id],
+            messaggio:
+              "Impossibile eliminare: ci sono membri dello staff tecnico collegati a questa squadra.",
+          },
+          {
+            sql: "SELECT COUNT(*) AS n FROM veicoli_squadra WHERE squadra_id = ?",
+            parametri: [id],
+            messaggio:
+              "Impossibile eliminare: ci sono veicoli collegati a questa squadra.",
+          },
+          {
+            sql: "SELECT COUNT(*) AS n FROM squadra_sponsor WHERE squadra_id = ?",
+            parametri: [id],
+            messaggio:
+              "Impossibile eliminare: ci sono sponsor collegati a questa squadra.",
+          },
+          {
+            sql: "SELECT COUNT(*) AS n FROM hotel WHERE squadra_id = ?",
+            parametri: [id],
+            messaggio:
+              "Impossibile eliminare: ci sono alloggi collegati a questa squadra.",
+          },
+        ],
+        (errVerifica, motivoBlocco) => {
+          if (errVerifica)
+            return res.status(500).json({ errore: errVerifica.message });
+          if (motivoBlocco) return res.status(409).json({ errore: motivoBlocco });
+
+          spostaInCestino("squadre", riga, (errCestino) => {
+            if (errCestino)
+              return res.status(500).json({ errore: errCestino.message });
+            db.run("DELETE FROM squadre WHERE id = ?", [id], function (errDel) {
+              if (errDel) return res.status(400).json({ errore: errDel.message });
+              io.emit("squadre:aggiornate", { tipo: "eliminata", id });
+              io.emit("cestino:aggiornato", { tipo: "creato" });
+              res.json({ ok: true, cestino: true });
+            });
+          });
+        },
+      );
     });
   });
 

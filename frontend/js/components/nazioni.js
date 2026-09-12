@@ -5,6 +5,7 @@ import {
   mostraToast,
   bandiera,
   attivaCampoRicerca,
+  erroreDaResponse,
 } from "../utils.js";
 import { socket } from "../socket.js";
 import { icona } from "../icone.js";
@@ -108,18 +109,19 @@ async function salvaNazione(nazioneEsistente) {
   if (res.ok) {
     chiudiModal();
     mostraToast(nazioneEsistente ? "Nazione modificata" : "Nazione aggiunta");
-  } else mostraToast("Errore nel salvataggio (nome o codice già usati?)");
+  } else mostraToast(await erroreDaResponse(res, "Errore nel salvataggio (nome o codice già usati?)"));
 }
 
 async function eliminaNazione(id) {
   if (
     !confirm(
-      "Eliminare questa nazione? I riferimenti in corridori/squadre verranno svuotati.",
+      "Eliminare questa nazione? Verrà spostata nel cestino per 15 giorni (non è possibile se è ancora usata da corridori o squadre).",
     )
   )
     return;
-  await apiDelete("/api/nazioni/" + id);
-  mostraToast("Nazione eliminata");
+  const res = await apiDelete("/api/nazioni/" + id);
+  if (res.ok) mostraToast("Nazione spostata nel cestino");
+  else mostraToast(await erroreDaResponse(res, "Impossibile eliminare la nazione"));
 }
 
 export function init(container) {

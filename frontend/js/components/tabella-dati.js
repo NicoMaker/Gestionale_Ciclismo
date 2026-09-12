@@ -5,6 +5,8 @@ import {
   chiudiModal,
   htmlCampoRicerca,
   attivaCampoRicerca,
+  bandiera,
+  erroreDaResponse,
 } from "../utils.js";
 import { cache } from "../state.js";
 import { socket } from "../socket.js";
@@ -30,11 +32,15 @@ function opzioniPer(tipo) {
 
 function risolviValore(colonna, valore) {
   if (valore === null || valore === undefined || valore === "") return "—";
-  if (colonna.type === "squadra")
-    return cache.squadre.find((s) => s.id === valore)?.nome ?? valore;
+  if (colonna.type === "squadra") {
+    const s = cache.squadre.find((s) => s.id === valore);
+    if (!s) return valore;
+    return `${s.nazione_codice ? bandiera(s.nazione_codice, 16) + " " : ""}${s.nome}`;
+  }
   if (colonna.type === "corridore") {
     const c = cache.corridori.find((c) => c.id === valore);
-    return c ? `${c.nome} ${c.cognome}` : valore;
+    if (!c) return valore;
+    return `${c.nazione_codice ? bandiera(c.nazione_codice, 16) + " " : ""}${c.nome} ${c.cognome}`;
   }
   if (colonna.type === "tappa") {
     const t = cache.tappe.find((t) => t.id === valore);
@@ -177,9 +183,13 @@ export function montaListaConForm(contenitore, cfg) {
 
     if (btnElimina) {
       if (!confirm("Eliminare questa riga?")) return;
-      await apiDelete(cfg.apiPath + "/" + btnElimina.dataset.id);
-      mostraToast("Eliminato");
-      ricarica();
+      const res = await apiDelete(cfg.apiPath + "/" + btnElimina.dataset.id);
+      if (res.ok) {
+        mostraToast("Eliminato");
+        ricarica();
+      } else {
+        mostraToast(await erroreDaResponse(res, "Impossibile eliminare"));
+      }
     }
   });
 

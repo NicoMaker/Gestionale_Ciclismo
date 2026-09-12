@@ -274,7 +274,21 @@ db.serialize(() => {
     )
   `);
 
-  console.log("✓ Schema database verificato/creato (20 tabelle)");
+  // 21. Cestino (soft-delete): conserva una copia JSON della riga eliminata
+  // così da poterla ripristinare entro il periodo di ritenzione, oppure
+  // farla scadere ed eliminarla definitivamente in automatico (cron).
+  db.run(`
+    CREATE TABLE IF NOT EXISTS cestino (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      entita TEXT NOT NULL,
+      entita_id INTEGER NOT NULL,
+      dati TEXT NOT NULL,
+      eliminato_il DATETIME DEFAULT CURRENT_TIMESTAMP,
+      scade_il DATETIME NOT NULL
+    )
+  `);
+
+  console.log("✓ Schema database verificato/creato (21 tabelle)");
 });
 
 module.exports = db;

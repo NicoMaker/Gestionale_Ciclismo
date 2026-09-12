@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db/database");
+const { verificaEliminabile, spostaInCestino } = require("../db/cestino");
 
 module.exports = (io) => {
   router.get("/", (req, res) => {
@@ -112,21 +113,77 @@ module.exports = (io) => {
     );
   });
 
+  // Eliminazione (soft-delete): il corridore finisce nel cestino solo se
+  // non è iscritto/collegato a gare, penalità, controlli o biciclette.
   router.delete("/:id", (req, res) => {
-    db.run(
-      "DELETE FROM corridori WHERE id = ?",
-      [req.params.id],
-      function (err) {
-        if (err) return res.status(400).json({ errore: err.message });
-        if (this.changes === 0)
-          return res.status(404).json({ errore: "Corridore non trovato" });
-        io.emit("corridori:aggiornati", {
-          tipo: "eliminato",
-          id: req.params.id,
-        });
-        res.json({ ok: true });
-      },
-    );
+    const id = req.params.id;
+    db.get("SELECT * FROM corridori WHERE id = ?", [id], (err, riga) => {
+      if (err) return res.status(500).json({ errore: err.message });
+      if (!riga)
+        return res.status(404).json({ errore: "Corridore non trovato" });
+
+      verificaEliminabile(
+        [
+          {
+            sql: "SELECT COUNT(*) AS n FROM risultati WHERE corridore_id = ?",
+            parametri: [id],
+            messaggio:
+              "Impossibile eliminare: il corridore è iscritto a uno o più risultati di tappa.",
+          },
+          {
+            sql: "SELECT COUNT(*) AS n FROM traguardi_volanti WHERE corridore_id = ?",
+            parametri: [id],
+            messaggio:
+              "Impossibile eliminare: il corridore ha traguardi volanti registrati.",
+          },
+          {
+            sql: "SELECT COUNT(*) AS n FROM gpm_risultati WHERE corridore_id = ?",
+            parametri: [id],
+            messaggio:
+              "Impossibile eliminare: il corridore ha risultati GPM registrati.",
+          },
+          {
+            sql: "SELECT COUNT(*) AS n FROM penalita WHERE corridore_id = ?",
+            parametri: [id],
+            messaggio:
+              "Impossibile eliminare: il corridore ha penalità registrate.",
+          },
+          {
+            sql: "SELECT COUNT(*) AS n FROM controlli_antidoping WHERE corridore_id = ?",
+            parametri: [id],
+            messaggio:
+              "Impossibile eliminare: il corridore ha controlli antidoping registrati.",
+          },
+          {
+            sql: "SELECT COUNT(*) AS n FROM biciclette WHERE corridore_id = ?",
+            parametri: [id],
+            messaggio:
+              "Impossibile eliminare: il corridore ha biciclette collegate.",
+          },
+        ],
+        (errVerifica, motivoBlocco) => {
+          if (errVerifica)
+            return res.status(500).json({ errore: errVerifica.message });
+          if (motivoBlocco) return res.status(409).json({ errore: motivoBlocco });
+
+          spostaInCestino("corridori", riga, (errCestino) => {
+            if (errCestino)
+              return res.status(500).json({ errore: errCestino.message });
+            db.run(
+              "DELETE FROM corridori WHERE id = ?",
+              [id],
+              function (errDel) {
+                if (errDel)
+                  return res.status(400).json({ errore: errDel.message });
+                io.emit("corridori:aggiornati", { tipo: "eliminato", id });
+                io.emit("cestino:aggiornato", { tipo: "creato" });
+                res.json({ ok: true, cestino: true });
+              },
+            );
+          });
+        },
+      );
+    });
   });
 
   return router;

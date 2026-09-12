@@ -6,6 +6,8 @@ import {
   creaSottoSchede,
   htmlCampoRicerca,
   attivaCampoRicerca,
+  bandiera,
+  erroreDaResponse,
 } from "../utils.js";
 import {
   cache,
@@ -90,7 +92,7 @@ async function ricaricaArrivo() {
     <tr>
       <td>${m ? `<span class="medaglia-podio">${m}</span>` : (r.posizione ?? "—")}</td>
       <td>${r.numero_pettorale ?? "—"}</td>
-      <td><strong>${r.nome} ${r.cognome}</strong></td>
+      <td><strong>${r.nazione_codice ? bandiera(r.nazione_codice, 16) + " " : ""}${r.nome} ${r.cognome}</strong></td>
       <td>${r.squadra_nome ?? "—"}</td>
       <td>${r.tempo ?? "—"}</td>
       <td>${r.distacco}</td>
@@ -162,13 +164,14 @@ async function salvaRisultato(risultatoEsistente) {
     mostraToast(
       risultatoEsistente ? "Risultato modificato" : "Risultato salvato",
     );
-  } else mostraToast("Errore nel salvataggio");
+  } else mostraToast(await erroreDaResponse(res, "Errore nel salvataggio"));
 }
 
 async function eliminaRisultato(id) {
   if (!confirm("Eliminare questo risultato?")) return;
-  await apiDelete("/api/risultati/" + id);
-  mostraToast("Risultato eliminato");
+  const res = await apiDelete("/api/risultati/" + id);
+  if (res.ok) mostraToast("Risultato eliminato");
+  else mostraToast(await erroreDaResponse(res, "Impossibile eliminare"));
 }
 
 function renderTraguardiVolanti(corpo) {

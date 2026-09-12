@@ -15,6 +15,7 @@ import * as Classifiche from "./components/classifiche.js";
 import * as Regolamento from "./components/regolamento.js";
 import * as Stampa from "./components/stampa.js";
 import * as Nazioni from "./components/nazioni.js";
+import * as Cestino from "./components/cestino.js";
 
 const sezioni = {
   tappe: Tappe,
@@ -25,6 +26,7 @@ const sezioni = {
   regolamento: Regolamento,
   stampa: Stampa,
   nazioni: Nazioni,
+  cestino: Cestino,
 };
 
 const inizializzate = new Set();

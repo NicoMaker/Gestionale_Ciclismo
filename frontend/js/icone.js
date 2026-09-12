@@ -61,6 +61,12 @@ const D = {
     '<circle cx="12" cy="14.5" r="6"/><path d="M9 3.5 L7 9.6 L12 8.3 L17 9.6 L15 3.5" stroke-linecap="round" stroke-linejoin="round"/>',
   nastro:
     '<path d="M7 12 L4 20 L9 18.3 L11 21 L14 13" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 12 L20 20 L15 18.3 L13 21" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="9" r="5.5"/>',
+  cestino:
+    '<path d="M5 7 H19 M9 7 V4.6 C9 4 9.4 3.5 10 3.5 H14 C14.6 3.5 15 4 15 4.6 V7 M7.5 7 L8.3 19.4 C8.35 20.2 9 20.8 9.8 20.8 H14.2 C15 20.8 15.65 20.2 15.7 19.4 L16.5 7" stroke-linecap="round" stroke-linejoin="round"/><path d="M10.3 10.5 V17 M13.7 10.5 V17" stroke-linecap="round"/>',
+  ripristina:
+    '<path d="M4 10 C6 6 9.5 4 13 4 C18 4 21 8 21 12 C21 16 18 20 13 20 C9.5 20 6.3 18 5 15" stroke-linecap="round"/><path d="M4 5 V10 H9" stroke-linecap="round" stroke-linejoin="round"/>',
+  elimina_definitivo:
+    '<path d="M5 7 H19 M9 7 V4.6 C9 4 9.4 3.5 10 3.5 H14 C14.6 3.5 15 4 15 4.6 V7 M7.5 7 L8.3 19.4 C8.35 20.2 9 20.8 9.8 20.8 H14.2 C15 20.8 15.65 20.2 15.7 19.4 L16.5 7" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 11 L14.5 16.5 M14.5 11 L9.5 16.5" stroke-linecap="round"/>',
 };
 
 export function icona(nome, extraClass = "") {

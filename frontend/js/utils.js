@@ -53,6 +53,17 @@ export function bandiera(codiceIso2, larghezzaPx = 20) {
   return `<img class="bandiera-img" src="https://flagcdn.com/${codice.toLowerCase()}.svg" width="${larghezzaPx}" height="${altezzaPx}" alt="${codice}" title="${codice}" loading="lazy" onerror="this.style.visibility='hidden'">`;
 }
 
+/* ---------- ERRORI API ---------- */
+// Estrae il messaggio di errore da una Response non-ok (o testo generico)
+export async function erroreDaResponse(res, generico = "Si è verificato un errore") {
+  try {
+    const corpo = await res.json();
+    return corpo?.errore || generico;
+  } catch {
+    return generico;
+  }
+}
+
 /* ---------- CAMPO DI RICERCA ---------- */
 export function htmlCampoRicerca(placeholder) {
   return `

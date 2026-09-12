@@ -6,6 +6,7 @@ import {
   creaSottoSchede,
   htmlCampoRicerca,
   attivaCampoRicerca,
+  erroreDaResponse,
 } from "../utils.js";
 import { cache, caricaTappe } from "../state.js";
 import { socket } from "../socket.js";
@@ -158,13 +159,14 @@ async function salvaTappa(tappaEsistente) {
   if (res.ok) {
     chiudiModal();
     mostraToast(tappaEsistente ? "Tappa modificata" : "Tappa creata");
-  } else mostraToast("Errore nel salvataggio");
+  } else mostraToast(await erroreDaResponse(res, "Errore nel salvataggio"));
 }
 
 async function eliminaTappa(id) {
-  if (!confirm("Eliminare questa tappa?")) return;
-  await apiDelete("/api/tappe/" + id);
-  mostraToast("Tappa eliminata");
+  if (!confirm("Eliminare questa tappa? Verrà spostata nel cestino per 15 giorni.")) return;
+  const res = await apiDelete("/api/tappe/" + id);
+  if (res.ok) mostraToast("Tappa spostata nel cestino");
+  else mostraToast(await erroreDaResponse(res, "Impossibile eliminare la tappa"));
 }
 
 function avviaDiretta(tappaId) {

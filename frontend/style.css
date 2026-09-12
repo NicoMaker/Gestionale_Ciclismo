@@ -776,6 +776,10 @@ tbody tr.riga-podio:nth-child(3) {
   padding: 9px 16px;
   font-size: 12.5px;
 }
+.btn-secondary.danger:hover {
+  border-color: #d92c4b;
+  color: #d92c4b;
+}
 
 /* ---- AUTOCOMPLETE NAZIONI ---- */
 .autocomplete-wrap {

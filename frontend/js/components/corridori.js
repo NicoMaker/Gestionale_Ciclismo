@@ -7,6 +7,7 @@ import {
   creaSottoSchede,
   htmlCampoRicerca,
   attivaCampoRicerca,
+  erroreDaResponse,
 } from "../utils.js";
 import {
   cache,
@@ -153,13 +154,14 @@ async function salvaCorridore(corridoreEsistente, leggiNazioneId) {
     mostraToast(
       corridoreEsistente ? "Corridore modificato" : "Corridore aggiunto",
     );
-  } else mostraToast("Errore nel salvataggio");
+  } else mostraToast(await erroreDaResponse(res, "Errore nel salvataggio"));
 }
 
 async function eliminaCorridore(id) {
-  if (!confirm("Eliminare questo corridore?")) return;
-  await apiDelete("/api/corridori/" + id);
-  mostraToast("Corridore eliminato");
+  if (!confirm("Eliminare questo corridore? Verrà spostato nel cestino per 15 giorni.")) return;
+  const res = await apiDelete("/api/corridori/" + id);
+  if (res.ok) mostraToast("Corridore spostato nel cestino");
+  else mostraToast(await erroreDaResponse(res, "Impossibile eliminare il corridore"));
 }
 
 function renderBiciclette(corpo) {

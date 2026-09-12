@@ -1,11 +1,15 @@
 const express = require("express");
 const http = require("http");
+const https = require("https");
+const os = require("os");
 const path = require("path");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const cron = require("node-cron");
 const { Server } = require("socket.io");
 
 require("./db/database"); // inizializza lo schema al boot
+const { eliminaScaduti } = require("./db/cestino");
 const creaRouterGenerico = require("./routes/generic");
 
 const app = express();
@@ -32,8 +36,10 @@ app.use("/api/squadre", require("./routes/squadre")(io));
 app.use("/api/corridori", require("./routes/corridori")(io));
 app.use("/api/tappe", require("./routes/tappe")(io));
 app.use("/api/risultati", require("./routes/risultati")(io));
+app.use("/api/sponsor", require("./routes/sponsor")(io));
+app.use("/api/cestino", require("./routes/cestino")(io));
 
-// ---- Route generiche CRUD per le tabelle secondarie (15 tabelle) ----
+// ---- Route generiche CRUD per le tabelle secondarie (14 tabelle) ----
 app.use(
   "/api/staff-tecnico",
   creaRouterGenerico(
@@ -112,16 +118,6 @@ app.use(
     io,
     "biciclette",
     "marca",
-  ),
-);
-app.use(
-  "/api/sponsor",
-  creaRouterGenerico(
-    "sponsor",
-    ["nome", "settore", "sito_web"],
-    io,
-    "sponsor",
-    "nome",
   ),
 );
 app.use(
@@ -220,7 +216,79 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`\n🚴  Gestionale Tappe Ciclistiche`);
-  console.log(`   Server avviato su http://localhost:${PORT}\n`);
+// ---------------------------------------------------------------------
+// Cron cestino: ogni notte alle 00:00 elimina in modo permanente e
+// definitivo tutte le voci del cestino la cui ritenzione (15 giorni) è
+// scaduta.
+// ---------------------------------------------------------------------
+cron.schedule("0 0 * * *", () => {
+  eliminaScaduti((err, eliminati) => {
+    if (err) {
+      console.error("✗ Cron cestino — errore:", err.message);
+      return;
+    }
+    console.log(
+      `🗑️  Cron cestino: ${eliminati} elemento/i scaduto/i eliminato/i definitivamente`,
+    );
+  });
 });
+
+// ---------------------------------------------------------------------
+// Individua l'IP locale (rete privata) tra le interfacce di rete
+// ---------------------------------------------------------------------
+function ottieniIpLocale() {
+  const interfacce = os.networkInterfaces();
+  for (const nome of Object.keys(interfacce)) {
+    for (const dettaglio of interfacce[nome] || []) {
+      if (dettaglio.family === "IPv4" && !dettaglio.internal) {
+        return dettaglio.address;
+      }
+    }
+  }
+  return "127.0.0.1";
+}
+
+// Recupera l'IP pubblico tramite un servizio esterno (best-effort: se non
+// c'è connessione a internet, si limita a segnalarlo senza bloccare l'avvio)
+function ottieniIpPubblico() {
+  return new Promise((resolve) => {
+    const richiesta = https.get(
+      "https://api.ipify.org?format=json",
+      { timeout: 3000 },
+      (res) => {
+        let corpo = "";
+        res.on("data", (chunk) => (corpo += chunk));
+        res.on("end", () => {
+          try {
+            resolve(JSON.parse(corpo).ip);
+          } catch {
+            resolve("non disponibile");
+          }
+        });
+      },
+    );
+    richiesta.on("timeout", () => {
+      richiesta.destroy();
+      resolve("non disponibile");
+    });
+    richiesta.on("error", () => resolve("non disponibile"));
+  });
+}
+
+async function avviaServer() {
+  const localIP = ottieniIpLocale();
+  const publicIP = await ottieniIpPubblico();
+
+  server.listen(PORT, "0.0.0.0", () => {
+    console.log(`\n🚀 Server avviato con successo!`);
+    console.log(`🌐 IP Pubblico: http://${publicIP}:${PORT}`);
+    console.log(`🏠 IP Locale: http://${localIP}:${PORT}`);
+    console.log(`📍 Localhost: http://localhost:${PORT}`);
+    console.log(`\n--------------------------------------`);
+    console.log(
+      `⏰ Cron cestino attivo: eliminazione automatica ogni notte alle 00:00`,
+    );
+  });
+}
+
+avviaServer();

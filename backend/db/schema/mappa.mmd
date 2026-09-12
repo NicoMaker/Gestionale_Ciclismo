@@ -24,6 +24,15 @@ erDiagram
     TAPPE ||--o{ MEDIA_ACCREDITATI : "accredita"
     TAPPE ||--o{ COMUNICATI_STAMPA : "riguarda"
 
+    CESTINO {
+        integer id PK
+        text entita "squadre | corridori | tappe | nazioni | sponsor"
+        integer entita_id "id originale della riga eliminata"
+        text dati "snapshot JSON completo della riga, per il ripristino"
+        datetime eliminato_il
+        datetime scade_il "eliminato_il + 15 giorni: eliminazione definitiva automatica (cron notturno)"
+    }
+
     NAZIONI {
         integer id PK
         text nome

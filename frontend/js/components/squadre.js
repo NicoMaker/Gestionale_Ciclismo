@@ -7,6 +7,7 @@ import {
   creaSottoSchede,
   htmlCampoRicerca,
   attivaCampoRicerca,
+  erroreDaResponse,
 } from "../utils.js";
 import {
   cache,
@@ -131,13 +132,14 @@ async function salvaSquadra(squadraEsistente, leggiNazioneId) {
   if (res.ok) {
     chiudiModal();
     mostraToast(squadraEsistente ? "Squadra modificata" : "Squadra creata");
-  } else mostraToast("Errore nel salvataggio");
+  } else mostraToast(await erroreDaResponse(res, "Errore nel salvataggio"));
 }
 
 async function eliminaSquadra(id) {
-  if (!confirm("Eliminare questa squadra?")) return;
-  await apiDelete("/api/squadre/" + id);
-  mostraToast("Squadra eliminata");
+  if (!confirm("Eliminare questa squadra? Verrà spostata nel cestino per 15 giorni.")) return;
+  const res = await apiDelete("/api/squadre/" + id);
+  if (res.ok) mostraToast("Squadra spostata nel cestino");
+  else mostraToast(await erroreDaResponse(res, "Impossibile eliminare la squadra"));
 }
 
 function renderStaff(corpo) {

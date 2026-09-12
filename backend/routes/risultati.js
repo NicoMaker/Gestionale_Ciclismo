@@ -108,10 +108,12 @@ module.exports = (io) => {
   // Risultati di una tappa
   router.get("/tappa/:tappaId", (req, res) => {
     const sql = `
-      SELECT r.*, c.nome, c.cognome, c.numero_pettorale, s.nome AS squadra_nome
+      SELECT r.*, c.nome, c.cognome, c.numero_pettorale, s.nome AS squadra_nome,
+             n.nome AS nazione_nome, n.codice_iso2 AS nazione_codice
       FROM risultati r
       JOIN corridori c ON r.corridore_id = c.id
       LEFT JOIN squadre s ON c.squadra_id = s.id
+      LEFT JOIN nazioni n ON c.nazione_id = n.id
       WHERE r.tappa_id = ?
       ORDER BY r.posizione ASC
     `;
