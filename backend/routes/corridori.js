@@ -7,9 +7,11 @@ module.exports = (io) => {
   router.get("/", (req, res) => {
     const sql = `
       SELECT c.*, s.nome AS squadra_nome, s.colore AS squadra_colore,
+             sn.codice_iso2 AS squadra_nazione_codice, sn.nome AS squadra_nazione_nome,
              n.nome AS nazione_nome, n.codice_iso2 AS nazione_codice
       FROM corridori c
       LEFT JOIN squadre s ON c.squadra_id = s.id
+      LEFT JOIN nazioni sn ON s.nazione_id = sn.id
       LEFT JOIN nazioni n ON c.nazione_id = n.id
       ORDER BY c.cognome, c.nome
     `;
@@ -109,6 +111,65 @@ module.exports = (io) => {
           nazione_id,
           squadra_id,
         });
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------
+  // Ritiro / infortunio: da questo momento il corridore non compare più
+  // nelle liste di selezione per nuovi risultati/tappe (non può più
+  // "gareggiare") e sparisce da tutte le classifiche, pur restando
+  // nell'anagrafica con lo storico dei risultati già ottenuti.
+  // ---------------------------------------------------------------------
+  router.post("/:id/ritira", (req, res) => {
+    const id = req.params.id;
+    const { ritirato_tappa_numero, motivo_ritiro, note_ritiro } = req.body;
+    if (!motivo_ritiro) {
+      return res
+        .status(400)
+        .json({ errore: "Il motivo del ritiro è obbligatorio" });
+    }
+    const motiviValidi = ["infortunio", "abbandono", "squalifica", "altro"];
+    if (!motiviValidi.includes(motivo_ritiro)) {
+      return res.status(400).json({ errore: "Motivo del ritiro non valido" });
+    }
+    db.run(
+      `UPDATE corridori SET
+         ritirato = 1,
+         ritirato_tappa_numero = ?,
+         motivo_ritiro = ?,
+         note_ritiro = ?,
+         ritirato_il = CURRENT_TIMESTAMP
+       WHERE id = ?`,
+      [ritirato_tappa_numero || null, motivo_ritiro, note_ritiro || null, id],
+      function (err) {
+        if (err) return res.status(400).json({ errore: err.message });
+        if (this.changes === 0)
+          return res.status(404).json({ errore: "Corridore non trovato" });
+        io.emit("corridori:aggiornati", { tipo: "ritirato", id });
+        res.json({ ok: true });
+      },
+    );
+  });
+
+  // Riammissione: annulla un ritiro inserito per errore
+  router.post("/:id/riammetti", (req, res) => {
+    const id = req.params.id;
+    db.run(
+      `UPDATE corridori SET
+         ritirato = 0,
+         ritirato_tappa_numero = NULL,
+         motivo_ritiro = NULL,
+         note_ritiro = NULL,
+         ritirato_il = NULL
+       WHERE id = ?`,
+      [id],
+      function (err) {
+        if (err) return res.status(400).json({ errore: err.message });
+        if (this.changes === 0)
+          return res.status(404).json({ errore: "Corridore non trovato" });
+        io.emit("corridori:aggiornati", { tipo: "riammesso", id });
+        res.json({ ok: true });
       },
     );
   });

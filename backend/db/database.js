@@ -32,6 +32,9 @@ db.serialize(() => {
   `);
 
   // 3. Corridori
+  //    ritirato / infortunato: da quando un corridore risulta ritirato
+  //    (infortunio, abbandono o squalifica) non può più essere selezionato
+  //    per le tappe successive e scompare da tutte le classifiche.
   db.run(`
     CREATE TABLE IF NOT EXISTS corridori (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,11 +44,36 @@ db.serialize(() => {
       nazione_id INTEGER,
       squadra_id INTEGER,
       data_nascita DATE,
+      ritirato INTEGER NOT NULL DEFAULT 0,
+      ritirato_tappa_numero INTEGER,
+      motivo_ritiro TEXT CHECK(motivo_ritiro IN ('infortunio','abbandono','squalifica','altro') OR motivo_ritiro IS NULL),
+      note_ritiro TEXT,
+      ritirato_il DATETIME,
       creato_il DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (nazione_id) REFERENCES nazioni(id) ON DELETE SET NULL,
       FOREIGN KEY (squadra_id) REFERENCES squadre(id) ON DELETE SET NULL
     )
   `);
+
+  // Migrazione "morbida": se il database esisteva già prima
+  // dell'introduzione dei ritiri, aggiungi le colonne mancanti senza
+  // toccare i dati già presenti (ALTER TABLE fallisce silenziosamente se
+  // la colonna esiste già — è previsto e viene ignorato).
+  const colonneRitiroDaAggiungere = [
+    "ALTER TABLE corridori ADD COLUMN ritirato INTEGER NOT NULL DEFAULT 0",
+    "ALTER TABLE corridori ADD COLUMN ritirato_tappa_numero INTEGER",
+    "ALTER TABLE corridori ADD COLUMN motivo_ritiro TEXT",
+    "ALTER TABLE corridori ADD COLUMN note_ritiro TEXT",
+    "ALTER TABLE corridori ADD COLUMN ritirato_il DATETIME",
+  ];
+  colonneRitiroDaAggiungere.forEach((sql) => {
+    db.run(sql, [], (err) => {
+      // "duplicate column name" = colonna già presente, va ignorato
+      if (err && !/duplicate column/i.test(err.message)) {
+        console.error("Migrazione ritiro corridori —", err.message);
+      }
+    });
+  });
 
   // 4. Staff tecnico
   db.run(`

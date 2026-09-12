@@ -11,24 +11,12 @@ import {
 import { cache } from "../state.js";
 import { socket } from "../socket.js";
 import { icona, iconaValore } from "../icone.js";
+import {
+  htmlCampoEntita,
+  attivaCampoEntita,
+} from "./entita-autocomplete.js";
 
-function opzioniPer(tipo) {
-  if (tipo === "squadra")
-    return cache.squadre.map((s) => ({ value: s.id, label: s.nome }));
-  if (tipo === "corridore")
-    return cache.corridori.map((c) => ({
-      value: c.id,
-      label: `${c.nome} ${c.cognome}`,
-    }));
-  if (tipo === "tappa")
-    return cache.tappe.map((t) => ({
-      value: t.id,
-      label: `Tappa ${t.numero_tappa} — ${t.nome}`,
-    }));
-  if (tipo === "sponsor")
-    return cache.sponsor.map((s) => ({ value: s.id, label: s.nome }));
-  return [];
-}
+const TIPI_ENTITA = ["squadra", "corridore", "tappa", "sponsor"];
 
 function risolviValore(colonna, valore) {
   if (valore === null || valore === undefined || valore === "") return "—";
@@ -40,7 +28,7 @@ function risolviValore(colonna, valore) {
   if (colonna.type === "corridore") {
     const c = cache.corridori.find((c) => c.id === valore);
     if (!c) return valore;
-    return `${c.nazione_codice ? bandiera(c.nazione_codice, 16) + " " : ""}${c.nome} ${c.cognome}`;
+    return `${c.nazione_codice ? bandiera(c.nazione_codice, 16) + " " : ""}${c.nome} ${c.cognome}${c.ritirato ? ' <span class="badge badge-ritirato">ritirato</span>' : ""}`;
   }
   if (colonna.type === "tappa") {
     const t = cache.tappe.find((t) => t.id === valore);
@@ -60,12 +48,8 @@ function campoHtml(c, id, valore) {
       ${c.opzioni.map((o) => `<option value="${o}" ${valore === o ? "selected" : ""}>${o.replace(/_/g, " ")}</option>`).join("")}
     </select></div>`;
   }
-  if (["squadra", "corridore", "tappa", "sponsor"].includes(c.type)) {
-    const opz = opzioniPer(c.type);
-    return `<div class="field"><label>${c.label}</label><select id="${id}">
-      <option value="">— seleziona —</option>
-      ${opz.map((o) => `<option value="${o.value}" ${valore == o.value ? "selected" : ""}>${o.label}</option>`).join("")}
-    </select></div>`;
+  if (TIPI_ENTITA.includes(c.type)) {
+    return htmlCampoEntita(id, c.label, c.type);
   }
   const tipoInput =
     c.type === "number" ? "number" : c.type === "date" ? "date" : "text";
@@ -148,12 +132,31 @@ export function montaListaConForm(contenitore, cfg) {
         <button class="btn-primary" id="cd_salva">${rigaEsistente ? "salva modifiche" : "salva"}</button>
       </div>
     `);
+
+    // i campi entità (squadra/corridore/tappa/sponsor) sono autocomplete di
+    // ricerca: vanno attivati dopo l'inserimento nel DOM e letti tramite il
+    // getter che restituiscono, non con .value come i campi normali
+    const lettoriEntita = {};
+    campiVisibili.forEach((c) => {
+      if (TIPI_ENTITA.includes(c.type)) {
+        lettoriEntita[c.key] = attivaCampoEntita(
+          "cd_" + c.key,
+          c.type,
+          rigaEsistente ? rigaEsistente[c.key] : null,
+        );
+      }
+    });
+
     document
       .getElementById("cd_annulla")
       .addEventListener("click", chiudiModal);
     document.getElementById("cd_salva").addEventListener("click", async () => {
       const body = { ...(cfg.valoriFissi || {}) };
       campiVisibili.forEach((c) => {
+        if (TIPI_ENTITA.includes(c.type)) {
+          body[c.key] = lettoriEntita[c.key]();
+          return;
+        }
         const el = document.getElementById("cd_" + c.key);
         const v = el.value;
         body[c.key] = c.type === "number" ? (v === "" ? null : +v) : v || null;
@@ -165,7 +168,7 @@ export function montaListaConForm(contenitore, cfg) {
         chiudiModal();
         mostraToast(rigaEsistente ? "Modifiche salvate" : "Salvato");
         ricarica();
-      } else mostraToast("Errore nel salvataggio");
+      } else mostraToast(await erroreDaResponse(res, "Errore nel salvataggio"));
     });
   }
 

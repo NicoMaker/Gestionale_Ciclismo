@@ -595,6 +595,26 @@ tbody tr:hover {
   background: linear-gradient(135deg, #fff4d9, #ffe9b3);
   color: #8a5a00;
 }
+.badge-in-gara {
+  background: #e3f7ec;
+  color: #17a06b;
+}
+.badge-ritirato {
+  background: #ffe1e6;
+  color: #c81743;
+  gap: 5px;
+}
+.badge-ritirato .icona {
+  width: 13px;
+  height: 13px;
+}
+tr.riga-ritirato {
+  opacity: 0.6;
+}
+tr.riga-ritirato td strong {
+  text-decoration: line-through;
+  text-decoration-color: #c81743;
+}
 
 .dot-colore {
   display: inline-block;

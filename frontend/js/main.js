@@ -1,4 +1,5 @@
 import { socket } from "./socket.js";
+import { mostraToast } from "./utils.js";
 import {
   cache,
   caricaNazioni,
@@ -70,8 +71,12 @@ socket.on("stato-live:aggiornato", (stato) => {
 });
 
 // ---------- Avvio ----------
-caricaNazioni();
-caricaTappe();
-caricaCorridori();
-caricaSquadre();
+Promise.all([caricaNazioni(), caricaTappe(), caricaCorridori(), caricaSquadre()])
+  .catch((err) => {
+    console.error("Avvio: impossibile caricare i dati iniziali —", err);
+    mostraToast(
+      err?.message ||
+        "Impossibile contattare il server. Avvia il backend con 'npm start' sulla porta 3000.",
+    );
+  });
 mostraSezione("tappe");

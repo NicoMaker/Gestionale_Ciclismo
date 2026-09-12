@@ -36,6 +36,8 @@ module.exports = (io) => {
    * classifica a squadre (che è la somma dei tempi dei suoi corridori).
    * ------------------------------------------------------------------- */
   function ottieniTempiCorridori(callback) {
+    // i corridori ritirati (infortunio, abbandono, squalifica...) escono
+    // definitivamente da tutte le classifiche a tempo/punti/squadre
     const sqlRisultati = `
       SELECT c.id, c.nome, c.cognome, c.numero_pettorale, c.data_nascita,
              s.id AS squadra_id, s.nome AS squadra_nome, s.colore AS squadra_colore,
@@ -45,6 +47,7 @@ module.exports = (io) => {
       LEFT JOIN squadre s ON c.squadra_id = s.id
       LEFT JOIN nazioni n ON c.nazione_id = n.id
       LEFT JOIN risultati r ON r.corridore_id = c.id
+      WHERE COALESCE(c.ritirato, 0) = 0
     `;
     db.all(sqlRisultati, [], (err, righe) => {
       if (err) return callback(err);
@@ -108,11 +111,14 @@ module.exports = (io) => {
   // Risultati di una tappa
   router.get("/tappa/:tappaId", (req, res) => {
     const sql = `
-      SELECT r.*, c.nome, c.cognome, c.numero_pettorale, s.nome AS squadra_nome,
+      SELECT r.*, c.nome, c.cognome, c.numero_pettorale,
+             s.nome AS squadra_nome, s.colore AS squadra_colore,
+             sn.codice_iso2 AS squadra_nazione_codice,
              n.nome AS nazione_nome, n.codice_iso2 AS nazione_codice
       FROM risultati r
       JOIN corridori c ON r.corridore_id = c.id
       LEFT JOIN squadre s ON c.squadra_id = s.id
+      LEFT JOIN nazioni sn ON s.nazione_id = sn.id
       LEFT JOIN nazioni n ON c.nazione_id = n.id
       WHERE r.tappa_id = ?
       ORDER BY r.posizione ASC
@@ -123,18 +129,22 @@ module.exports = (io) => {
     });
   });
 
-  // Classifica generale a punti (maglia ciclamino), penalità in punti incluse
+  // Classifica generale a punti (maglia ciclamino): punti d'arrivo di tappa
+  // + punti dei traguardi volanti (sprint intermedi), meno le penalità in
+  // punti. I corridori ritirati non compaiono più.
   router.get("/classifica-generale", (req, res) => {
     const sql = `
       SELECT c.id, c.nome, c.cognome, c.numero_pettorale, s.nome AS squadra_nome,
              n.nome AS nazione_nome, n.codice_iso2 AS nazione_codice,
              COALESCE((SELECT SUM(r.punti) FROM risultati r WHERE r.corridore_id = c.id), 0)
+               + COALESCE((SELECT SUM(t.punti) FROM traguardi_volanti t WHERE t.corridore_id = c.id), 0)
                - COALESCE((SELECT SUM(p.punti) FROM penalita p WHERE p.corridore_id = c.id), 0)
                AS punti_totali,
              (SELECT COUNT(*) FROM risultati r WHERE r.corridore_id = c.id) AS tappe_disputate
       FROM corridori c
       LEFT JOIN squadre s ON c.squadra_id = s.id
       LEFT JOIN nazioni n ON c.nazione_id = n.id
+      WHERE COALESCE(c.ritirato, 0) = 0
       GROUP BY c.id
       ORDER BY punti_totali DESC
     `;
@@ -192,6 +202,7 @@ module.exports = (io) => {
       JOIN corridori c ON g.corridore_id = c.id
       LEFT JOIN squadre s ON c.squadra_id = s.id
       LEFT JOIN nazioni n ON c.nazione_id = n.id
+      WHERE COALESCE(c.ritirato, 0) = 0
       GROUP BY c.id
       ORDER BY punti_totali DESC
     `;

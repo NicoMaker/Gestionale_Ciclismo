@@ -18,6 +18,7 @@ import {
 } from "../state.js";
 import { socket } from "../socket.js";
 import { montaListaConForm } from "./tabella-dati.js";
+import { htmlCampoEntita, attivaCampoEntita } from "./entita-autocomplete.js";
 import { icona, medaglia } from "../icone.js";
 
 let sottoTabAttiva = "arrivo";
@@ -93,7 +94,7 @@ async function ricaricaArrivo() {
       <td>${m ? `<span class="medaglia-podio">${m}</span>` : (r.posizione ?? "—")}</td>
       <td>${r.numero_pettorale ?? "—"}</td>
       <td><strong>${r.nazione_codice ? bandiera(r.nazione_codice, 16) + " " : ""}${r.nome} ${r.cognome}</strong></td>
-      <td>${r.squadra_nome ?? "—"}</td>
+      <td>${r.squadra_nome ? `${r.squadra_nazione_codice ? bandiera(r.squadra_nazione_codice, 16) + " " : ""}${r.squadra_nome}` : "—"}</td>
       <td>${r.tempo ?? "—"}</td>
       <td>${r.distacco}</td>
       <td><span class="badge badge-punti">${r.punti}</span></td>
@@ -124,11 +125,14 @@ function apriFormRisultato(risultatoEsistente) {
   const r = risultatoEsistente || {};
   apriModal(`
     <h2>${risultatoEsistente ? "Modifica risultato" : "Aggiungi risultato"}</h2>
-    <div class="field"><label>Corridore</label>
-      <select id="r_corridore" ${risultatoEsistente ? "disabled" : ""}>
-        ${cache.corridori.map((c) => `<option value="${c.id}" ${r.corridore_id === c.id ? "selected" : ""}>${c.nome} ${c.cognome}</option>`).join("")}
-      </select>
-    </div>
+    ${
+      risultatoEsistente
+        ? `<div class="field"><label>Corridore</label><input value="${(() => {
+            const c = cache.corridori.find((c) => c.id === r.corridore_id);
+            return c ? `${c.nome} ${c.cognome}` : "";
+          })()}" disabled></div>`
+        : htmlCampoEntita("r_corridore", "Corridore", "corridore")
+    }
     <div class="field-row">
       <div class="field"><label>Posizione</label><input type="number" id="r_posizione" min="1" value="${r.posizione ?? ""}"></div>
       <div class="field"><label>Punti</label><input type="number" id="r_punti" value="${r.punti ?? 0}"></div>
@@ -142,16 +146,26 @@ function apriFormRisultato(risultatoEsistente) {
       <button class="btn-primary" id="r_salva">${risultatoEsistente ? "salva modifiche" : "salva risultato"}</button>
     </div>
   `);
+  const leggiCorridoreId = risultatoEsistente
+    ? () => r.corridore_id
+    : attivaCampoEntita("r_corridore", "corridore", null);
   document.getElementById("r_annulla").addEventListener("click", chiudiModal);
   document
     .getElementById("r_salva")
-    .addEventListener("click", () => salvaRisultato(risultatoEsistente));
+    .addEventListener("click", () =>
+      salvaRisultato(risultatoEsistente, leggiCorridoreId),
+    );
 }
 
-async function salvaRisultato(risultatoEsistente) {
+async function salvaRisultato(risultatoEsistente, leggiCorridoreId) {
+  const corridoreId = leggiCorridoreId();
+  if (!corridoreId) {
+    mostraToast("Seleziona un corridore");
+    return;
+  }
   const body = {
     tappa_id: tappaSelezionataId,
-    corridore_id: +document.getElementById("r_corridore").value,
+    corridore_id: corridoreId,
     posizione: +document.getElementById("r_posizione").value || null,
     punti: +document.getElementById("r_punti").value || 0,
     tempo: document.getElementById("r_tempo").value,

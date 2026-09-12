@@ -32,6 +32,8 @@ const D = {
     '<circle cx="12" cy="13" r="8"/><path d="M12 13 V8.2 M12 13 L15.2 15" stroke-linecap="round"/><path d="M9.5 2.3 H14.5" stroke-linecap="round"/>',
   penalita:
     '<path d="M12 3 L20 6.3 V11.5 C20 16.4 16.8 19.9 12 21.5 C7.2 19.9 4 16.4 4 11.5 V6.3 Z" stroke-linejoin="round"/><path d="M12 8 V13 M12 16 V16.1" stroke-linecap="round"/>',
+  infortunio:
+    '<rect x="3" y="9" width="18" height="8" rx="1.6"/><path d="M8 13 H11 M13 13 H16 M11 10.5 V15.5" stroke-linecap="round"/><path d="M7 9 V6.8 C7 5.8 7.8 5 8.8 5 H15.2 C16.2 5 17 5.8 17 6.8 V9" stroke-linecap="round" stroke-linejoin="round"/>',
   esitoNegativo:
     '<circle cx="12" cy="12" r="9"/><path d="M8.5 12.5 L10.8 14.8 L15.7 9.5" stroke-linecap="round" stroke-linejoin="round"/>',
   esitoPositivo:
