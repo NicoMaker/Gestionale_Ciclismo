@@ -80,6 +80,30 @@ module.exports = (io) => {
             messaggio:
               "Impossibile eliminare: ci sono corridori collegati a questa squadra. Riassegnali o eliminali prima.",
           },
+          {
+            sql: "SELECT COUNT(*) AS n FROM staff_tecnico WHERE squadra_id = ?",
+            parametri: [id],
+            messaggio:
+              "Impossibile eliminare: ci sono membri dello staff tecnico collegati a questa squadra.",
+          },
+          {
+            sql: "SELECT COUNT(*) AS n FROM veicoli_squadra WHERE squadra_id = ?",
+            parametri: [id],
+            messaggio:
+              "Impossibile eliminare: ci sono veicoli collegati a questa squadra.",
+          },
+          {
+            sql: "SELECT COUNT(*) AS n FROM squadra_sponsor WHERE squadra_id = ?",
+            parametri: [id],
+            messaggio:
+              "Impossibile eliminare: ci sono sponsor collegati a questa squadra.",
+          },
+          {
+            sql: "SELECT COUNT(*) AS n FROM hotel WHERE squadra_id = ?",
+            parametri: [id],
+            messaggio:
+              "Impossibile eliminare: ci sono alloggi collegati a questa squadra.",
+          },
         ],
         (errVerifica, motivoBlocco) => {
           if (errVerifica)

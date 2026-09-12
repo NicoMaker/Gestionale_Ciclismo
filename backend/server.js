@@ -10,7 +10,6 @@ const { Server } = require("socket.io");
 
 require("./db/database"); // inizializza lo schema al boot
 const { eliminaScaduti } = require("./db/cestino");
-const { validaPartecipazione } = require("./db/esclusioni");
 const creaRouterGenerico = require("./routes/generic");
 
 const app = express();
@@ -37,9 +36,20 @@ app.use("/api/squadre", require("./routes/squadre")(io));
 app.use("/api/corridori", require("./routes/corridori")(io));
 app.use("/api/tappe", require("./routes/tappe")(io));
 app.use("/api/risultati", require("./routes/risultati")(io));
-app.use("/api/ritiri", require("./routes/ritiri")(io));
+app.use("/api/sponsor", require("./routes/sponsor")(io));
 app.use("/api/cestino", require("./routes/cestino")(io));
 
+// ---- Route generiche CRUD per le tabelle secondarie (14 tabelle) ----
+app.use(
+  "/api/staff-tecnico",
+  creaRouterGenerico(
+    "staff_tecnico",
+    ["nome", "cognome", "ruolo", "squadra_id"],
+    io,
+    "staff-tecnico",
+    "cognome",
+  ),
+);
 app.use(
   "/api/tappe-percorso",
   creaRouterGenerico(
@@ -51,6 +61,16 @@ app.use(
   ),
 );
 app.use(
+  "/api/classifiche-tipo",
+  creaRouterGenerico(
+    "classifiche_tipo",
+    ["nome", "descrizione"],
+    io,
+    "classifiche-tipo",
+    "nome",
+  ),
+);
+app.use(
   "/api/traguardi-volanti",
   creaRouterGenerico(
     "traguardi_volanti",
@@ -58,7 +78,6 @@ app.use(
     io,
     "traguardi-volanti",
     "posizione",
-    validaPartecipazione,
   ),
 );
 app.use(
@@ -69,7 +88,6 @@ app.use(
     io,
     "gpm-risultati",
     "posizione",
-    validaPartecipazione,
   ),
 );
 app.use(
@@ -80,7 +98,86 @@ app.use(
     io,
     "penalita",
     "id",
-    validaPartecipazione,
+  ),
+);
+app.use(
+  "/api/controlli-antidoping",
+  creaRouterGenerico(
+    "controlli_antidoping",
+    ["corridore_id", "tappa_id", "data", "esito"],
+    io,
+    "controlli-antidoping",
+    "data",
+  ),
+);
+app.use(
+  "/api/biciclette",
+  creaRouterGenerico(
+    "biciclette",
+    ["corridore_id", "marca", "modello", "telaio"],
+    io,
+    "biciclette",
+    "marca",
+  ),
+);
+app.use(
+  "/api/squadra-sponsor",
+  creaRouterGenerico(
+    "squadra_sponsor",
+    ["squadra_id", "sponsor_id", "tipo"],
+    io,
+    "squadra-sponsor",
+    "id",
+  ),
+);
+app.use(
+  "/api/veicoli-squadra",
+  creaRouterGenerico(
+    "veicoli_squadra",
+    ["squadra_id", "tipo", "targa", "modello"],
+    io,
+    "veicoli-squadra",
+    "id",
+  ),
+);
+app.use(
+  "/api/hotel",
+  creaRouterGenerico(
+    "hotel",
+    ["tappa_id", "squadra_id", "nome", "citta", "indirizzo"],
+    io,
+    "hotel",
+    "citta",
+  ),
+);
+app.use(
+  "/api/meteo-tappa",
+  creaRouterGenerico(
+    "meteo_tappa",
+    ["tappa_id", "temperatura", "condizione", "vento_kmh"],
+    io,
+    "meteo-tappa",
+    "id",
+  ),
+);
+app.use(
+  "/api/media-accreditati",
+  creaRouterGenerico(
+    "media_accreditati",
+    ["nome", "testata", "tipo", "tappa_id"],
+    io,
+    "media-accreditati",
+    "nome",
+  ),
+);
+app.use(
+  "/api/comunicati-stampa",
+  creaRouterGenerico(
+    "comunicati_stampa",
+    ["titolo", "contenuto", "data", "tappa_id"],
+    io,
+    "comunicati-stampa",
+    "data",
   ),
 );
 

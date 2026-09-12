@@ -1,5 +1,6 @@
-// Popola il database con dati di esempio per la corsa.
-// Esegui con: node seed.js — è idempotente: ripulisce le tabelle e le reinserisce da zero.
+// Popola il database con dati di esempio realistici e coerenti per tutte le 20 tabelle.
+// Esegui con: node seed.js — è idempotente: ripulisce le tabelle e le reinserisce da zero,
+// quindi può essere lanciato più volte senza errori di UNIQUE/duplicati.
 const db = require("./db/database");
 
 // ---------------------------------------------------------------------------
@@ -477,20 +478,30 @@ async function main() {
 
   console.log("🧹 Pulizia tabelle esistenti...");
   const tabelleInOrdine = [
-    "ritiri",
+    "comunicati_stampa",
+    "media_accreditati",
+    "meteo_tappa",
+    "hotel",
+    "veicoli_squadra",
+    "squadra_sponsor",
+    "sponsor",
+    "biciclette",
+    "controlli_antidoping",
     "penalita",
     "gpm_risultati",
     "traguardi_volanti",
+    "classifiche_tipo",
     "risultati",
     "tappe_percorso",
     "tappe",
+    "staff_tecnico",
     "corridori",
     "squadre",
     "nazioni",
   ];
   for (const t of tabelleInOrdine) await run(`DELETE FROM ${t}`);
   await run(
-    "DELETE FROM sqlite_sequence WHERE name IN ('ritiri','penalita','gpm_risultati','traguardi_volanti','risultati','tappe_percorso','tappe','corridori','squadre','nazioni')",
+    "DELETE FROM sqlite_sequence WHERE name IN ('comunicati_stampa','media_accreditati','meteo_tappa','hotel','veicoli_squadra','squadra_sponsor','sponsor','biciclette','controlli_antidoping','penalita','gpm_risultati','traguardi_volanti','classifiche_tipo','risultati','tappe_percorso','tappe','staff_tecnico','corridori','squadre','nazioni')",
   );
 
   // ---- 1) Nazioni --------------------------------------------------------
@@ -518,7 +529,7 @@ async function main() {
   }
 
   // ---- 3) Corridori (6 per squadra = 60 totali) + biciclette --------------
-  console.log("🧑\u200d🚴 Corridori...");
+  console.log("🧑\u200d🚴 Corridori e biciclette...");
   const corridori = []; // { id, squadraId, codiceNazione, livello }
   for (let i = 0; i < idSquadra.length; i++) {
     const sq = idSquadra[i];
@@ -543,10 +554,71 @@ async function main() {
         nome,
         cognome,
       });
+
+      await run(
+        "INSERT INTO biciclette (corridore_id, marca, modello, telaio) VALUES (?, ?, ?, ?)",
+        [
+          res.lastID,
+          scegli(marcheBici),
+          scegli(modelliBici),
+          "TL" + interoTra(100000, 999999),
+        ],
+      );
     }
   }
 
-  // ---- 4) Tappe e percorso (sprint/GPM) ----------------------------------
+  // ---- 4) Staff tecnico (2 per squadra) e veicoli (3 per squadra) ---------
+  console.log("🛠️  Staff tecnico e veicoli...");
+  for (const sq of idSquadra) {
+    const pool = poolNomi[sq.codice];
+    await run(
+      "INSERT INTO staff_tecnico (nome, cognome, ruolo, squadra_id) VALUES (?, ?, ?, ?)",
+      [scegli(pool.nomi), scegli(pool.cognomi), "direttore_sportivo", sq.id],
+    );
+    await run(
+      "INSERT INTO staff_tecnico (nome, cognome, ruolo, squadra_id) VALUES (?, ?, ?, ?)",
+      [
+        scegli(pool.nomi),
+        scegli(pool.cognomi),
+        scegli(ruoliStaff.filter((r) => r !== "direttore_sportivo")),
+        sq.id,
+      ],
+    );
+
+    for (const [tipo, modello] of veicoliPerSquadra) {
+      const targa = `${scegli(["AB", "CD", "EF", "GH", "LM"])}${interoTra(100, 999)}${scegli(["XY", "ZK", "QR"])}`;
+      await run(
+        "INSERT INTO veicoli_squadra (squadra_id, tipo, targa, modello) VALUES (?, ?, ?, ?)",
+        [sq.id, tipo, targa, modello],
+      );
+    }
+  }
+
+  // ---- 5) Sponsor + relazione squadra_sponsor ------------------------------
+  console.log("🏷️  Sponsor...");
+  const idSponsor = [];
+  for (const [nome, settore, sito] of sponsor) {
+    const res = await run(
+      "INSERT INTO sponsor (nome, settore, sito_web) VALUES (?, ?, ?)",
+      [nome, settore, sito],
+    );
+    idSponsor.push(res.lastID);
+  }
+  for (let i = 0; i < idSquadra.length; i++) {
+    const main = idSponsor[i % idSponsor.length];
+    const co = idSponsor[(i + 3) % idSponsor.length];
+    await run(
+      "INSERT INTO squadra_sponsor (squadra_id, sponsor_id, tipo) VALUES (?, ?, ?)",
+      [idSquadra[i].id, main, "main_sponsor"],
+    );
+    if (co !== main)
+      await run(
+        "INSERT INTO squadra_sponsor (squadra_id, sponsor_id, tipo) VALUES (?, ?, ?)",
+        [idSquadra[i].id, co, "co_sponsor"],
+      );
+  }
+
+  // ---- 6) Tappe, percorso (sprint/GPM) e meteo -----------------------------
   console.log("🗺️  Tappe, percorso e meteo...");
   const idTappa = [];
   for (let i = 0; i < percorsoTappe.length; i++) {
@@ -562,6 +634,16 @@ async function main() {
       [i + 1, nome, partenza, arrivo, distanza, dislivello, tipo, data, stato],
     );
     idTappa.push({ id: res.lastID, numero: i + 1, tipo, distanza, nome });
+
+    await run(
+      "INSERT INTO meteo_tappa (tappa_id, temperatura, condizione, vento_kmh) VALUES (?, ?, ?, ?)",
+      [
+        res.lastID,
+        decimaleTra(8, 29, 1),
+        scegli(condizioniMeteo),
+        decimaleTra(3, 42, 1),
+      ],
+    );
 
     if (tipo === "collina" || tipo === "montagna") {
       const nPunti = tipo === "montagna" ? 2 : 1;
@@ -667,8 +749,16 @@ async function main() {
     }
   }
 
-  // ---- 5) Penalità ----------------------------------------------------------
-  console.log("⚖️  Penalità...");
+  // ---- 8) Classifiche tipo --------------------------------------------------
+  console.log("🏆 Tipi di classifica...");
+  for (const c of classificheTipo)
+    await run(
+      "INSERT INTO classifiche_tipo (nome, descrizione) VALUES (?, ?)",
+      c,
+    );
+
+  // ---- 9) Penalità e controlli antidoping -----------------------------------
+  console.log("⚖️  Penalità e controlli antidoping...");
   const motiviPenalita = [
     "sgancio ritardato in volata",
     "aiuto esterno non autorizzato",
@@ -692,7 +782,107 @@ async function main() {
     );
   }
 
-  // ---- 6) Normalizzazione finale codici ISO2 ------------------------------
+  const esiti = [
+    "negativo",
+    "negativo",
+    "negativo",
+    "negativo",
+    "in_attesa",
+    "in_attesa",
+    "positivo",
+  ];
+  for (let i = 0; i < 15; i++) {
+    const c = scegli(corridori);
+    const t = scegli(idTappa);
+    await run(
+      "INSERT INTO controlli_antidoping (corridore_id, tappa_id, data, esito) VALUES (?, ?, ?, ?)",
+      [c.id, t.id, sommaData(dataInizio, t.numero - 1), scegli(esiti)],
+    );
+  }
+
+  // ---- 10) Alloggi (hotel per squadra sulle prime tappe) ---------------------
+  console.log("🏨 Alloggi...");
+  for (const tappa of idTappa.slice(0, 3)) {
+    for (const sq of idSquadra) {
+      await run(
+        "INSERT INTO hotel (tappa_id, squadra_id, nome, citta, indirizzo) VALUES (?, ?, ?, ?, ?)",
+        [
+          tappa.id,
+          sq.id,
+          `Hotel ${scegli(["Corona", "Belvedere", "Panorama", "Centrale", "Imperiale", "Stazione"])}`,
+          scegli(cittaHotel),
+          `Via ${scegli(["Roma", "Garibaldi", "Dante", "Verdi", "Mazzini"])}, ${interoTra(1, 120)}`,
+        ],
+      );
+    }
+  }
+
+  // ---- 11) Stampa: media accreditati e comunicati ----------------------------
+  console.log("📰 Media accreditati e comunicati stampa...");
+  const testate = [
+    "Gazzetta del Ciclismo",
+    "Radio Corsa Live",
+    "CicloTV Nazionale",
+    "FotoSprint Agency",
+    "PedalaOnline",
+    "Corriere delle Due Ruote",
+    "EuroCycling News",
+    "VeloPress International",
+  ];
+  const tipiMedia = ["stampa", "tv", "radio", "foto", "online"];
+  for (let i = 0; i < 12; i++) {
+    const pool = poolNomi[scegli(Object.keys(poolNomi))];
+    await run(
+      "INSERT INTO media_accreditati (nome, testata, tipo, tappa_id) VALUES (?, ?, ?, ?)",
+      [
+        `${scegli(pool.nomi)} ${scegli(pool.cognomi)}`,
+        scegli(testate),
+        scegli(tipiMedia),
+        scegli(idTappa).id,
+      ],
+    );
+  }
+
+  const comunicati = [
+    [
+      "Al via la corsa: presentate le 12 tappe",
+      "La corsa scatta da Roma con dodici frazioni che attraverseranno l'intero Paese fino all'arrivo di Milano.",
+    ],
+    [
+      "Grande attesa per la cronometro di Terracina",
+      "Gli specialisti si preparano per la prima prova contro il tempo della corsa.",
+    ],
+    [
+      "Maltempo in vista sulle tappe di montagna",
+      "Gli organizzatori monitorano le previsioni meteo per le tappe alpine.",
+    ],
+    [
+      "Accrediti stampa: aperte le richieste per la stampa internazionale",
+      "Cresce l'interesse dei media esteri per l'edizione di quest'anno.",
+    ],
+    [
+      "Controlli antidoping rafforzati per questa edizione",
+      "La commissione ha intensificato i controlli su tutte le tappe in programma.",
+    ],
+    [
+      "Sponsor tecnici confermati per tutte le squadre",
+      "Le principali squadre hanno ufficializzato i propri sponsor tecnici e commerciali.",
+    ],
+  ];
+  for (let i = 0; i < comunicati.length; i++) {
+    const [titolo, contenuto] = comunicati[i];
+    await run(
+      "INSERT INTO comunicati_stampa (titolo, contenuto, data, tappa_id) VALUES (?, ?, ?, ?)",
+      [
+        titolo,
+        contenuto,
+        sommaData(dataInizio, i),
+        idTappa[Math.min(i, idTappa.length - 1)].id,
+      ],
+    );
+  }
+
+  // ---- 12) Normalizzazione finale codici ISO2 ------------------------------
   // Difensivo: assicura che tutti i codici nel DB siano maiuscoli e senza spazi,
   // anche se per qualche motivo fossero stati inseriti diversamente.
   const normalizzazione = await run(
@@ -723,14 +913,22 @@ async function main() {
   }
 
   console.log("\n✅ Seed completato:");
-  console.log(`   • ${nazioni.length} nazioni`);
+  console.log(`   • ${nazioni.length} nazioni (con bandiera preimpostata)`);
   console.log(
-    `   • ${idSquadra.length} squadre, ${corridori.length} corridori`,
+    `   • ${idSquadra.length} squadre, ${corridori.length} corridori, ${corridori.length} biciclette`,
   );
   console.log(
-    `   • ${idTappa.length} tappe con percorso, risultati per le prime ${tappeConRisultati.length}`,
+    `   • ${idSquadra.length * 2} membri di staff tecnico, ${idSquadra.length * 3} veicoli squadra`,
   );
-  console.log("   • penalità e classifiche calcolate dai risultati");
+  console.log(
+    `   • ${sponsor.length} sponsor e le relative sponsorizzazioni per squadra`,
+  );
+  console.log(
+    `   • ${idTappa.length} tappe con percorso e meteo, risultati per le prime ${tappeConRisultati.length}`,
+  );
+  console.log(
+    "   • penalità, controlli antidoping, alloggi, media accreditati e comunicati stampa",
+  );
   process.exit(0);
 }
 

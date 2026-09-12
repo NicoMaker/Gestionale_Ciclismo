@@ -754,51 +754,14 @@ tbody tr.riga-podio:nth-child(3) {
 }
 .subtab-head {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 18px;
   flex-wrap: wrap;
 }
-.select-filtrato {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 220px;
-}
-.filtro-select-cerca {
-  font-family: inherit;
-  font-size: 12.5px;
-  padding: 7px 10px;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--bordo);
-  background: var(--carta);
-}
 .subtab-sezione {
   margin-bottom: 30px;
-}
-.sezione-ritiri {
-  margin-top: 28px;
-  padding-top: 8px;
-  border-top: 1px dashed var(--bordo);
-}
-.sezione-ritiri .subtab-head h4 {
-  margin: 0;
-  flex: 1;
-}
-.hint-ritiri {
-  font-size: 12.5px;
-  color: var(--testo-soft);
-  margin: 0 0 12px;
-  line-height: 1.45;
-}
-.badge-infortunio {
-  background: #ffe6ec;
-  color: #d92c4b;
-}
-.badge-non_partecipa {
-  background: #fff2e0;
-  color: #c25c00;
 }
 .subtab-sezione h4 {
   font-size: 12.5px;

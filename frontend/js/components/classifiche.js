@@ -4,7 +4,6 @@ import {
   htmlCampoRicerca,
   attivaCampoRicerca,
   bandiera,
-  htmlNomeSquadra,
 } from "../utils.js";
 import { socket } from "../socket.js";
 import { montaListaConForm } from "./tabella-dati.js";
@@ -28,13 +27,10 @@ function bandieraInline(codiceIso2) {
 
 function bannerMaglia(leader, coloreVar, etichetta, bordoExtra) {
   if (!leader) return "";
-  const nomeSquadra = htmlNomeSquadra(
-    leader.squadra_nome,
-    leader.squadra_nazione_codice,
-  );
+  const nomeSquadra = leader.squadra_nome ?? "—";
   const nomeCompleto = leader.nome
-    ? `${bandieraInline(leader.nazione_codice)}${leader.nome} ${leader.cognome}`
-    : htmlNomeSquadra(leader.squadra_nome, leader.nazione_codice);
+    ? `${leader.nome} ${leader.cognome}`
+    : leader.squadra_nome;
   const sottotitolo = leader.nome
     ? nomeSquadra
     : `${leader.corridori_contati ?? 0} corridori in classifica`;
@@ -42,7 +38,7 @@ function bannerMaglia(leader, coloreVar, etichetta, bordoExtra) {
     <div class="banner-maglia" style="--colore-maglia:${coloreVar};">
       <span class="maglia-dot"${bordoExtra ? ' style="border:2px solid var(--bordo);"' : ""}></span>
       <div>
-        <strong>${nomeCompleto}</strong>
+        <strong>${bandieraInline(leader.nazione_codice)}${nomeCompleto}</strong>
         <span class="maglia-label">indossa la ${etichetta} — ${sottotitolo}</span>
       </div>
     </div>
@@ -97,7 +93,7 @@ function disegnaTempo() {
     <tr class="${pos <= 3 ? "riga-podio" : ""}">
       <td>${m ? `<span class="medaglia-podio">${m}</span>` : pos}</td>
       <td><strong>${bandieraInline(r.nazione_codice)}${r.nome} ${r.cognome}</strong></td>
-      <td>${htmlNomeSquadra(r.squadra_nome, r.squadra_nazione_codice)}</td>
+      <td>${r.squadra_nome ?? "—"}</td>
       <td>${r.tappe_disputate}</td>
       <td><span class="badge badge-codice">${r.tempo_totale}</span></td>
       <td>${r.distacco}</td>
@@ -161,7 +157,7 @@ function disegnaPunti() {
     <tr class="${pos <= 3 ? "riga-podio" : ""}">
       <td>${m ? `<span class="medaglia-podio">${m}</span>` : pos}</td>
       <td><strong>${bandieraInline(r.nazione_codice)}${r.nome} ${r.cognome}</strong></td>
-      <td>${htmlNomeSquadra(r.squadra_nome, r.squadra_nazione_codice)}</td>
+      <td>${r.squadra_nome ?? "—"}</td>
       <td>${r.tappe_disputate}</td>
       <td><span class="badge badge-punti">${r.punti_totali ?? 0}</span></td>
     </tr>
@@ -225,7 +221,7 @@ function disegnaGiovani() {
     <tr class="${pos <= 3 ? "riga-podio" : ""}">
       <td>${m ? `<span class="medaglia-podio">${m}</span>` : pos}</td>
       <td><strong>${bandieraInline(r.nazione_codice)}${r.nome} ${r.cognome}</strong></td>
-      <td>${htmlNomeSquadra(r.squadra_nome, r.squadra_nazione_codice)}</td>
+      <td>${r.squadra_nome ?? "—"}</td>
       <td>${r.eta}</td>
       <td><span class="badge badge-codice">${r.tempo_totale}</span></td>
       <td>${r.distacco}</td>
@@ -289,7 +285,7 @@ function disegnaMontagna() {
     <tr class="${pos <= 3 ? "riga-podio" : ""}">
       <td>${m ? `<span class="medaglia-podio">${m}</span>` : pos}</td>
       <td><strong>${bandieraInline(r.nazione_codice)}${r.nome} ${r.cognome}</strong></td>
-      <td>${htmlNomeSquadra(r.squadra_nome, r.squadra_nazione_codice)}</td>
+      <td>${r.squadra_nome ?? "—"}</td>
       <td>${r.gpm_disputati}</td>
       <td><span class="badge badge-gpm">${r.punti_totali ?? 0}</span></td>
     </tr>
@@ -352,7 +348,8 @@ function disegnaSquadre() {
     <tr class="${pos <= 3 ? "riga-podio" : ""}">
       <td>${m ? `<span class="medaglia-podio">${m}</span>` : pos}</td>
       <td>
-        <strong>${htmlNomeSquadra(r.squadra_nome, r.nazione_codice, r.squadra_colore)}</strong>
+        <span class="dot-colore" style="background:${r.squadra_colore}"></span>
+        <strong>${bandieraInline(r.nazione_codice)}${r.squadra_nome}</strong>
       </td>
       <td>${r.corridori_contati}</td>
       <td><span class="badge badge-codice">${r.tempo_totale}</span></td>
@@ -367,6 +364,18 @@ function disegnaSquadre() {
 async function ricaricaSquadre() {
   stato.squadre.dati = await apiGet("/api/risultati/classifica-squadre");
   disegnaSquadre();
+}
+
+function renderTipiClassifica(corpo) {
+  sottoTabAttiva = "tipi";
+  montaListaConForm(corpo, {
+    titolo: "Tipo di classifica",
+    apiPath: "/api/classifiche-tipo",
+    colonne: [
+      { key: "nome", label: "Nome", type: "text" },
+      { key: "descrizione", label: "Descrizione", type: "text" },
+    ],
+  });
 }
 
 function ricaricaAttiva() {
@@ -386,13 +395,15 @@ export function init(container) {
       { key: "giovani", label: "Giovani (maglia bianca)" },
       { key: "montagna", label: "Scalatori GPM (maglia verde)" },
       { key: "squadre", label: "Classifica squadre" },
+      { key: "tipi", label: "Tipi di classifica" },
     ],
     (key, corpo) => {
       if (key === "tempo") renderTempo(corpo);
       else if (key === "punti") renderPunti(corpo);
       else if (key === "giovani") renderGiovani(corpo);
       else if (key === "montagna") renderMontagna(corpo);
-      else renderSquadre(corpo);
+      else if (key === "squadre") renderSquadre(corpo);
+      else renderTipiClassifica(corpo);
     },
   );
 
@@ -402,5 +413,4 @@ export function init(container) {
   socket.on("risultati:aggiornati", ricaricaAttiva);
   socket.on("gpm-risultati:aggiornati", ricaricaAttiva);
   socket.on("penalita:aggiornati", ricaricaAttiva);
-  socket.on("ritiri:aggiornati", ricaricaAttiva);
 }
