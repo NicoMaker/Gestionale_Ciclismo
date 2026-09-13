@@ -905,7 +905,7 @@ async function main() {
   );
   await run(
     `UPDATE corridori SET
-       ritirato = 1, ritirato_tappa_numero = ?, motivo_ritiro = 'squalifica',
+       ritirato = 1, ritirato_tappa_numero = ?, motivo_ritiro = 'doping',
        note_ritiro = ?, ritirato_il = CURRENT_TIMESTAMP
      WHERE id = ?`,
     [

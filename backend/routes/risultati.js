@@ -55,13 +55,15 @@ module.exports = (io) => {
 
   /* ---------------------------------------------------------------------
    * Somma, per ogni corridore, tutti i tempi di tappa disputati (colonna
-   * risultati.tempo) più le eventuali penalità in secondi. È la base
-   * comune per: classifica generale a tempo, classifica giovani e
+   * risultati.tempo) più le eventuali penalità in secondi, meno gli
+   * eventuali abbuoni guadagnati (bonus in secondi per chi arriva nelle
+   * prime posizioni di tappa, solo sulle tappe con abbuoni attivi). È la
+   * base comune per: classifica generale a tempo, classifica giovani e
    * classifica a squadre (che è la somma dei tempi dei suoi corridori).
    * ------------------------------------------------------------------- */
   function ottieniTempiCorridori(callback) {
-    // i corridori ritirati (infortunio, abbandono, squalifica...) escono
-    // definitivamente da tutte le classifiche a tempo/punti/squadre
+    // i corridori ritirati (infortunio, abbandono, squalifica, doping...)
+    // escono definitivamente da tutte le classifiche a tempo/punti/squadre
     const sqlRisultati = `
       SELECT c.id, c.nome, c.cognome, c.numero_pettorale, c.data_nascita,
              s.id AS squadra_id, s.nome AS squadra_nome, s.colore AS squadra_colore,
@@ -80,37 +82,54 @@ module.exports = (io) => {
         [],
         (err2, penalita) => {
           if (err2) return callback(err2);
-          const secondiPenalita = new Map(
-            penalita.map((p) => [p.corridore_id, p.secondi || 0]),
+          db.all(
+            `SELECT r.corridore_id, SUM(a.secondi) AS abbuono
+             FROM risultati r
+             JOIN tappe t ON t.id = r.tappa_id
+             JOIN abbuoni_classifica a ON a.posizione = r.posizione
+             WHERE t.abbuoni_attivi = 1
+             GROUP BY r.corridore_id`,
+            [],
+            (err3, abbuoni) => {
+              if (err3) return callback(err3);
+              const secondiPenalita = new Map(
+                penalita.map((p) => [p.corridore_id, p.secondi || 0]),
+              );
+              const secondiAbbuono = new Map(
+                abbuoni.map((a) => [a.corridore_id, a.abbuono || 0]),
+              );
+              const mappa = new Map();
+              for (const r of righe) {
+                if (!mappa.has(r.id)) {
+                  mappa.set(r.id, {
+                    id: r.id,
+                    nome: r.nome,
+                    cognome: r.cognome,
+                    numero_pettorale: r.numero_pettorale,
+                    data_nascita: r.data_nascita,
+                    squadra_id: r.squadra_id,
+                    squadra_nome: r.squadra_nome,
+                    squadra_colore: r.squadra_colore,
+                    nazione_nome: r.nazione_nome,
+                    nazione_codice: r.nazione_codice,
+                    tappe_disputate: 0,
+                    secondi_totali: 0,
+                  });
+                }
+                if (r.tempo) {
+                  const voce = mappa.get(r.id);
+                  voce.tappe_disputate += 1;
+                  voce.secondi_totali += tempoInSecondi(r.tempo);
+                }
+              }
+              for (const voce of mappa.values()) {
+                voce.abbuono_secondi = secondiAbbuono.get(voce.id) || 0;
+                voce.secondi_totali += secondiPenalita.get(voce.id) || 0;
+                voce.secondi_totali -= voce.abbuono_secondi;
+              }
+              callback(null, Array.from(mappa.values()));
+            },
           );
-          const mappa = new Map();
-          for (const r of righe) {
-            if (!mappa.has(r.id)) {
-              mappa.set(r.id, {
-                id: r.id,
-                nome: r.nome,
-                cognome: r.cognome,
-                numero_pettorale: r.numero_pettorale,
-                data_nascita: r.data_nascita,
-                squadra_id: r.squadra_id,
-                squadra_nome: r.squadra_nome,
-                squadra_colore: r.squadra_colore,
-                nazione_nome: r.nazione_nome,
-                nazione_codice: r.nazione_codice,
-                tappe_disputate: 0,
-                secondi_totali: 0,
-              });
-            }
-            if (r.tempo) {
-              const voce = mappa.get(r.id);
-              voce.tappe_disputate += 1;
-              voce.secondi_totali += tempoInSecondi(r.tempo);
-            }
-          }
-          for (const voce of mappa.values()) {
-            voce.secondi_totali += secondiPenalita.get(voce.id) || 0;
-          }
-          callback(null, Array.from(mappa.values()));
         },
       );
     });
@@ -276,6 +295,119 @@ module.exports = (io) => {
             },
           );
           res.json(conDistacco(classifica));
+        },
+      );
+    });
+  });
+
+  // Dettaglio corridore: dove è arrivato tappa per tappa e in che
+  // posizione si trova in ciascuna delle classifiche (maglia rosa,
+  // ciclamino, verde GPM, e bianca giovani se rientra per età).
+  router.get("/corridore/:corridoreId", (req, res) => {
+    const corridoreId = +req.params.corridoreId;
+
+    const sqlRisultatiTappa = `
+      SELECT r.tappa_id, r.posizione, r.tempo, r.distacco, r.punti,
+             t.numero_tappa, t.nome AS tappa_nome, t.tipo AS tappa_tipo,
+             t.data AS tappa_data, t.partenza, t.arrivo
+      FROM risultati r
+      JOIN tappe t ON t.id = r.tappa_id
+      WHERE r.corridore_id = ?
+      ORDER BY t.numero_tappa ASC
+    `;
+    const sqlPunti = `
+      SELECT c.id,
+             COALESCE((SELECT SUM(r.punti) FROM risultati r WHERE r.corridore_id = c.id), 0)
+               + COALESCE((SELECT SUM(t.punti) FROM traguardi_volanti t WHERE t.corridore_id = c.id), 0)
+               - COALESCE((SELECT SUM(p.punti) FROM penalita p WHERE p.corridore_id = c.id), 0)
+               AS punti_totali,
+             (SELECT COUNT(*) FROM risultati r WHERE r.corridore_id = c.id) AS tappe_disputate
+      FROM corridori c
+      WHERE COALESCE(c.ritirato, 0) = 0
+      GROUP BY c.id
+      HAVING tappe_disputate > 0
+      ORDER BY punti_totali DESC
+    `;
+    const sqlMontagna = `
+      SELECT c.id, SUM(g.punti) AS punti_totali
+      FROM gpm_risultati g
+      JOIN corridori c ON g.corridore_id = c.id
+      WHERE COALESCE(c.ritirato, 0) = 0
+      GROUP BY c.id
+      ORDER BY punti_totali DESC
+    `;
+
+    function posizioneIn(elenco, campoId = "id") {
+      const indice = elenco.findIndex((r) => r[campoId] === corridoreId);
+      return indice === -1
+        ? null
+        : { posizione: indice + 1, totale: elenco.length };
+    }
+
+    db.all(sqlRisultatiTappa, [corridoreId], (err, risultati) => {
+      if (err) return res.status(500).json({ errore: err.message });
+
+      db.get(
+        "SELECT ritirato, data_nascita FROM corridori WHERE id = ?",
+        [corridoreId],
+        (errC, corridore) => {
+          if (errC) return res.status(500).json({ errore: errC.message });
+          if (!corridore)
+            return res.status(404).json({ errore: "Corridore non trovato" });
+
+          ottieniTempiCorridori((errT, tempi) => {
+            if (errT) return res.status(500).json({ errore: errT.message });
+            const generale = conDistacco(
+              tempi.filter((c) => c.tappe_disputate > 0),
+            );
+
+            db.get(
+              "SELECT MAX(CAST(strftime('%Y', data) AS INTEGER)) AS anno FROM tappe WHERE data IS NOT NULL",
+              [],
+              (errAnno, rigaAnno) => {
+                if (errAnno)
+                  return res.status(500).json({ errore: errAnno.message });
+                const annoRiferimento =
+                  rigaAnno?.anno || new Date().getFullYear();
+                const idoneoGiovani =
+                  corridore.data_nascita &&
+                  new Date(corridore.data_nascita).getFullYear() >=
+                    annoRiferimento - 25;
+                const giovani = idoneoGiovani
+                  ? conDistacco(
+                      tempi.filter(
+                        (c) =>
+                          c.tappe_disputate > 0 &&
+                          c.data_nascita &&
+                          new Date(c.data_nascita).getFullYear() >=
+                            annoRiferimento - 25,
+                      ),
+                    )
+                  : null;
+
+                db.all(sqlPunti, [], (errP, punti) => {
+                  if (errP)
+                    return res.status(500).json({ errore: errP.message });
+
+                  db.all(sqlMontagna, [], (errM, montagna) => {
+                    if (errM)
+                      return res.status(500).json({ errore: errM.message });
+
+                    res.json({
+                      risultati,
+                      ritirato: !!corridore.ritirato,
+                      classifiche: {
+                        generale: posizioneIn(generale),
+                        punti: posizioneIn(punti),
+                        giovani: giovani ? posizioneIn(giovani) : null,
+                        montagna: posizioneIn(montagna),
+                      },
+                    });
+                  });
+                });
+              },
+            );
+          });
         },
       );
     });

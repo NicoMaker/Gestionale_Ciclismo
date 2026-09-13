@@ -129,7 +129,13 @@ module.exports = (io) => {
         .status(400)
         .json({ errore: "Il motivo del ritiro è obbligatorio" });
     }
-    const motiviValidi = ["infortunio", "abbandono", "squalifica", "altro"];
+    const motiviValidi = [
+      "infortunio",
+      "abbandono",
+      "squalifica",
+      "doping",
+      "altro",
+    ];
     if (!motiviValidi.includes(motivo_ritiro)) {
       return res.status(400).json({ errore: "Motivo del ritiro non valido" });
     }

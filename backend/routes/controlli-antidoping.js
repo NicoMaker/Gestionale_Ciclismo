@@ -4,11 +4,13 @@ const db = require("../db/database");
 
 /* ---------------------------------------------------------------------
  * Un controllo antidoping con esito "positivo" ha una conseguenza
- * sportiva automatica: il corridore viene squalificato e, da questo
- * momento, non può più essere selezionato per nessuna tappa successiva
- * né comparire in classifica — esattamente come un ritiro manuale, ma
- * innescato in automatico dal risultato del controllo invece che da
- * un'azione esplicita dell'utente in anagrafica corridori.
+ * sportiva automatica: il corridore viene ritirato con motivo "doping"
+ * e, da questo momento, non può più essere selezionato per nessuna
+ * tappa successiva né comparire in classifica — esattamente come un
+ * ritiro manuale, ma innescato in automatico dal risultato del
+ * controllo invece che da un'azione esplicita dell'utente in anagrafica
+ * corridori, e con un motivo dedicato ("doping") per distinguerlo da
+ * una squalifica per altre ragioni (es. comportamento in gara).
  * ------------------------------------------------------------------- */
 function applicaSqualificaDoping(corridoreId, tappaId, io) {
   const aggiorna = (numeroTappa) => {
@@ -19,7 +21,7 @@ function applicaSqualificaDoping(corridoreId, tappaId, io) {
       `UPDATE corridori SET
          ritirato = 1,
          ritirato_tappa_numero = ?,
-         motivo_ritiro = 'squalifica',
+         motivo_ritiro = 'doping',
          note_ritiro = ?,
          ritirato_il = CURRENT_TIMESTAMP
        WHERE id = ?`,

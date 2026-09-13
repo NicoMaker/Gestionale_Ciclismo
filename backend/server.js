@@ -123,6 +123,16 @@ app.use(
   ),
 );
 app.use(
+  "/api/abbuoni",
+  creaRouterGenerico(
+    "abbuoni_classifica",
+    ["posizione", "secondi"],
+    io,
+    "abbuoni",
+    "posizione",
+  ),
+);
+app.use(
   "/api/penalita",
   creaRouterGenerico(
     "penalita",

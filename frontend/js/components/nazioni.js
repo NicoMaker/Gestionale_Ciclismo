@@ -35,7 +35,7 @@ function disegna(tbody) {
   `,
       )
       .join("") ||
-    `<tr><td colspan="3" style="text-align:center;color:#999;padding:24px;">${queryCorrente ? "Nessuna nazione trovata" : "Nessuna nazione inserita"}</td></tr>`;
+    `<tr><td colspan="3" class="stato-vuoto">${queryCorrente ? "Nessuna nazione trovata" : "Nessuna nazione inserita"}</td></tr>`;
 
   tbody
     .querySelectorAll("[data-modifica]")

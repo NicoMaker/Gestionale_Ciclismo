@@ -55,7 +55,7 @@ async function renderTempo(corpo) {
     <div id="bannerTempo"></div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Pos.</th><th>Corridore</th><th>Squadra</th><th>Tappe</th><th>Tempo totale</th><th>Distacco</th></tr></thead>
+        <thead><tr><th>Pos.</th><th>Corridore</th><th>Squadra</th><th>Tappe</th><th>Abbuono</th><th>Tempo totale</th><th>Distacco</th></tr></thead>
         <tbody id="tabellaClassificaTempo"></tbody>
       </table>
     </div>
@@ -95,13 +95,14 @@ function disegnaTempo() {
       <td><strong>${bandieraInline(r.nazione_codice)}${r.nome} ${r.cognome}</strong></td>
       <td>${r.squadra_nome ?? "—"}</td>
       <td>${r.tappe_disputate}</td>
+      <td>${r.abbuono_secondi ? `<span class="badge badge-abbuono" title="Secondi guadagnati per posizioni di tappa">-${r.abbuono_secondi}s</span>` : "—"}</td>
       <td><span class="badge badge-codice">${r.tempo_totale}</span></td>
       <td>${r.distacco}</td>
     </tr>
   `;
       })
       .join("") ||
-    `<tr><td colspan="6" style="text-align:center;color:#999;padding:24px;">${query ? "Nessun corridore trovato" : "Nessun dato disponibile"}</td></tr>`;
+    `<tr><td colspan="7" class="stato-vuoto">${query ? "Nessun corridore trovato" : "Nessun dato disponibile"}</td></tr>`;
 }
 
 async function ricaricaTempo() {
@@ -164,7 +165,7 @@ function disegnaPunti() {
   `;
       })
       .join("") ||
-    `<tr><td colspan="5" style="text-align:center;color:#999;padding:24px;">${query ? "Nessun corridore trovato" : "Nessun dato disponibile"}</td></tr>`;
+    `<tr><td colspan="5" class="stato-vuoto">${query ? "Nessun corridore trovato" : "Nessun dato disponibile"}</td></tr>`;
 }
 
 async function ricaricaPunti() {
@@ -229,7 +230,7 @@ function disegnaGiovani() {
   `;
       })
       .join("") ||
-    `<tr><td colspan="6" style="text-align:center;color:#999;padding:24px;">${query ? "Nessun corridore trovato" : "Nessun corridore under 25 in classifica"}</td></tr>`;
+    `<tr><td colspan="6" class="stato-vuoto">${query ? "Nessun corridore trovato" : "Nessun corridore under 25 in classifica"}</td></tr>`;
 }
 
 async function ricaricaGiovani() {
@@ -292,7 +293,7 @@ function disegnaMontagna() {
   `;
       })
       .join("") ||
-    `<tr><td colspan="5" style="text-align:center;color:#999;padding:24px;">${query ? "Nessun corridore trovato" : "Nessun GPM ancora disputato"}</td></tr>`;
+    `<tr><td colspan="5" class="stato-vuoto">${query ? "Nessun corridore trovato" : "Nessun GPM ancora disputato"}</td></tr>`;
 }
 
 async function ricaricaMontagna() {
@@ -358,7 +359,7 @@ function disegnaSquadre() {
   `;
       })
       .join("") ||
-    `<tr><td colspan="5" style="text-align:center;color:#999;padding:24px;">${query ? "Nessuna squadra trovata" : "Nessun dato disponibile"}</td></tr>`;
+    `<tr><td colspan="5" class="stato-vuoto">${query ? "Nessuna squadra trovata" : "Nessun dato disponibile"}</td></tr>`;
 }
 
 async function ricaricaSquadre() {

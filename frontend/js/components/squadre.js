@@ -8,12 +8,17 @@ import {
   htmlCampoRicerca,
   attivaCampoRicerca,
   erroreDaResponse,
+  calcolaEta,
+  annoRiferimentoGara,
+  ETA_LIMITE_MAGLIA_BIANCA,
 } from "../utils.js";
 import {
   cache,
   caricaSquadre,
   garantisciNazioni,
   garantisciSponsor,
+  garantisciCorridori,
+  garantisciTappe,
 } from "../state.js";
 import { socket } from "../socket.js";
 import { montaListaConForm } from "./tabella-dati.js";
@@ -22,6 +27,7 @@ import {
   attivaCampoNazione,
 } from "./nazione-autocomplete.js";
 import { icona } from "../icone.js";
+import { apriFormCorridore, apriDettaglioCorridore, MOTIVI_RITIRO } from "./corridori.js";
 
 let sottoTabAttiva = "elenco";
 let queryCorrente = "";
@@ -66,6 +72,7 @@ function disegnaElenco() {
       <p>${s.nazione_codice ? `<span class="bandiera">${bandiera(s.nazione_codice)}</span>${s.nazione_nome}` : "nazione non specificata"}</p>
       <p class="conteggio-corridori">${icona("bici")}${s.numero_corridori ?? 0} corridori in rosa${s.numero_corridori && s.numero_corridori !== s.numero_corridori_in_gara ? ` · ${s.numero_corridori_in_gara ?? 0} in gara` : ""}</p>
       <div class="row">
+        <button class="btn-secondary btn-piccolo" data-rosa="${s.id}">${icona("bici")}vedi rosa</button>
         <button class="btn-icon" title="modifica" data-modifica="${s.id}">${icona("modifica")}</button>
         <button class="btn-icon danger" title="elimina" data-elimina="${s.id}">${icona("elimina")}</button>
       </div>
@@ -74,6 +81,13 @@ function disegnaElenco() {
       )
       .join("") ||
     `<p style="color:#999;">${queryCorrente ? "Nessuna squadra trovata" : "Nessuna squadra inserita"}</p>`;
+
+  wrap.querySelectorAll("[data-rosa]").forEach((b) =>
+    b.addEventListener("click", () => {
+      const s = cache.squadre.find((s) => s.id === +b.dataset.rosa);
+      if (s) apriRosaSquadra(s);
+    }),
+  );
 
   wrap.querySelectorAll("[data-modifica]").forEach((b) =>
     b.addEventListener("click", async () => {
@@ -149,6 +163,110 @@ async function eliminaSquadra(id) {
     mostraToast(
       await erroreDaResponse(res, "Impossibile eliminare la squadra"),
     );
+}
+
+/* ---------------------------------------------------------------------
+ * Dettaglio squadra: la rosa completa dei corridori, con ricerca e la
+ * possibilità di aggiungerne uno nuovo già assegnato a questa squadra
+ * (compare automaticamente anche nell'elenco corridori generale, è la
+ * stessa anagrafica). Se poi la squadra di un corridore viene cambiata
+ * dalla sezione corridori, la rosa si aggiorna da sola in tempo reale.
+ * ------------------------------------------------------------------- */
+let squadraRosaId = null;
+let queryRosa = "";
+
+function apriRosaSquadra(squadra) {
+  squadraRosaId = squadra.id;
+  queryRosa = "";
+  apriModal(`
+    <h2>Rosa — ${squadra.nome}</h2>
+    <div class="subtab-head" style="margin-bottom:14px;">
+      ${htmlCampoRicerca("cerca nella rosa...")}
+      <button class="btn-secondary btn-piccolo" id="rosa_aggiungi">${icona("aggiungi")}aggiungi corridore</button>
+    </div>
+    <div id="rosaLista"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="rosa_chiudi">chiudi</button>
+    </div>
+  `);
+  attivaCampoRicerca(document.getElementById("modalBox"), (q) => {
+    queryRosa = q;
+    disegnaRosa();
+  });
+  document.getElementById("rosa_chiudi").addEventListener("click", () => {
+    squadraRosaId = null;
+    chiudiModal();
+  });
+  document.getElementById("rosa_aggiungi").addEventListener("click", () => {
+    apriFormCorridore(null, {
+      squadraPreselezionata: squadra.id,
+      alSalvataggio: () => {
+        const s = cache.squadre.find((s) => s.id === squadra.id) || squadra;
+        apriRosaSquadra(s);
+      },
+    });
+  });
+  garantisciCorridori().then(() => {
+    garantisciTappe().then(disegnaRosa);
+  });
+}
+
+function disegnaRosa() {
+  const lista = document.getElementById("rosaLista");
+  if (!lista || squadraRosaId == null) return;
+  const annoRiferimento = annoRiferimentoGara(cache.tappe);
+  const rosa = cache.corridori
+    .filter((c) => c.squadra_id === squadraRosaId)
+    .filter((c) => {
+      if (!queryRosa) return true;
+      return `${c.nome} ${c.cognome} ${c.numero_pettorale ?? ""}`
+        .toLowerCase()
+        .includes(queryRosa);
+    })
+    .sort((a, b) => (a.numero_pettorale ?? 999) - (b.numero_pettorale ?? 999));
+
+  lista.innerHTML =
+    rosa
+      .map((c) => {
+        const eta = calcolaEta(c.data_nascita, annoRiferimento);
+        const giovane = eta != null && eta <= ETA_LIMITE_MAGLIA_BIANCA;
+        const stato = c.ritirato
+          ? `<span class="badge badge-ritirato">${MOTIVI_RITIRO[c.motivo_ritiro] || "Ritirato"}</span>`
+          : '<span class="badge badge-in-gara">in gara</span>';
+        return `
+      <div class="rosa-riga">
+        <span class="badge badge-pettorale">${c.numero_pettorale ?? "—"}</span>
+        <div class="rosa-info">
+          <div class="rosa-nome"><strong>${c.nome} ${c.cognome}</strong></div>
+          <div class="rosa-meta">
+            <span>${eta != null ? `${eta} anni` : "età —"}</span>
+            ${giovane ? '<span class="badge badge-giovane">bianca</span>' : ""}
+            ${stato}
+          </div>
+        </div>
+        <button class="btn-icon" title="vedi dettaglio" data-rosa-dettaglio="${c.id}">${icona("occhio")}</button>
+        <button class="btn-icon" title="modifica" data-rosa-modifica="${c.id}">${icona("modifica")}</button>
+      </div>
+    `;
+      })
+      .join("") ||
+    `<div class="stato-vuoto">${queryRosa ? "Nessun corridore trovato" : "Rosa vuota — aggiungi il primo corridore"}</div>`;
+
+  lista.querySelectorAll("[data-rosa-dettaglio]").forEach((b) =>
+    b.addEventListener("click", () =>
+      apriDettaglioCorridore(+b.dataset.rosaDettaglio),
+    ),
+  );
+  lista.querySelectorAll("[data-rosa-modifica]").forEach((b) =>
+    b.addEventListener("click", () => {
+      const c = cache.corridori.find((c) => c.id === +b.dataset.rosaModifica);
+      const squadra = cache.squadre.find((s) => s.id === squadraRosaId);
+      if (c)
+        apriFormCorridore(c, {
+          alSalvataggio: () => squadra && apriRosaSquadra(squadra),
+        });
+    }),
+  );
 }
 
 function renderStaff(corpo) {
@@ -262,5 +380,10 @@ export function init(container) {
 
   socket.on("squadre:aggiornate", () => {
     if (sottoTabAttiva === "elenco") ricaricaElenco();
+  });
+  // se un corridore viene aggiunto/modificato/spostato di squadra altrove
+  // nell'app, la rosa aperta qui (se c'è) resta sempre allineata
+  socket.on("corridori:aggiornati", () => {
+    if (squadraRosaId != null) disegnaRosa();
   });
 }

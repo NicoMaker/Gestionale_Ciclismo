@@ -74,7 +74,7 @@ function disegna() {
   `,
       )
       .join("") ||
-    `<tr><td colspan="5" style="text-align:center;color:#999;padding:24px;">${queryCorrente ? "Nessun elemento trovato" : "Il cestino è vuoto"}</td></tr>`;
+    `<tr><td colspan="5" class="stato-vuoto">${queryCorrente ? "Nessun elemento trovato" : "Il cestino è vuoto"}</td></tr>`;
 
   if (contatoreGlobale)
     contatoreGlobale.textContent = `${vociCorrenti.length} element${vociCorrenti.length === 1 ? "o" : "i"} nel cestino`;

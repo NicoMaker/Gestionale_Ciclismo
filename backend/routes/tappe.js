@@ -30,6 +30,7 @@ module.exports = (io) => {
       tipo,
       data,
       stato,
+      abbuoni_attivi,
     } = req.body;
     if (!numero_tappa || !nome || !partenza || !arrivo) {
       return res.status(400).json({
@@ -37,8 +38,8 @@ module.exports = (io) => {
       });
     }
     db.run(
-      `INSERT INTO tappe (numero_tappa, nome, partenza, arrivo, distanza_km, dislivello_m, tipo, data, stato)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO tappe (numero_tappa, nome, partenza, arrivo, distanza_km, dislivello_m, tipo, data, stato, abbuoni_attivi)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         numero_tappa,
         nome,
@@ -49,6 +50,7 @@ module.exports = (io) => {
         tipo || "pianura",
         data || null,
         stato || "programmata",
+        abbuoni_attivi === false || abbuoni_attivi === 0 ? 0 : 1,
       ],
       function (err) {
         if (err) return res.status(400).json({ errore: err.message });
@@ -63,6 +65,7 @@ module.exports = (io) => {
           tipo,
           data,
           stato,
+          abbuoni_attivi: abbuoni_attivi === false || abbuoni_attivi === 0 ? 0 : 1,
         };
         io.emit("tappe:aggiornate", { tipo: "creata", dato: nuova });
         res.status(201).json(nuova);
@@ -81,9 +84,12 @@ module.exports = (io) => {
       tipo,
       data,
       stato,
+      abbuoni_attivi,
     } = req.body;
+    const abbuoniValore =
+      abbuoni_attivi === false || abbuoni_attivi === 0 ? 0 : 1;
     db.run(
-      `UPDATE tappe SET numero_tappa=?, nome=?, partenza=?, arrivo=?, distanza_km=?, dislivello_m=?, tipo=?, data=?, stato=?
+      `UPDATE tappe SET numero_tappa=?, nome=?, partenza=?, arrivo=?, distanza_km=?, dislivello_m=?, tipo=?, data=?, stato=?, abbuoni_attivi=?
        WHERE id=?`,
       [
         numero_tappa,
@@ -95,6 +101,7 @@ module.exports = (io) => {
         tipo,
         data,
         stato,
+        abbuoniValore,
         req.params.id,
       ],
       function (err) {
@@ -113,6 +120,7 @@ module.exports = (io) => {
           tipo,
           data,
           stato,
+          abbuoni_attivi: abbuoniValore,
         });
       },
     );

@@ -46,7 +46,7 @@ db.serialize(() => {
       data_nascita DATE,
       ritirato INTEGER NOT NULL DEFAULT 0,
       ritirato_tappa_numero INTEGER,
-      motivo_ritiro TEXT CHECK(motivo_ritiro IN ('infortunio','abbandono','squalifica','altro') OR motivo_ritiro IS NULL),
+      motivo_ritiro TEXT CHECK(motivo_ritiro IN ('infortunio','abbandono','squalifica','doping','altro') OR motivo_ritiro IS NULL),
       note_ritiro TEXT,
       ritirato_il DATETIME,
       creato_il DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -101,9 +101,23 @@ db.serialize(() => {
       tipo TEXT DEFAULT 'pianura' CHECK(tipo IN ('pianura','collina','montagna','cronometro')),
       data DATE,
       stato TEXT DEFAULT 'programmata' CHECK(stato IN ('programmata','in_corso','conclusa')),
+      abbuoni_attivi INTEGER NOT NULL DEFAULT 1,
       creato_il DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Migrazione "morbida" per l'abbuono: i giri già esistenti nascono con
+  // gli abbuoni attivi di default su ogni tappa (comportamento standard
+  // dei grandi giri), disattivabili singolarmente (es. una cronometro).
+  db.run(
+    "ALTER TABLE tappe ADD COLUMN abbuoni_attivi INTEGER NOT NULL DEFAULT 1",
+    [],
+    (err) => {
+      if (err && !/duplicate column/i.test(err.message)) {
+        console.error("Migrazione abbuoni tappe —", err.message);
+      }
+    },
+  );
 
   // 6. Punti intermedi di tappa (sprint / GPM)
   db.run(`
@@ -302,7 +316,24 @@ db.serialize(() => {
     )
   `);
 
-  // 21. Cestino (soft-delete): conserva una copia JSON della riga eliminata
+  // 21. Abbuoni di classifica generale: quanti secondi si "guadagnano"
+  // (cioè si sottraggono dal tempo in classifica generale) arrivando in
+  // una data posizione di tappa. Regola configurabile — di serie quella
+  // classica dei grandi giri: 10s al primo, 6s al secondo, 4s al terzo.
+  // Si applicano solo sulle tappe con abbuoni_attivi = 1.
+  db.run(`
+    CREATE TABLE IF NOT EXISTS abbuoni_classifica (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      posizione INTEGER NOT NULL UNIQUE,
+      secondi INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+  db.run(
+    `INSERT OR IGNORE INTO abbuoni_classifica (posizione, secondi) VALUES
+      (1, 10), (2, 6), (3, 4)`,
+  );
+
+  // 22. Cestino (soft-delete): conserva una copia JSON della riga eliminata
   // così da poterla ripristinare entro il periodo di ritenzione, oppure
   // farla scadere ed eliminarla definitivamente in automatico (cron).
   db.run(`
@@ -316,7 +347,7 @@ db.serialize(() => {
     )
   `);
 
-  console.log("✓ Schema database verificato/creato (21 tabelle)");
+  console.log("✓ Schema database verificato/creato (22 tabelle)");
 });
 
 module.exports = db;

@@ -1,4 +1,4 @@
-import { apiPost, apiPut, apiDelete } from "../api.js";
+import { apiGet, apiPost, apiPut, apiDelete } from "../api.js";
 import {
   apriModal,
   chiudiModal,
@@ -28,10 +28,11 @@ import {
 import { htmlCampoEntita, attivaCampoEntita } from "./entita-autocomplete.js";
 import { icona } from "../icone.js";
 
-const MOTIVI_RITIRO = {
+export const MOTIVI_RITIRO = {
   infortunio: "Infortunio",
   abbandono: "Abbandono / non partecipazione",
   squalifica: "Squalifica",
+  doping: "Doping",
   altro: "Altro",
 };
 
@@ -42,7 +43,7 @@ function renderElenco(corpo) {
   sottoTabAttiva = "elenco";
   corpo.innerHTML = `
     <div class="subtab-head">
-      ${htmlCampoRicerca("cerca corridore, nazione o squadra...")}
+      ${htmlCampoRicerca("cerca corridore, nazione, squadra o motivo ritiro...")}
       <button class="btn-secondary btn-piccolo" id="btnNuovoCorridore">${icona("aggiungi")}nuovo corridore</button>
     </div>
     <div class="table-wrap">
@@ -54,12 +55,7 @@ function renderElenco(corpo) {
   `;
   document
     .getElementById("btnNuovoCorridore")
-    .addEventListener("click", async () => {
-      await garantisciSquadre();
-      await garantisciNazioni();
-      await garantisciTappe();
-      apriFormCorridore(null);
-    });
+    .addEventListener("click", () => apriFormCorridore(null));
   attivaCampoRicerca(corpo, (q) => {
     queryCorrente = q;
     disegnaElenco();
@@ -70,10 +66,11 @@ function renderElenco(corpo) {
 function badgeStato(c) {
   if (!c.ritirato) return '<span class="badge badge-in-gara">in gara</span>';
   const motivo = MOTIVI_RITIRO[c.motivo_ritiro] || "Ritirato";
+  const iconaMotivo = c.motivo_ritiro === "doping" ? "doping" : "infortunio";
   const daTappa = c.ritirato_tappa_numero
     ? ` dalla tappa ${c.ritirato_tappa_numero}`
     : "";
-  return `<span class="badge badge-ritirato" title="${motivo}${daTappa}">${icona("infortunio")}${motivo}${daTappa}</span>`;
+  return `<span class="badge badge-ritirato badge-ritirato-${c.motivo_ritiro || "altro"}" title="${motivo}${daTappa}">${icona(iconaMotivo)}${motivo}${daTappa}</span>`;
 }
 
 function disegnaElenco() {
@@ -83,7 +80,7 @@ function disegnaElenco() {
   const filtrati = cache.corridori.filter((c) => {
     if (!queryCorrente) return true;
     const testo =
-      `${c.nome} ${c.cognome} ${c.nazione_nome ?? ""} ${c.squadra_nome ?? ""} ${c.numero_pettorale ?? ""}`.toLowerCase();
+      `${c.nome} ${c.cognome} ${c.nazione_nome ?? ""} ${c.squadra_nome ?? ""} ${c.numero_pettorale ?? ""} ${MOTIVI_RITIRO[c.motivo_ritiro] ?? ""} ${c.note_ritiro ?? ""}`.toLowerCase();
     return testo.includes(queryCorrente);
   });
   tbody.innerHTML =
@@ -100,6 +97,7 @@ function disegnaElenco() {
       <td>${c.squadra_nome ? `${c.squadra_nazione_codice ? `<span class="bandiera">${bandiera(c.squadra_nazione_codice)}</span>` : ""}<span class="dot-colore" style="background:${c.squadra_colore || "#999"}"></span>${c.squadra_nome}` : "—"}</td>
       <td>${badgeStato(c)}</td>
       <td class="td-azioni">
+        <button class="btn-icon" title="vedi dettaglio" data-dettaglio="${c.id}">${icona("occhio")}</button>
         ${
           c.ritirato
             ? `<button class="btn-icon" title="riammetti in gara" data-riammetti="${c.id}">${icona("ripristina")}</button>`
@@ -112,13 +110,15 @@ function disegnaElenco() {
   `;
       })
       .join("") ||
-    `<tr><td colspan="7" style="text-align:center;color:#999;padding:24px;">${queryCorrente ? "Nessun corridore trovato" : "Nessun corridore inserito"}</td></tr>`;
+    `<tr><td colspan="7" class="stato-vuoto">${queryCorrente ? "Nessun corridore trovato" : "Nessun corridore inserito"}</td></tr>`;
 
+  tbody.querySelectorAll("[data-dettaglio]").forEach((b) =>
+    b.addEventListener("click", () =>
+      apriDettaglioCorridore(+b.dataset.dettaglio),
+    ),
+  );
   tbody.querySelectorAll("[data-modifica]").forEach((b) =>
-    b.addEventListener("click", async () => {
-      await garantisciSquadre();
-      await garantisciNazioni();
-      await garantisciTappe();
+    b.addEventListener("click", () => {
       const c = cache.corridori.find((c) => c.id === +b.dataset.modifica);
       if (c) apriFormCorridore(c);
     }),
@@ -150,8 +150,13 @@ async function ricaricaElenco() {
   disegnaElenco();
 }
 
-function apriFormCorridore(corridoreEsistente) {
+export async function apriFormCorridore(corridoreEsistente, opzioni) {
+  await garantisciSquadre();
+  await garantisciNazioni();
+  await garantisciTappe();
   const c = corridoreEsistente || {};
+  const squadraIniziale =
+    c.squadra_id ?? opzioni?.squadraPreselezionata ?? null;
   apriModal(`
     <h2>${corridoreEsistente ? "Modifica corridore" : "Nuovo corridore"}</h2>
     <div class="field-row">
@@ -182,7 +187,7 @@ function apriFormCorridore(corridoreEsistente) {
   const leggiSquadraId = attivaCampoEntita(
     "c_squadra",
     "squadra",
-    c.squadra_id ?? null,
+    squadraIniziale,
   );
 
   // età calcolata al volo, per capire subito — mentre si inserisce la
@@ -210,7 +215,7 @@ function apriFormCorridore(corridoreEsistente) {
   document
     .getElementById("c_salva")
     .addEventListener("click", () =>
-      salvaCorridore(corridoreEsistente, leggiNazioneId, leggiSquadraId),
+      salvaCorridore(corridoreEsistente, leggiNazioneId, leggiSquadraId, opzioni),
     );
 }
 
@@ -218,6 +223,7 @@ async function salvaCorridore(
   corridoreEsistente,
   leggiNazioneId,
   leggiSquadraId,
+  opzioni,
 ) {
   const body = {
     nome: document.getElementById("c_nome").value,
@@ -239,6 +245,7 @@ async function salvaCorridore(
     mostraToast(
       corridoreEsistente ? "Corridore modificato" : "Corridore aggiunto",
     );
+    opzioni?.alSalvataggio?.(await res.json());
   } else mostraToast(await erroreDaResponse(res, "Errore nel salvataggio"));
 }
 
@@ -334,6 +341,76 @@ async function riammettiCorridore(corridoreId) {
     mostraToast("Corridore riammesso in gara");
     ricaricaElenco();
   } else mostraToast(await erroreDaResponse(res, "Impossibile riammettere"));
+}
+
+function htmlMaglia(nome, coloreVar, posizione) {
+  const testo = posizione
+    ? `${posizione.posizione}° / ${posizione.totale}`
+    : "non in classifica";
+  return `
+    <div class="banner-maglia dettaglio-maglia" style="--colore-maglia:${coloreVar};">
+      <span class="maglia-dot"></span>
+      <div>
+        <strong>${testo}</strong>
+        <span class="maglia-label">${nome}</span>
+      </div>
+    </div>
+  `;
+}
+
+export async function apriDettaglioCorridore(corridoreId) {
+  const c = cache.corridori.find((c) => c.id === corridoreId);
+  if (!c) return;
+  apriModal(`
+    <h2>${c.nazione_codice ? bandiera(c.nazione_codice, 20) + " " : ""}${c.nome} ${c.cognome}</h2>
+    <p style="color:var(--testo-soft);margin-top:-8px;margin-bottom:16px;">
+      ${c.numero_pettorale ? `Pettorale #${c.numero_pettorale} · ` : ""}${c.squadra_nome ?? "senza squadra"}
+      ${badgeStato(c)}
+    </p>
+    <div id="dettaglioMaglie" class="dettaglio-maglie">Caricamento posizioni in classifica…</div>
+    <h4 style="margin:18px 0 8px;">Tappa per tappa</h4>
+    <div class="table-wrap" style="max-height:38vh;">
+      <table>
+        <thead><tr><th>#</th><th>Tappa</th><th>Pos.</th><th>Tempo</th><th>Punti</th></tr></thead>
+        <tbody id="dettaglioTappeBody"><tr><td colspan="5" class="stato-vuoto">Caricamento…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="dett_chiudi">chiudi</button>
+    </div>
+  `);
+  document
+    .getElementById("dett_chiudi")
+    .addEventListener("click", chiudiModal);
+
+  const dati = await apiGet("/api/risultati/corridore/" + corridoreId);
+  const maglie = document.getElementById("dettaglioMaglie");
+  const corpoBody = document.getElementById("dettaglioTappeBody");
+  if (!dati || !maglie || !corpoBody) return; // il modale è stato chiuso nel frattempo
+
+  maglie.innerHTML =
+    htmlMaglia("maglia rosa (generale)", "var(--rosa-maglia)", dati.classifiche.generale) +
+    htmlMaglia("maglia ciclamino (punti)", "var(--viola)", dati.classifiche.punti) +
+    htmlMaglia("maglia verde (montagna)", "var(--verde-montagna)", dati.classifiche.montagna) +
+    (dati.classifiche.giovani
+      ? htmlMaglia("maglia bianca (giovani)", "var(--bianca-maglia)", dati.classifiche.giovani)
+      : "");
+
+  corpoBody.innerHTML =
+    dati.risultati
+      .map(
+        (r) => `
+    <tr>
+      <td><span class="badge badge-numero">${r.numero_tappa}</span></td>
+      <td>${r.tappa_nome} <span class="testo-soft">(${r.partenza} → ${r.arrivo})</span></td>
+      <td>${r.posizione ?? "—"}</td>
+      <td>${r.tempo ?? "—"}</td>
+      <td>${r.punti ?? 0}</td>
+    </tr>
+  `,
+      )
+      .join("") ||
+    `<tr><td colspan="5" class="stato-vuoto">Nessun risultato ancora registrato</td></tr>`;
 }
 
 function renderBiciclette(corpo) {

@@ -78,6 +78,7 @@ erDiagram
         text tipo
         date data
         text stato
+        integer abbuoni_attivi
     }
     TAPPE_PERCORSO {
         integer id PK
@@ -184,4 +185,9 @@ erDiagram
         text contenuto
         date data
         integer tappa_id FK
+    }
+    ABBUONI_CLASSIFICA {
+        integer id PK
+        integer posizione
+        integer secondi
     }

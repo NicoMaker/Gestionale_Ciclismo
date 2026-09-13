@@ -40,6 +40,10 @@ const D = {
     '<circle cx="12" cy="12" r="9"/><path d="M9 9 L15 15 M15 9 L9 15" stroke-linecap="round"/>',
   esitoAttesa:
     '<circle cx="12" cy="12" r="9"/><path d="M12 7.3 V12 L15.2 14" stroke-linecap="round" stroke-linejoin="round"/>',
+  doping:
+    '<path d="M9 3 H15 M10 3 V14.5 C10 17 8 19 8 19.5 C8 20.5 9 21 12 21 C15 21 16 20.5 16 19.5 C16 19 14 17 14 14.5 V3" stroke-linecap="round" stroke-linejoin="round"/><path d="M10.2 15.2 H13.8" stroke-linecap="round"/>',
+  occhio:
+    '<path d="M2.5 12 C5 7 8.3 5 12 5 C15.7 5 19 7 21.5 12 C19 17 15.7 19 12 19 C8.3 19 5 17 2.5 12 Z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3"/>',
   bici: '<circle cx="6" cy="17" r="3.4"/><circle cx="18" cy="17" r="3.4"/><path d="M6 17 L10 8 L15 8 M10 8 L8.3 4.7 H11.5 M10 8 L14.3 13.6 L18 17" stroke-linecap="round" stroke-linejoin="round"/>',
   staff:
     '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20 C4.5 15.6 7.8 13.4 12 13.4 C16.2 13.4 19.5 15.6 19.5 20" stroke-linecap="round"/>',

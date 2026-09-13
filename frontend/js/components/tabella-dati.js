@@ -16,6 +16,14 @@ import { htmlCampoEntita, attivaCampoEntita } from "./entita-autocomplete.js";
 
 const TIPI_ENTITA = ["squadra", "corridore", "tappa", "sponsor"];
 
+const MOTIVI_RITIRO_BREVE = {
+  infortunio: "infortunio",
+  abbandono: "abbandono",
+  squalifica: "squalifica",
+  doping: "doping",
+  altro: "ritirato",
+};
+
 function risolviValore(colonna, valore) {
   if (valore === null || valore === undefined || valore === "") return "—";
   if (colonna.type === "squadra") {
@@ -26,7 +34,11 @@ function risolviValore(colonna, valore) {
   if (colonna.type === "corridore") {
     const c = cache.corridori.find((c) => c.id === valore);
     if (!c) return valore;
-    return `${c.nazione_codice ? bandiera(c.nazione_codice, 16) + " " : ""}${c.nome} ${c.cognome}${c.ritirato ? ' <span class="badge badge-ritirato">ritirato</span>' : ""}`;
+    const squadra = c.squadra_id
+      ? cache.squadre.find((s) => s.id === c.squadra_id)
+      : null;
+    const motivo = MOTIVI_RITIRO_BREVE[c.motivo_ritiro] || "ritirato";
+    return `${c.nazione_codice ? bandiera(c.nazione_codice, 16) + " " : ""}${c.nome} ${c.cognome}${squadra ? ` <span class="testo-soft">· ${squadra.nome}</span>` : ""}${c.ritirato ? ` <span class="badge badge-ritirato">${motivo}</span>` : ""}`;
   }
   if (colonna.type === "tappa") {
     const t = cache.tappe.find((t) => t.id === valore);
@@ -98,7 +110,7 @@ export function montaListaConForm(contenitore, cfg) {
     `,
         )
         .join("") ||
-      `<tr><td colspan="${cfg.colonne.length + 1}" style="text-align:center;color:#999;padding:20px;">${query ? "Nessun risultato per la ricerca" : "Nessun dato"}</td></tr>`;
+      `<tr><td colspan="${cfg.colonne.length + 1}" class="stato-vuoto">${query ? "Nessun risultato per la ricerca" : "Nessun dato"}</td></tr>`;
   }
 
   async function ricarica() {

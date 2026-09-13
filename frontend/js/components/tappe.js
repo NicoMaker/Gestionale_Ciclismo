@@ -73,7 +73,7 @@ function disegnaElenco() {
   `,
       )
       .join("") ||
-    `<tr><td colspan="9" style="text-align:center;color:#999;padding:24px;">${queryCorrente ? "Nessuna tappa trovata" : "Nessuna tappa inserita"}</td></tr>`;
+    `<tr><td colspan="9" class="stato-vuoto">${queryCorrente ? "Nessuna tappa trovata" : "Nessuna tappa inserita"}</td></tr>`;
 
   tbody
     .querySelectorAll("[data-diretta]")
@@ -127,6 +127,10 @@ function apriFormTappa(tappaEsistente) {
         </select>
       </div>
     </div>
+    <label class="campo-checkbox">
+      <input type="checkbox" id="f_abbuoni" ${t.abbuoni_attivi === 0 ? "" : "checked"}>
+      Assegna abbuoni ai primi 3 di tappa (10/6/4 secondi in classifica generale)
+    </label>
     <div class="modal-actions">
       <button class="btn-secondary" id="f_annulla">annulla</button>
       <button class="btn-primary" id="f_salva">${tappaEsistente ? "salva modifiche" : "salva tappa"}</button>
@@ -149,6 +153,7 @@ async function salvaTappa(tappaEsistente) {
     tipo: document.getElementById("f_tipo").value,
     data: document.getElementById("f_data").value || null,
     stato: document.getElementById("f_stato").value,
+    abbuoni_attivi: document.getElementById("f_abbuoni").checked,
   };
   if (!body.numero_tappa || !body.nome || !body.partenza || !body.arrivo) {
     mostraToast("Compila numero, nome, partenza e arrivo");

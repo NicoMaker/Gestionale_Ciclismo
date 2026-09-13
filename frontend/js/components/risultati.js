@@ -107,7 +107,7 @@ async function ricaricaArrivo() {
   `;
       })
       .join("") ||
-    `<tr><td colspan="8" style="text-align:center;color:#999;padding:24px;">${queryCorrente ? "Nessun risultato trovato" : "Nessun risultato per questa tappa"}</td></tr>`;
+    `<tr><td colspan="8" class="stato-vuoto">${queryCorrente ? "Nessun risultato trovato" : "Nessun risultato per questa tappa"}</td></tr>`;
 
   tbody.querySelectorAll("[data-modifica]").forEach((b) =>
     b.addEventListener("click", async () => {
