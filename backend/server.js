@@ -13,9 +13,11 @@ const { eliminaScaduti } = require("./db/cestino");
 const creaRouterGenerico = require("./routes/generic");
 
 // Validazione condivisa: un corridore ritirato/squalificato non può avere
-// una riga (risultato, traguardo volante, GPM...) per la tappa del ritiro
-// né per le successive; per le tappe precedenti resta ammesso, per poter
-// correggere dati storici già disputati prima del ritiro.
+// una riga (risultato, traguardo volante, GPM...) per le tappe successive
+// a quella del ritiro; la tappa del ritiro stessa resta ammessa (es.
+// abbandono in corsa: va comunque registrato il risultato di quella
+// tappa), così come quelle precedenti, per poter correggere dati storici
+// già disputati prima del ritiro.
 function validaCorridoreAmmessoPerTappa(body, callback) {
   const { corridore_id, tappa_id } = body;
   if (!corridore_id || !tappa_id) return callback(null, null);
@@ -29,7 +31,7 @@ function validaCorridoreAmmessoPerTappa(body, callback) {
       if (!riga || !riga.ritirato) return callback(null, null);
       const ammesso =
         riga.ritirato_tappa_numero != null &&
-        riga.numero_tappa < riga.ritirato_tappa_numero;
+        riga.numero_tappa <= riga.ritirato_tappa_numero;
       callback(
         null,
         ammesso

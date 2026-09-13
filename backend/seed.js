@@ -813,13 +813,52 @@ async function main() {
   // risultati già ottenuti nelle prime tappe.
   console.log("🚑 Ritiri di esempio (infortunio, abbandono, squalifica, altro)...");
   const candidatiRitiro = mescola(corridori);
+
+  // Caso "abbandono in corsa": il ritiro avviene proprio durante una
+  // tappa già disputata (tappa 4), non tra una tappa e l'altra. Il
+  // risultato di quella tappa quindi non è un arrivo regolare ma un DNF
+  // (nessuna posizione/tempo, come farebbe un utente dall'app segnando
+  // il ritiro "dalla tappa 4" e poi inserendo comunque la riga di quella
+  // tappa senza posizione); dalla tappa successiva in poi non ha più
+  // nessun risultato, perché non è più partito.
+  console.log("🚑 Ritiro in corsa durante una tappa già disputata...");
+  const corridoreRitiroInCorsa = candidatiRitiro[0];
+  const tappaRitiroInCorsa = tappeConRisultati[3]; // tappa 4
+  await run(
+    `UPDATE risultati SET posizione = NULL, tempo = NULL, distacco = NULL, punti = 0
+     WHERE tappa_id = ? AND corridore_id = ?`,
+    [tappaRitiroInCorsa.id, corridoreRitiroInCorsa.id],
+  );
+  for (const tappaSuccessiva of tappeConRisultati.slice(4)) {
+    await run(
+      "DELETE FROM risultati WHERE tappa_id = ? AND corridore_id = ?",
+      [tappaSuccessiva.id, corridoreRitiroInCorsa.id],
+    );
+    await run(
+      "DELETE FROM traguardi_volanti WHERE tappa_id = ? AND corridore_id = ?",
+      [tappaSuccessiva.id, corridoreRitiroInCorsa.id],
+    );
+    await run(
+      "DELETE FROM gpm_risultati WHERE tappa_id = ? AND corridore_id = ?",
+      [tappaSuccessiva.id, corridoreRitiroInCorsa.id],
+    );
+  }
+  await run(
+    `UPDATE corridori SET
+       ritirato = 1, ritirato_tappa_numero = ?, motivo_ritiro = 'infortunio',
+       note_ritiro = ?, ritirato_il = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [
+      tappaRitiroInCorsa.numero,
+      "Caduta a metà tappa, non ha completato la frazione",
+      corridoreRitiroInCorsa.id,
+    ],
+  );
+
+  // Altri motivi di ritiro: decisi "tra una tappa e l'altra" (come farebbe
+  // normalmente un utente dall'app), quindi da una tappa futura in poi;
+  // le tappe già disputate restano con il loro risultato regolare.
   const ritiriEsempio = [
-    {
-      corridore: candidatiRitiro[0],
-      motivo: "infortunio",
-      dallaTappa: 7,
-      note: "Caduta in discesa, frattura alla clavicola",
-    },
     {
       corridore: candidatiRitiro[1],
       motivo: "abbandono",

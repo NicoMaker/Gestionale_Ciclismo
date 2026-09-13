@@ -73,9 +73,10 @@ export function htmlCampoEntita(idPrefix, label, tipo) {
  * @param {object} [opzioni]
  * @param {number|null} [opzioni.tappaNumero] - numero della tappa di
  *   riferimento (solo per tipo "corridore"): un corridore ritirato viene
- *   escluso solo se questa tappa è >= alla tappa del suo ritiro (oppure
- *   sempre, se il ritiro non ha una tappa specificata o non è nota la
- *   tappa di riferimento).
+ *   escluso solo se questa tappa è > alla tappa del suo ritiro (la tappa
+ *   del ritiro stesso resta ammessa, per poterne registrare il risultato
+ *   di abbandono); oppure sempre, se il ritiro non ha una tappa
+ *   specificata o non è nota la tappa di riferimento.
  * @param {number[]} [opzioni.escludiIds] - id aggiuntivi da escludere
  *   sempre (es. corridori già presenti in un'altra riga per la stessa
  *   tappa, per evitare doppioni).
@@ -106,7 +107,10 @@ export function attivaCampoEntita(idPrefix, tipo, valoreIniziale, opzioni) {
     // comportamento prudente, il corridore resta escluso ovunque
     if (tappaNumeroCorrente == null || e.ritiratoTappaNumero == null)
       return true;
-    return tappaNumeroCorrente >= e.ritiratoTappaNumero;
+    // la tappa del ritiro stesso resta ammessa (es. abbandono in corsa,
+    // va comunque registrato il risultato di quella tappa); solo dalle
+    // tappe successive il corridore non è più selezionabile
+    return tappaNumeroCorrente > e.ritiratoTappaNumero;
   }
 
   let selezionabili = tuttiGliElementi.filter(

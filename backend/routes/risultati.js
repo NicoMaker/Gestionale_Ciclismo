@@ -31,8 +31,10 @@ function secondiInTempo(totaleSecondi) {
 module.exports = (io) => {
   /* ---------------------------------------------------------------------
    * Un corridore ritirato/infortunato/squalificato non può avere un
-   * risultato per la tappa del ritiro né per quelle successive; per le
-   * tappe precedenti resta invece ammesso (correzione di dati storici).
+   * risultato per le tappe successive a quella del ritiro; la tappa del
+   * ritiro stessa resta invece ammessa (es. abbandono in corsa: va
+   * comunque registrato il risultato di quella tappa), così come le
+   * tappe precedenti (correzione di dati storici).
    * Se il ritiro non ha una tappa specificata, è prudenzialmente escluso
    * da qualunque tappa (non sappiamo fino a dove ha corso).
    * ------------------------------------------------------------------- */
@@ -46,7 +48,7 @@ module.exports = (io) => {
         if (err) return callback(err);
         if (!riga || !riga.ritirato) return callback(null, true);
         if (riga.ritirato_tappa_numero == null) return callback(null, false);
-        callback(null, riga.numero_tappa < riga.ritirato_tappa_numero);
+        callback(null, riga.numero_tappa <= riga.ritirato_tappa_numero);
       },
     );
   }
