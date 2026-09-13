@@ -7,6 +7,7 @@ import {
   attivaCampoRicerca,
   bandiera,
   erroreDaResponse,
+  formattaDataIt,
 } from "../utils.js";
 import { cache } from "../state.js";
 import { socket } from "../socket.js";
@@ -36,6 +37,7 @@ function risolviValore(colonna, valore) {
   if (colonna.type === "select") {
     return `<span class="badge badge-${valore}">${iconaValore(valore)}${String(valore).replace(/_/g, " ")}</span>`;
   }
+  if (colonna.type === "date") return formattaDataIt(valore);
   return valore;
 }
 
@@ -133,16 +135,65 @@ export function montaListaConForm(contenitore, cfg) {
     // i campi entità (squadra/corridore/tappa/sponsor) sono autocomplete di
     // ricerca: vanno attivati dopo l'inserimento nel DOM e letti tramite il
     // getter che restituiscono, non con .value come i campi normali
+    const colTappa = campiVisibili.find((c) => c.type === "tappa");
+    const colCorridore = campiVisibili.find((c) => c.type === "corridore");
+
+    function esclusiPerTappa(tappaId) {
+      // corridori già presenti in un'altra riga per la stessa tappa (es.
+      // due volate/GPM sulla stessa tappa per lo stesso corridore) — si
+      // attiva solo se la configurazione lo richiede esplicitamente
+      if (!cfg.evitaDuplicatiTappaCorridore || !colTappa || !tappaId)
+        return [];
+      return righeCorrenti
+        .filter(
+          (r) =>
+            r[colTappa.key] === tappaId &&
+            (!rigaEsistente || r.id !== rigaEsistente.id),
+        )
+        .map((r) => r[colCorridore.key]);
+    }
+    function numeroTappaDa(tappaId) {
+      return tappaId
+        ? (cache.tappe.find((t) => t.id === tappaId)?.numero_tappa ?? null)
+        : null;
+    }
+
     const lettoriEntita = {};
     campiVisibili.forEach((c) => {
-      if (TIPI_ENTITA.includes(c.type)) {
-        lettoriEntita[c.key] = attivaCampoEntita(
-          "cd_" + c.key,
-          c.type,
-          rigaEsistente ? rigaEsistente[c.key] : null,
-        );
+      if (!TIPI_ENTITA.includes(c.type)) return;
+      let opzioni;
+      if (c.type === "corridore" && colTappa) {
+        const tappaIdIniziale = rigaEsistente
+          ? rigaEsistente[colTappa.key]
+          : null;
+        opzioni = {
+          tappaNumero: numeroTappaDa(tappaIdIniziale),
+          escludiIds: esclusiPerTappa(tappaIdIniziale),
+        };
       }
+      lettoriEntita[c.key] = attivaCampoEntita(
+        "cd_" + c.key,
+        c.type,
+        rigaEsistente ? rigaEsistente[c.key] : null,
+        opzioni,
+      );
     });
+
+    // se il form ha sia una tappa che un corridore, cambiare la tappa deve
+    // ricalcolare al volo sia l'esclusione dei ritirati (in base alla
+    // nuova tappa) sia i doppioni già presenti per quella tappa
+    if (colTappa && colCorridore) {
+      const hiddenTappa = document.getElementById(
+        "cd_" + colTappa.key + "_hidden",
+      );
+      hiddenTappa?.addEventListener("change", () => {
+        const tappaId = +hiddenTappa.value || null;
+        lettoriEntita[colCorridore.key].aggiornaFiltri({
+          tappaNumero: numeroTappaDa(tappaId),
+          escludiIds: esclusiPerTappa(tappaId),
+        });
+      });
+    }
 
     document
       .getElementById("cd_annulla")

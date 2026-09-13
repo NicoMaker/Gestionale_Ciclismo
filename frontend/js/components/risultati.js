@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiDelete } from "../api.js";
+import { apiGet, apiPost, apiPut, apiDelete } from "../api.js";
 import {
   apriModal,
   chiudiModal,
@@ -24,21 +24,16 @@ import { icona, medaglia } from "../icone.js";
 let sottoTabAttiva = "arrivo";
 let tappaSelezionataId = null;
 
-function htmlSelectTappe(idSelect) {
-  return `<select id="${idSelect}" class="select-tappa">
-    ${cache.tappe.map((t) => `<option value="${t.id}">Tappa ${t.numero_tappa} — ${t.nome}</option>`).join("")}
-  </select>`;
-}
-
 async function renderArrivo(corpo) {
   sottoTabAttiva = "arrivo";
   await garantisciTappe();
+  await garantisciCorridori();
   if (!tappaSelezionataId && cache.tappe.length)
     tappaSelezionataId = cache.tappe[0].id;
 
   corpo.innerHTML = `
     <div class="subtab-head">
-      ${htmlSelectTappe("selRisultatiTappa")}
+      ${htmlCampoEntita("selRisultatiTappa", "Tappa", "tappa")}
       ${htmlCampoRicerca("cerca corridore o squadra...")}
       <button class="btn-secondary btn-piccolo" id="btnAggiungiRisultato">${icona("aggiungi")}aggiungi risultato</button>
     </div>
@@ -50,12 +45,18 @@ async function renderArrivo(corpo) {
     </div>
   `;
 
-  const sel = document.getElementById("selRisultatiTappa");
-  sel.value = tappaSelezionataId;
-  sel.addEventListener("change", () => {
-    tappaSelezionataId = +sel.value;
-    ricaricaArrivo();
-  });
+  // campo di ricerca al posto della semplice <select>: comodo quando il
+  // giro ha molte tappe (stesso concetto usato per squadre/nazioni)
+  attivaCampoEntita("selRisultatiTappa", "tappa", tappaSelezionataId);
+  document
+    .getElementById("selRisultatiTappa_hidden")
+    .addEventListener("change", (e) => {
+      const nuovoId = +e.target.value || null;
+      if (!nuovoId) return;
+      tappaSelezionataId = nuovoId;
+      ricaricaArrivo();
+    });
+
   document
     .getElementById("btnAggiungiRisultato")
     .addEventListener("click", async () => {
@@ -125,14 +126,7 @@ function apriFormRisultato(risultatoEsistente) {
   const r = risultatoEsistente || {};
   apriModal(`
     <h2>${risultatoEsistente ? "Modifica risultato" : "Aggiungi risultato"}</h2>
-    ${
-      risultatoEsistente
-        ? `<div class="field"><label>Corridore</label><input value="${(() => {
-            const c = cache.corridori.find((c) => c.id === r.corridore_id);
-            return c ? `${c.nome} ${c.cognome}` : "";
-          })()}" disabled></div>`
-        : htmlCampoEntita("r_corridore", "Corridore", "corridore")
-    }
+    ${htmlCampoEntita("r_corridore", "Corridore", "corridore")}
     <div class="field-row">
       <div class="field"><label>Posizione</label><input type="number" id="r_posizione" min="1" value="${r.posizione ?? ""}"></div>
       <div class="field"><label>Punti</label><input type="number" id="r_punti" value="${r.punti ?? 0}"></div>
@@ -146,9 +140,25 @@ function apriFormRisultato(risultatoEsistente) {
       <button class="btn-primary" id="r_salva">${risultatoEsistente ? "salva modifiche" : "salva risultato"}</button>
     </div>
   `);
-  const leggiCorridoreId = risultatoEsistente
-    ? () => r.corridore_id
-    : attivaCampoEntita("r_corridore", "corridore", null);
+
+  // il corridore è sempre modificabile, anche in un risultato già
+  // esistente — ma non si può scegliere un corridore già presente in
+  // questa tappa (doppione), né uno ritirato/squalificato da questa
+  // tappa in poi; la tappa in corso resta invece consentita ai corridori
+  // ritirati proprio in questa tappa o in una successiva
+  const numeroTappaCorrente =
+    cache.tappe.find((t) => t.id === tappaSelezionataId)?.numero_tappa ??
+    null;
+  const escludiIds = risultatiCorrenti
+    .filter((x) => !risultatoEsistente || x.id !== risultatoEsistente.id)
+    .map((x) => x.corridore_id);
+  const leggiCorridoreId = attivaCampoEntita(
+    "r_corridore",
+    "corridore",
+    risultatoEsistente ? r.corridore_id : null,
+    { tappaNumero: numeroTappaCorrente, escludiIds },
+  );
+
   document.getElementById("r_annulla").addEventListener("click", chiudiModal);
   document
     .getElementById("r_salva")
@@ -171,13 +181,17 @@ async function salvaRisultato(risultatoEsistente, leggiCorridoreId) {
     tempo: document.getElementById("r_tempo").value,
     distacco: document.getElementById("r_distacco").value,
   };
-  // La route risultati fa upsert su (tappa_id, corridore_id): stesso endpoint per crea e modifica
-  const res = await apiPost("/api/risultati", body);
+  // Modifica: aggiorna per id (permette anche di cambiare corridore senza
+  // lasciare righe fantasma). Creazione: upsert su (tappa_id, corridore_id).
+  const res = risultatoEsistente
+    ? await apiPut("/api/risultati/" + risultatoEsistente.id, body)
+    : await apiPost("/api/risultati", body);
   if (res.ok) {
     chiudiModal();
     mostraToast(
       risultatoEsistente ? "Risultato modificato" : "Risultato salvato",
     );
+    ricaricaArrivo();
   } else mostraToast(await erroreDaResponse(res, "Errore nel salvataggio"));
 }
 
@@ -193,6 +207,7 @@ function renderTraguardiVolanti(corpo) {
   montaListaConForm(corpo, {
     titolo: "Traguardi volanti",
     apiPath: "/api/traguardi-volanti",
+    evitaDuplicatiTappaCorridore: true,
     colonne: [
       { key: "tappa_id", label: "Tappa", type: "tappa" },
       { key: "corridore_id", label: "Corridore", type: "corridore" },
@@ -207,6 +222,7 @@ function renderGpm(corpo) {
   montaListaConForm(corpo, {
     titolo: "Risultati GPM",
     apiPath: "/api/gpm-risultati",
+    evitaDuplicatiTappaCorridore: true,
     colonne: [
       { key: "tappa_id", label: "Tappa", type: "tappa" },
       { key: "corridore_id", label: "Corridore", type: "corridore" },

@@ -64,6 +64,7 @@ function disegnaElenco() {
     <div class="squadra-card" style="border-top-color:${s.colore || "#e6197f"}">
       <h3><span class="dot-colore" style="background:${s.colore || "#e6197f"}"></span>${s.nome}</h3>
       <p>${s.nazione_codice ? `<span class="bandiera">${bandiera(s.nazione_codice)}</span>${s.nazione_nome}` : "nazione non specificata"}</p>
+      <p class="conteggio-corridori">${icona("bici")}${s.numero_corridori ?? 0} corridori in rosa${s.numero_corridori && s.numero_corridori !== s.numero_corridori_in_gara ? ` · ${s.numero_corridori_in_gara ?? 0} in gara` : ""}</p>
       <div class="row">
         <button class="btn-icon" title="modifica" data-modifica="${s.id}">${icona("modifica")}</button>
         <button class="btn-icon danger" title="elimina" data-elimina="${s.id}">${icona("elimina")}</button>

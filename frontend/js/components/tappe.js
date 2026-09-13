@@ -7,6 +7,7 @@ import {
   htmlCampoRicerca,
   attivaCampoRicerca,
   erroreDaResponse,
+  formattaDataIt,
 } from "../utils.js";
 import { cache, caricaTappe } from "../state.js";
 import { socket } from "../socket.js";
@@ -61,7 +62,7 @@ function disegnaElenco() {
       <td>${t.distanza_km ?? "—"} km</td>
       <td>${t.dislivello_m ?? "—"} m</td>
       <td><span class="badge badge-${t.tipo}">${iconaValore(t.tipo)}${t.tipo}</span></td>
-      <td>${t.data ?? "—"}</td>
+      <td>${formattaDataIt(t.data)}</td>
       <td><span class="badge badge-${t.stato}">${iconaValore(t.stato)}${t.stato.replace("_", " ")}</span></td>
       <td class="td-azioni">
         <button class="btn-icon" title="avvia diretta" data-diretta="${t.id}">${icona("diretta")}</button>

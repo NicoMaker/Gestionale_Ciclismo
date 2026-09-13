@@ -8,9 +8,37 @@ const bodyParser = require("body-parser");
 const cron = require("node-cron");
 const { Server } = require("socket.io");
 
-require("./db/database"); // inizializza lo schema al boot
+const db = require("./db/database"); // inizializza lo schema al boot
 const { eliminaScaduti } = require("./db/cestino");
 const creaRouterGenerico = require("./routes/generic");
+
+// Validazione condivisa: un corridore ritirato/squalificato non può avere
+// una riga (risultato, traguardo volante, GPM...) per la tappa del ritiro
+// né per le successive; per le tappe precedenti resta ammesso, per poter
+// correggere dati storici già disputati prima del ritiro.
+function validaCorridoreAmmessoPerTappa(body, callback) {
+  const { corridore_id, tappa_id } = body;
+  if (!corridore_id || !tappa_id) return callback(null, null);
+  db.get(
+    `SELECT c.ritirato, c.ritirato_tappa_numero, t.numero_tappa
+     FROM corridori c, tappe t
+     WHERE c.id = ? AND t.id = ?`,
+    [corridore_id, tappa_id],
+    (err, riga) => {
+      if (err) return callback(err);
+      if (!riga || !riga.ritirato) return callback(null, null);
+      const ammesso =
+        riga.ritirato_tappa_numero != null &&
+        riga.numero_tappa < riga.ritirato_tappa_numero;
+      callback(
+        null,
+        ammesso
+          ? null
+          : "Il corridore è ritirato/squalificato e non può avere risultati da quella tappa in poi",
+      );
+    },
+  );
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -78,6 +106,7 @@ app.use(
     io,
     "traguardi-volanti",
     "posizione",
+    validaCorridoreAmmessoPerTappa,
   ),
 );
 app.use(
@@ -88,6 +117,7 @@ app.use(
     io,
     "gpm-risultati",
     "posizione",
+    validaCorridoreAmmessoPerTappa,
   ),
 );
 app.use(
@@ -100,16 +130,9 @@ app.use(
     "id",
   ),
 );
-app.use(
-  "/api/controlli-antidoping",
-  creaRouterGenerico(
-    "controlli_antidoping",
-    ["corridore_id", "tappa_id", "data", "esito"],
-    io,
-    "controlli-antidoping",
-    "data",
-  ),
-);
+// Route dedicata (non generica): un esito "positivo" squalifica in
+// automatico il corridore e lo esclude dalle tappe successive.
+app.use("/api/controlli-antidoping", require("./routes/controlli-antidoping")(io));
 app.use(
   "/api/biciclette",
   creaRouterGenerico(

@@ -8,9 +8,29 @@ const db = require("../db/database");
  * @param {object} io - istanza Socket.IO per notificare i client
  * @param {string} eventoBase - prefisso evento socket (es. 'sponsor')
  * @param {string} [orderBy] - colonna di ordinamento (default: id)
+ * @param {(body: object, callback: (err: Error|null, motivoBlocco: string|null) => void) => void} [validazione]
+ *   controllo opzionale eseguito prima di creare/modificare una riga:
+ *   se richiama callback con un motivoBlocco non nullo, la richiesta
+ *   viene rifiutata con 409 e quel messaggio (es. "corridore ritirato").
  */
-function creaRouterGenerico(tabella, colonne, io, eventoBase, orderBy = "id") {
+function creaRouterGenerico(
+  tabella,
+  colonne,
+  io,
+  eventoBase,
+  orderBy = "id",
+  validazione = null,
+) {
   const router = express.Router();
+
+  function eseguiConValidazione(req, res, azione) {
+    if (!validazione) return azione();
+    validazione(req.body, (err, motivoBlocco) => {
+      if (err) return res.status(500).json({ errore: err.message });
+      if (motivoBlocco) return res.status(409).json({ errore: motivoBlocco });
+      azione();
+    });
+  }
 
   router.get("/", (req, res) => {
     db.all(`SELECT * FROM ${tabella} ORDER BY ${orderBy}`, [], (err, rows) => {
@@ -32,41 +52,45 @@ function creaRouterGenerico(tabella, colonne, io, eventoBase, orderBy = "id") {
   });
 
   router.post("/", (req, res) => {
-    const valori = colonne.map((c) =>
-      req.body[c] === undefined || req.body[c] === "" ? null : req.body[c],
-    );
-    const placeholders = colonne.map(() => "?").join(", ");
-    db.run(
-      `INSERT INTO ${tabella} (${colonne.join(", ")}) VALUES (${placeholders})`,
-      valori,
-      function (err) {
-        if (err) return res.status(400).json({ errore: err.message });
-        const nuovo = { id: this.lastID, ...req.body };
-        io.emit(`${eventoBase}:aggiornati`, { tipo: "creata", dato: nuovo });
-        res.status(201).json(nuovo);
-      },
-    );
+    eseguiConValidazione(req, res, () => {
+      const valori = colonne.map((c) =>
+        req.body[c] === undefined || req.body[c] === "" ? null : req.body[c],
+      );
+      const placeholders = colonne.map(() => "?").join(", ");
+      db.run(
+        `INSERT INTO ${tabella} (${colonne.join(", ")}) VALUES (${placeholders})`,
+        valori,
+        function (err) {
+          if (err) return res.status(400).json({ errore: err.message });
+          const nuovo = { id: this.lastID, ...req.body };
+          io.emit(`${eventoBase}:aggiornati`, { tipo: "creata", dato: nuovo });
+          res.status(201).json(nuovo);
+        },
+      );
+    });
   });
 
   router.put("/:id", (req, res) => {
-    const valori = colonne.map((c) =>
-      req.body[c] === undefined || req.body[c] === "" ? null : req.body[c],
-    );
-    const setClause = colonne.map((c) => `${c} = ?`).join(", ");
-    db.run(
-      `UPDATE ${tabella} SET ${setClause} WHERE id = ?`,
-      [...valori, req.params.id],
-      function (err) {
-        if (err) return res.status(400).json({ errore: err.message });
-        if (this.changes === 0)
-          return res.status(404).json({ errore: "Riga non trovata" });
-        io.emit(`${eventoBase}:aggiornati`, {
-          tipo: "modificata",
-          id: req.params.id,
-        });
-        res.json({ id: req.params.id, ...req.body });
-      },
-    );
+    eseguiConValidazione(req, res, () => {
+      const valori = colonne.map((c) =>
+        req.body[c] === undefined || req.body[c] === "" ? null : req.body[c],
+      );
+      const setClause = colonne.map((c) => `${c} = ?`).join(", ");
+      db.run(
+        `UPDATE ${tabella} SET ${setClause} WHERE id = ?`,
+        [...valori, req.params.id],
+        function (err) {
+          if (err) return res.status(400).json({ errore: err.message });
+          if (this.changes === 0)
+            return res.status(404).json({ errore: "Riga non trovata" });
+          io.emit(`${eventoBase}:aggiornati`, {
+            tipo: "modificata",
+            id: req.params.id,
+          });
+          res.json({ id: req.params.id, ...req.body });
+        },
+      );
+    });
   });
 
   router.delete("/:id", (req, res) => {

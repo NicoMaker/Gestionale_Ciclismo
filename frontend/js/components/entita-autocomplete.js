@@ -10,30 +10,31 @@ function elencoPer(tipo) {
       id: s.id,
       label: s.nome,
       flagCodice: s.nazione_codice || null,
-      escluso: false,
     }));
   if (tipo === "corridore")
     return cache.corridori.map((c) => ({
       id: c.id,
       label: `${c.nome} ${c.cognome}${c.numero_pettorale ? " · #" + c.numero_pettorale : ""}`,
       flagCodice: c.nazione_codice || null,
-      // un corridore ritirato/infortunato non è più selezionabile per nuove
-      // tappe: resta visibile solo se è già il valore correntemente scelto
-      escluso: !!c.ritirato,
+      // un corridore ritirato/infortunato/squalificato non è più
+      // selezionabile a partire dalla tappa del ritiro in poi; per le
+      // tappe precedenti resta invece disponibile, per poter inserire o
+      // correggere risultati storici già disputati prima del ritiro
+      ritirato: !!c.ritirato,
+      ritiratoTappaNumero: c.ritirato_tappa_numero ?? null,
     }));
   if (tipo === "tappa")
     return cache.tappe.map((t) => ({
       id: t.id,
       label: `Tappa ${t.numero_tappa} — ${t.nome}`,
       flagCodice: null,
-      escluso: false,
+      numeroTappa: t.numero_tappa,
     }));
   if (tipo === "sponsor")
     return cache.sponsor.map((s) => ({
       id: s.id,
       label: s.nome,
       flagCodice: null,
-      escluso: false,
     }));
   return [];
 }
@@ -63,10 +64,28 @@ export function htmlCampoEntita(idPrefix, label, tipo) {
   `;
 }
 
-// Ritorna una funzione getter (come attivaCampoNazione) che restituisce
-// l'id selezionato (o null). "valoreIniziale" è l'id già salvato, se in
-// modifica.
-export function attivaCampoEntita(idPrefix, tipo, valoreIniziale) {
+/**
+ * Attiva un campo di ricerca con autocompletamento.
+ *
+ * @param {string} idPrefix
+ * @param {string} tipo - "squadra" | "corridore" | "tappa" | "sponsor"
+ * @param {number|null} valoreIniziale - id già salvato, se in modifica
+ * @param {object} [opzioni]
+ * @param {number|null} [opzioni.tappaNumero] - numero della tappa di
+ *   riferimento (solo per tipo "corridore"): un corridore ritirato viene
+ *   escluso solo se questa tappa è >= alla tappa del suo ritiro (oppure
+ *   sempre, se il ritiro non ha una tappa specificata o non è nota la
+ *   tappa di riferimento).
+ * @param {number[]} [opzioni.escludiIds] - id aggiuntivi da escludere
+ *   sempre (es. corridori già presenti in un'altra riga per la stessa
+ *   tappa, per evitare doppioni).
+ *
+ * Ritorna una funzione getter che restituisce l'id selezionato (o null).
+ * La funzione espone anche .aggiornaFiltri({ tappaNumero, escludiIds })
+ * per ricalcolare le esclusioni quando cambia il contesto (es. l'utente
+ * cambia la tappa in un form che ha sia tappa che corridore).
+ */
+export function attivaCampoEntita(idPrefix, tipo, valoreIniziale, opzioni) {
   const wrapEl = document.getElementById(idPrefix + "_wrap");
   if (!wrapEl) return () => null;
 
@@ -76,10 +95,22 @@ export function attivaCampoEntita(idPrefix, tipo, valoreIniziale) {
   const flagEl = wrapEl.querySelector(".autocomplete-flag");
 
   const tuttiGliElementi = elencoPer(tipo);
-  // includi comunque l'elemento correntemente selezionato anche se
-  // "escluso" (es. corridore ritirato in un risultato già registrato)
-  const selezionabili = tuttiGliElementi.filter(
-    (e) => !e.escluso || e.id === valoreIniziale,
+
+  let tappaNumeroCorrente = opzioni?.tappaNumero ?? null;
+  let escludiIdsCorrenti = new Set(opzioni?.escludiIds ?? []);
+
+  function nonSelezionabile(e) {
+    if (escludiIdsCorrenti.has(e.id)) return true;
+    if (tipo !== "corridore" || !e.ritirato) return false;
+    // ritiro senza tappa specificata, o tappa di riferimento sconosciuta:
+    // comportamento prudente, il corridore resta escluso ovunque
+    if (tappaNumeroCorrente == null || e.ritiratoTappaNumero == null)
+      return true;
+    return tappaNumeroCorrente >= e.ritiratoTappaNumero;
+  }
+
+  let selezionabili = tuttiGliElementi.filter(
+    (e) => e.id === valoreIniziale || !nonSelezionabile(e),
   );
 
   function mostraFlag(elemento) {
@@ -128,6 +159,7 @@ export function attivaCampoEntita(idPrefix, tipo, valoreIniziale) {
     hidden.value = "";
     mostraFlag(null);
     renderRisultati(input.value);
+    hidden.dispatchEvent(new Event("change"));
   });
   input.addEventListener("blur", () =>
     setTimeout(() => lista.classList.remove("open"), 150),
@@ -139,7 +171,20 @@ export function attivaCampoEntita(idPrefix, tipo, valoreIniziale) {
     hidden.value = item.dataset.id;
     mostraFlag(selezionabili.find((e) => e.id === +item.dataset.id));
     lista.classList.remove("open");
+    // avvisa eventuali campi collegati (es. un campo corridore che deve
+    // ricalcolare le esclusioni quando cambia la tappa selezionata qui)
+    hidden.dispatchEvent(new Event("change"));
   });
 
-  return () => +hidden.value || null;
+  const getter = () => +hidden.value || null;
+  getter.aggiornaFiltri = (nuoveOpzioni) => {
+    if (nuoveOpzioni?.tappaNumero !== undefined)
+      tappaNumeroCorrente = nuoveOpzioni.tappaNumero;
+    if (nuoveOpzioni?.escludiIds !== undefined)
+      escludiIdsCorrenti = new Set(nuoveOpzioni.escludiIds);
+    selezionabili = tuttiGliElementi.filter(
+      (e) => e.id === valoreIniziale || !nonSelezionabile(e),
+    );
+  };
+  return getter;
 }

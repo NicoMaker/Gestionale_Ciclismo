@@ -782,6 +782,10 @@ async function main() {
     );
   }
 
+  // Esiti "di routine": niente "positivo" qui, perché quel caso viene
+  // seminato più sotto in modo esplicito e collegato alla squalifica
+  // automatica del corridore (così il dato resta sempre coerente: un
+  // controllo positivo senza conseguenze sportive sarebbe un errore).
   const esiti = [
     "negativo",
     "negativo",
@@ -789,7 +793,6 @@ async function main() {
     "negativo",
     "in_attesa",
     "in_attesa",
-    "positivo",
   ];
   for (let i = 0; i < 15; i++) {
     const c = scegli(corridori);
@@ -799,6 +802,79 @@ async function main() {
       [c.id, t.id, sommaData(dataInizio, t.numero - 1), scegli(esiti)],
     );
   }
+
+  // ---- 9bis) Ritiri di esempio: tutti i casi possibili -----------------------
+  // Copre in modo esplicito ogni motivo di ritiro previsto dallo schema
+  // (infortunio, abbandono, squalifica, altro) più il caso "squalifica
+  // automatica da doping", per avere sempre nel database dimostrativo
+  // almeno un esempio di ciascuna casistica: da questo momento questi
+  // corridori non sono più selezionabili per le tappe successive e
+  // spariscono da tutte le classifiche, pur mantenendo lo storico dei
+  // risultati già ottenuti nelle prime tappe.
+  console.log("🚑 Ritiri di esempio (infortunio, abbandono, squalifica, altro)...");
+  const candidatiRitiro = mescola(corridori);
+  const ritiriEsempio = [
+    {
+      corridore: candidatiRitiro[0],
+      motivo: "infortunio",
+      dallaTappa: 7,
+      note: "Caduta in discesa, frattura alla clavicola",
+    },
+    {
+      corridore: candidatiRitiro[1],
+      motivo: "abbandono",
+      dallaTappa: 8,
+      note: "Non è nelle condizioni per proseguire la corsa",
+    },
+    {
+      corridore: candidatiRitiro[2],
+      motivo: "squalifica",
+      dallaTappa: 9,
+      note: "Squalificato dalla giuria per comportamento antisportivo in volata",
+    },
+    {
+      corridore: candidatiRitiro[3],
+      motivo: "altro",
+      dallaTappa: 10,
+      note: "Motivi personali",
+    },
+  ];
+  for (const r of ritiriEsempio) {
+    await run(
+      `UPDATE corridori SET
+         ritirato = 1, ritirato_tappa_numero = ?, motivo_ritiro = ?,
+         note_ritiro = ?, ritirato_il = CURRENT_TIMESTAMP
+       WHERE id = ?`,
+      [r.dallaTappa, r.motivo, r.note, r.corridore.id],
+    );
+  }
+
+  // Caso "controllo antidoping positivo" → squalifica automatica: il
+  // corridore risulta positivo al controllo dell'ultima tappa già
+  // disputata e, di conseguenza, non parte più dalla tappa successiva.
+  console.log("🧪 Caso doping positivo, con squalifica automatica collegata...");
+  const corridoreDoping = candidatiRitiro[4];
+  const tappaControlloDoping = tappeConRisultati[tappeConRisultati.length - 1];
+  await run(
+    "INSERT INTO controlli_antidoping (corridore_id, tappa_id, data, esito) VALUES (?, ?, ?, ?)",
+    [
+      corridoreDoping.id,
+      tappaControlloDoping.id,
+      sommaData(dataInizio, tappaControlloDoping.numero - 1),
+      "positivo",
+    ],
+  );
+  await run(
+    `UPDATE corridori SET
+       ritirato = 1, ritirato_tappa_numero = ?, motivo_ritiro = 'squalifica',
+       note_ritiro = ?, ritirato_il = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [
+      tappaControlloDoping.numero + 1,
+      `Squalifica automatica: controllo antidoping positivo (tappa ${tappaControlloDoping.numero})`,
+      corridoreDoping.id,
+    ],
+  );
 
   // ---- 10) Alloggi (hotel per squadra sulle prime tappe) ---------------------
   console.log("🏨 Alloggi...");
@@ -928,6 +1004,9 @@ async function main() {
   );
   console.log(
     "   • penalità, controlli antidoping, alloggi, media accreditati e comunicati stampa",
+  );
+  console.log(
+    "   • 5 ritiri di esempio: infortunio, abbandono, squalifica, altro + 1 squalifica automatica da doping positivo",
   );
   process.exit(0);
 }

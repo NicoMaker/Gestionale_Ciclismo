@@ -604,6 +604,12 @@ tbody tr:hover {
   color: #c81743;
   gap: 5px;
 }
+.badge-giovane {
+  background: #f7f7fb;
+  border: 1.5px solid var(--rosa-maglia);
+  color: var(--rosa-maglia);
+  font-weight: 600;
+}
 .badge-ritirato .icona {
   width: 13px;
   height: 13px;
@@ -722,6 +728,14 @@ tbody tr.riga-podio:nth-child(3) {
   font-size: 16px;
   font-weight: 700;
   margin-bottom: 5px;
+}
+.squadra-card .conteggio-corridori {
+  font-size: 12.5px;
+  color: var(--testo-soft);
+  margin: -6px 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 .squadra-card p {
   font-size: 13px;
@@ -930,6 +944,11 @@ tbody tr.riga-podio:nth-child(3) {
   outline: none;
   border-color: var(--rosa-maglia);
   box-shadow: 0 0 0 3.5px var(--rosa-glow);
+}
+.campo-hint {
+  font-size: 13px;
+  color: var(--testo-soft);
+  padding: 10px 0;
 }
 .field-row {
   display: grid;

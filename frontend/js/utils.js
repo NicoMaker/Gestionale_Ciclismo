@@ -53,6 +53,42 @@ export function bandiera(codiceIso2, larghezzaPx = 20) {
   return `<img class="bandiera-img" src="https://flagcdn.com/${codice.toLowerCase()}.svg" width="${larghezzaPx}" height="${altezzaPx}" alt="${codice}" title="${codice}" loading="lazy" onerror="this.style.visibility='hidden'">`;
 }
 
+/* ---------- DATE IN FORMATO ITALIANO ---------- */
+// Converte una data ISO (aaaa-mm-gg, eventualmente con orario) nel
+// formato italiano gg/mm/aaaa usato in tutta l'interfaccia.
+export function formattaDataIt(dataIso) {
+  if (!dataIso) return "—";
+  const d = new Date(dataIso);
+  if (Number.isNaN(d.getTime())) return dataIso;
+  return d.toLocaleDateString("it-IT", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+// Anno di riferimento della corsa (per calcolare l'età sportiva dei
+// corridori, coerente con la classifica giovani/maglia bianca lato
+// backend): l'anno più recente tra le tappe in calendario, altrimenti
+// l'anno corrente.
+export function annoRiferimentoGara(tappe) {
+  const anni = (tappe || [])
+    .map((t) => (t.data ? new Date(t.data).getFullYear() : null))
+    .filter((a) => a && !Number.isNaN(a));
+  return anni.length ? Math.max(...anni) : new Date().getFullYear();
+}
+
+// Età in anni compiuti nell'anno di riferimento della corsa.
+export function calcolaEta(dataNascitaIso, annoRiferimento) {
+  if (!dataNascitaIso) return null;
+  const anno = new Date(dataNascitaIso).getFullYear();
+  if (Number.isNaN(anno)) return null;
+  return (annoRiferimento || new Date().getFullYear()) - anno;
+}
+
+// Soglia della classifica giovani / maglia bianca (coerente col backend)
+export const ETA_LIMITE_MAGLIA_BIANCA = 25;
+
 /* ---------- ERRORI API ---------- */
 // Estrae il messaggio di errore da una Response non-ok (o testo generico)
 export async function erroreDaResponse(

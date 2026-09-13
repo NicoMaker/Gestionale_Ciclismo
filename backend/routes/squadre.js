@@ -5,8 +5,13 @@ const { verificaEliminabile, spostaInCestino } = require("../db/cestino");
 
 module.exports = (io) => {
   router.get("/", (req, res) => {
+    // numero_corridori: quanti corridori ha in rosa la squadra;
+    // numero_corridori_in_gara: quanti di questi sono ancora in gara
+    // (esclude ritirati/infortunati/squalificati).
     const sql = `
-      SELECT s.*, n.nome AS nazione_nome, n.codice_iso2 AS nazione_codice
+      SELECT s.*, n.nome AS nazione_nome, n.codice_iso2 AS nazione_codice,
+             (SELECT COUNT(*) FROM corridori c WHERE c.squadra_id = s.id) AS numero_corridori,
+             (SELECT COUNT(*) FROM corridori c WHERE c.squadra_id = s.id AND COALESCE(c.ritirato, 0) = 0) AS numero_corridori_in_gara
       FROM squadre s
       LEFT JOIN nazioni n ON s.nazione_id = n.id
       ORDER BY s.nome

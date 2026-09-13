@@ -8,6 +8,9 @@ import {
   htmlCampoRicerca,
   attivaCampoRicerca,
   erroreDaResponse,
+  calcolaEta,
+  annoRiferimentoGara,
+  ETA_LIMITE_MAGLIA_BIANCA,
 } from "../utils.js";
 import {
   cache,
@@ -44,7 +47,7 @@ function renderElenco(corpo) {
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Pett.</th><th>Nome</th><th>Nazionalità</th><th>Squadra</th><th>Stato</th><th class="th-azioni"></th></tr></thead>
+        <thead><tr><th>Pett.</th><th>Nome</th><th>Età</th><th>Nazionalità</th><th>Squadra</th><th>Stato</th><th class="th-azioni"></th></tr></thead>
         <tbody id="tabellaCorridori"></tbody>
       </table>
     </div>
@@ -54,6 +57,7 @@ function renderElenco(corpo) {
     .addEventListener("click", async () => {
       await garantisciSquadre();
       await garantisciNazioni();
+      await garantisciTappe();
       apriFormCorridore(null);
     });
   attivaCampoRicerca(corpo, (q) => {
@@ -75,6 +79,7 @@ function badgeStato(c) {
 function disegnaElenco() {
   const tbody = document.getElementById("tabellaCorridori");
   if (!tbody) return;
+  const annoRiferimento = annoRiferimentoGara(cache.tappe);
   const filtrati = cache.corridori.filter((c) => {
     if (!queryCorrente) return true;
     const testo =
@@ -83,11 +88,14 @@ function disegnaElenco() {
   });
   tbody.innerHTML =
     filtrati
-      .map(
-        (c) => `
+      .map((c) => {
+        const eta = calcolaEta(c.data_nascita, annoRiferimento);
+        const giovane = eta != null && eta <= ETA_LIMITE_MAGLIA_BIANCA;
+        return `
     <tr class="${c.ritirato ? "riga-ritirato" : ""}">
       <td><span class="badge badge-pettorale">${c.numero_pettorale ?? "—"}</span></td>
       <td><strong>${c.nome} ${c.cognome}</strong></td>
+      <td>${eta != null ? `${eta} anni` : "—"}${giovane ? ' <span class="badge badge-giovane" title="Rientra nella classifica giovani (maglia bianca)">maglia bianca</span>' : ""}</td>
       <td>${c.nazione_codice ? `<span class="bandiera">${bandiera(c.nazione_codice)}</span>${c.nazione_nome}` : "—"}</td>
       <td>${c.squadra_nome ? `${c.squadra_nazione_codice ? `<span class="bandiera">${bandiera(c.squadra_nazione_codice)}</span>` : ""}<span class="dot-colore" style="background:${c.squadra_colore || "#999"}"></span>${c.squadra_nome}` : "—"}</td>
       <td>${badgeStato(c)}</td>
@@ -101,15 +109,16 @@ function disegnaElenco() {
         <button class="btn-icon danger" title="elimina" data-elimina="${c.id}">${icona("elimina")}</button>
       </td>
     </tr>
-  `,
-      )
+  `;
+      })
       .join("") ||
-    `<tr><td colspan="6" style="text-align:center;color:#999;padding:24px;">${queryCorrente ? "Nessun corridore trovato" : "Nessun corridore inserito"}</td></tr>`;
+    `<tr><td colspan="7" style="text-align:center;color:#999;padding:24px;">${queryCorrente ? "Nessun corridore trovato" : "Nessun corridore inserito"}</td></tr>`;
 
   tbody.querySelectorAll("[data-modifica]").forEach((b) =>
     b.addEventListener("click", async () => {
       await garantisciSquadre();
       await garantisciNazioni();
+      await garantisciTappe();
       const c = cache.corridori.find((c) => c.id === +b.dataset.modifica);
       if (c) apriFormCorridore(c);
     }),
@@ -137,6 +146,7 @@ function disegnaElenco() {
 
 async function ricaricaElenco() {
   await caricaCorridori();
+  await garantisciTappe();
   disegnaElenco();
 }
 
@@ -152,6 +162,16 @@ function apriFormCorridore(corridoreEsistente) {
       <div class="field"><label>Pettorale</label><input type="number" id="c_pettorale" value="${c.numero_pettorale ?? ""}"></div>
       ${htmlCampoNazione("c_naz", "Nazionalità")}
     </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Data di nascita</label>
+        <input type="date" id="c_nascita" value="${c.data_nascita ?? ""}">
+      </div>
+      <div class="field">
+        <label>Età / classifica giovani</label>
+        <div class="campo-hint" id="c_eta_hint">—</div>
+      </div>
+    </div>
     ${htmlCampoEntita("c_squadra", "Squadra", "squadra")}
     <div class="modal-actions">
       <button class="btn-secondary" id="c_annulla">annulla</button>
@@ -164,6 +184,28 @@ function apriFormCorridore(corridoreEsistente) {
     "squadra",
     c.squadra_id ?? null,
   );
+
+  // età calcolata al volo, per capire subito — mentre si inserisce la
+  // data di nascita — se il corridore rientrerà nella classifica giovani
+  // (maglia bianca), che in questo gestionale è riservata a chi ha 25
+  // anni o meno nell'anno della corsa
+  const annoRiferimento = annoRiferimentoGara(cache.tappe);
+  const inputNascita = document.getElementById("c_nascita");
+  const etaHint = document.getElementById("c_eta_hint");
+  function aggiornaEtaHint() {
+    const eta = calcolaEta(inputNascita.value, annoRiferimento);
+    if (eta == null) {
+      etaHint.textContent = "—";
+      return;
+    }
+    etaHint.textContent =
+      eta <= ETA_LIMITE_MAGLIA_BIANCA
+        ? `${eta} anni · rientra in classifica giovani (maglia bianca)`
+        : `${eta} anni · fuori classifica giovani (oltre ${ETA_LIMITE_MAGLIA_BIANCA} anni)`;
+  }
+  inputNascita.addEventListener("input", aggiornaEtaHint);
+  aggiornaEtaHint();
+
   document.getElementById("c_annulla").addEventListener("click", chiudiModal);
   document
     .getElementById("c_salva")
@@ -181,6 +223,7 @@ async function salvaCorridore(
     nome: document.getElementById("c_nome").value,
     cognome: document.getElementById("c_cognome").value,
     numero_pettorale: +document.getElementById("c_pettorale").value || null,
+    data_nascita: document.getElementById("c_nascita").value || null,
     nazione_id: leggiNazioneId(),
     squadra_id: leggiSquadraId(),
   };

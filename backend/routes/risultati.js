@@ -30,6 +30,28 @@ function secondiInTempo(totaleSecondi) {
 
 module.exports = (io) => {
   /* ---------------------------------------------------------------------
+   * Un corridore ritirato/infortunato/squalificato non può avere un
+   * risultato per la tappa del ritiro né per quelle successive; per le
+   * tappe precedenti resta invece ammesso (correzione di dati storici).
+   * Se il ritiro non ha una tappa specificata, è prudenzialmente escluso
+   * da qualunque tappa (non sappiamo fino a dove ha corso).
+   * ------------------------------------------------------------------- */
+  function corridoreAmmessoPerTappa(corridoreId, tappaId, callback) {
+    db.get(
+      `SELECT c.ritirato, c.ritirato_tappa_numero, t.numero_tappa
+       FROM corridori c, tappe t
+       WHERE c.id = ? AND t.id = ?`,
+      [corridoreId, tappaId],
+      (err, riga) => {
+        if (err) return callback(err);
+        if (!riga || !riga.ritirato) return callback(null, true);
+        if (riga.ritirato_tappa_numero == null) return callback(null, false);
+        callback(null, riga.numero_tappa < riga.ritirato_tappa_numero);
+      },
+    );
+  }
+
+  /* ---------------------------------------------------------------------
    * Somma, per ogni corridore, tutti i tempi di tappa disputati (colonna
    * risultati.tempo) più le eventuali penalità in secondi. È la base
    * comune per: classifica generale a tempo, classifica giovani e
@@ -266,37 +288,128 @@ module.exports = (io) => {
         .status(400)
         .json({ errore: "tappa_id e corridore_id sono obbligatori" });
     }
-    const sql = `
-      INSERT INTO risultati (tappa_id, corridore_id, posizione, tempo, distacco, punti)
-      VALUES (?, ?, ?, ?, ?, ?)
-      ON CONFLICT(tappa_id, corridore_id) DO UPDATE SET
-        posizione = excluded.posizione,
-        tempo = excluded.tempo,
-        distacco = excluded.distacco,
-        punti = excluded.punti
-    `;
-    db.run(
-      sql,
-      [
-        tappa_id,
-        corridore_id,
-        posizione || null,
-        tempo || null,
-        distacco || "00:00:00",
-        punti || 0,
-      ],
-      function (err) {
-        if (err) return res.status(400).json({ errore: err.message });
-        const risultato = {
+    corridoreAmmessoPerTappa(corridore_id, tappa_id, (errAmmesso, ammesso) => {
+      if (errAmmesso) return res.status(500).json({ errore: errAmmesso.message });
+      if (!ammesso) {
+        return res.status(409).json({
+          errore:
+            "Il corridore è ritirato/squalificato e non può avere risultati da quella tappa in poi",
+        });
+      }
+      const sql = `
+        INSERT INTO risultati (tappa_id, corridore_id, posizione, tempo, distacco, punti)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(tappa_id, corridore_id) DO UPDATE SET
+          posizione = excluded.posizione,
+          tempo = excluded.tempo,
+          distacco = excluded.distacco,
+          punti = excluded.punti
+      `;
+      db.run(
+        sql,
+        [
           tappa_id,
           corridore_id,
-          posizione,
-          tempo,
-          distacco,
-          punti,
-        };
-        io.emit("risultati:aggiornati", { tipo: "salvato", dato: risultato });
-        res.status(201).json(risultato);
+          posizione || null,
+          tempo || null,
+          distacco || "00:00:00",
+          punti || 0,
+        ],
+        function (err) {
+          if (err) return res.status(400).json({ errore: err.message });
+          const risultato = {
+            tappa_id,
+            corridore_id,
+            posizione,
+            tempo,
+            distacco,
+            punti,
+          };
+          io.emit("risultati:aggiornati", {
+            tipo: "salvato",
+            dato: risultato,
+          });
+          res.status(201).json(risultato);
+        },
+      );
+    });
+  });
+
+  // Modifica di un risultato già registrato, corridore compreso: a
+  // differenza dell'upsert di POST (che fa da chiave tappa_id+corridore_id
+  // ed è pensato per l'inserimento), qui si aggiorna la riga per id, così
+  // da poter riassegnare il risultato a un altro corridore senza lasciare
+  // una riga "fantasma" con il vecchio corridore.
+  router.put("/:id", (req, res) => {
+    const { tappa_id, corridore_id, posizione, tempo, distacco, punti } =
+      req.body;
+    if (!tappa_id || !corridore_id) {
+      return res
+        .status(400)
+        .json({ errore: "tappa_id e corridore_id sono obbligatori" });
+    }
+
+    function aggiornaRisultato() {
+      db.run(
+        `UPDATE risultati SET tappa_id = ?, corridore_id = ?, posizione = ?, tempo = ?, distacco = ?, punti = ?
+         WHERE id = ?`,
+        [
+          tappa_id,
+          corridore_id,
+          posizione || null,
+          tempo || null,
+          distacco || "00:00:00",
+          punti || 0,
+          req.params.id,
+        ],
+        function (err) {
+          if (err) return res.status(400).json({ errore: err.message });
+          if (this.changes === 0)
+            return res.status(404).json({ errore: "Risultato non trovato" });
+          const risultato = {
+            id: req.params.id,
+            tappa_id,
+            corridore_id,
+            posizione,
+            tempo,
+            distacco,
+            punti,
+          };
+          io.emit("risultati:aggiornati", {
+            tipo: "modificato",
+            dato: risultato,
+          });
+          res.json(risultato);
+        },
+      );
+    }
+
+    db.get(
+      "SELECT id FROM risultati WHERE tappa_id = ? AND corridore_id = ? AND id != ?",
+      [tappa_id, corridore_id, req.params.id],
+      (errVerifica, conflitto) => {
+        if (errVerifica)
+          return res.status(500).json({ errore: errVerifica.message });
+        if (conflitto) {
+          return res.status(409).json({
+            errore: "Questo corridore ha già un risultato per questa tappa",
+          });
+        }
+        corridoreAmmessoPerTappa(
+          corridore_id,
+          tappa_id,
+          (errAmmesso, ammesso) => {
+            if (errAmmesso)
+              return res.status(500).json({ errore: errAmmesso.message });
+            if (!ammesso) {
+              return res.status(409).json({
+                errore:
+                  "Il corridore è ritirato/squalificato e non può avere risultati da quella tappa in poi",
+              });
+            }
+            aggiornaRisultato();
+          },
+        );
       },
     );
   });
