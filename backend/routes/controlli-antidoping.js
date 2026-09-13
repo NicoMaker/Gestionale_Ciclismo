@@ -140,7 +140,13 @@ module.exports = (io) => {
             if (esito === "positivo" && esitoPrecedente !== "positivo") {
               applicaSqualificaDoping(corridore_id, tappa_id, io);
             }
-            res.json({ id: req.params.id, corridore_id, tappa_id, data, esito });
+            res.json({
+              id: req.params.id,
+              corridore_id,
+              tappa_id,
+              data,
+              esito,
+            });
           },
         );
       },

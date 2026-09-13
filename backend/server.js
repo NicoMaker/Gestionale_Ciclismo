@@ -144,7 +144,10 @@ app.use(
 );
 // Route dedicata (non generica): un esito "positivo" squalifica in
 // automatico il corridore e lo esclude dalle tappe successive.
-app.use("/api/controlli-antidoping", require("./routes/controlli-antidoping")(io));
+app.use(
+  "/api/controlli-antidoping",
+  require("./routes/controlli-antidoping")(io),
+);
 app.use(
   "/api/biciclette",
   creaRouterGenerico(

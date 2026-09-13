@@ -811,7 +811,9 @@ async function main() {
   // corridori non sono più selezionabili per le tappe successive e
   // spariscono da tutte le classifiche, pur mantenendo lo storico dei
   // risultati già ottenuti nelle prime tappe.
-  console.log("🚑 Ritiri di esempio (infortunio, abbandono, squalifica, altro)...");
+  console.log(
+    "🚑 Ritiri di esempio (infortunio, abbandono, squalifica, altro)...",
+  );
   const candidatiRitiro = mescola(corridori);
 
   // Caso "abbandono in corsa": il ritiro avviene proprio durante una
@@ -830,10 +832,10 @@ async function main() {
     [tappaRitiroInCorsa.id, corridoreRitiroInCorsa.id],
   );
   for (const tappaSuccessiva of tappeConRisultati.slice(4)) {
-    await run(
-      "DELETE FROM risultati WHERE tappa_id = ? AND corridore_id = ?",
-      [tappaSuccessiva.id, corridoreRitiroInCorsa.id],
-    );
+    await run("DELETE FROM risultati WHERE tappa_id = ? AND corridore_id = ?", [
+      tappaSuccessiva.id,
+      corridoreRitiroInCorsa.id,
+    ]);
     await run(
       "DELETE FROM traguardi_volanti WHERE tappa_id = ? AND corridore_id = ?",
       [tappaSuccessiva.id, corridoreRitiroInCorsa.id],
@@ -891,7 +893,9 @@ async function main() {
   // Caso "controllo antidoping positivo" → squalifica automatica: il
   // corridore risulta positivo al controllo dell'ultima tappa già
   // disputata e, di conseguenza, non parte più dalla tappa successiva.
-  console.log("🧪 Caso doping positivo, con squalifica automatica collegata...");
+  console.log(
+    "🧪 Caso doping positivo, con squalifica automatica collegata...",
+  );
   const corridoreDoping = candidatiRitiro[4];
   const tappaControlloDoping = tappeConRisultati[tappeConRisultati.length - 1];
   await run(

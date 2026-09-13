@@ -423,7 +423,8 @@ module.exports = (io) => {
         .json({ errore: "tappa_id e corridore_id sono obbligatori" });
     }
     corridoreAmmessoPerTappa(corridore_id, tappa_id, (errAmmesso, ammesso) => {
-      if (errAmmesso) return res.status(500).json({ errore: errAmmesso.message });
+      if (errAmmesso)
+        return res.status(500).json({ errore: errAmmesso.message });
       if (!ammesso) {
         return res.status(409).json({
           errore:

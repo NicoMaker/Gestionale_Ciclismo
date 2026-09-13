@@ -154,8 +154,7 @@ export function montaListaConForm(contenitore, cfg) {
       // corridori già presenti in un'altra riga per la stessa tappa (es.
       // due volate/GPM sulla stessa tappa per lo stesso corridore) — si
       // attiva solo se la configurazione lo richiede esplicitamente
-      if (!cfg.evitaDuplicatiTappaCorridore || !colTappa || !tappaId)
-        return [];
+      if (!cfg.evitaDuplicatiTappaCorridore || !colTappa || !tappaId) return [];
       return righeCorrenti
         .filter(
           (r) =>

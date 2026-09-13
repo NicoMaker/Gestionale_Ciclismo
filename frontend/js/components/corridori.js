@@ -112,11 +112,13 @@ function disegnaElenco() {
       .join("") ||
     `<tr><td colspan="7" class="stato-vuoto">${queryCorrente ? "Nessun corridore trovato" : "Nessun corridore inserito"}</td></tr>`;
 
-  tbody.querySelectorAll("[data-dettaglio]").forEach((b) =>
-    b.addEventListener("click", () =>
-      apriDettaglioCorridore(+b.dataset.dettaglio),
-    ),
-  );
+  tbody
+    .querySelectorAll("[data-dettaglio]")
+    .forEach((b) =>
+      b.addEventListener("click", () =>
+        apriDettaglioCorridore(+b.dataset.dettaglio),
+      ),
+    );
   tbody.querySelectorAll("[data-modifica]").forEach((b) =>
     b.addEventListener("click", () => {
       const c = cache.corridori.find((c) => c.id === +b.dataset.modifica);
@@ -215,7 +217,12 @@ export async function apriFormCorridore(corridoreEsistente, opzioni) {
   document
     .getElementById("c_salva")
     .addEventListener("click", () =>
-      salvaCorridore(corridoreEsistente, leggiNazioneId, leggiSquadraId, opzioni),
+      salvaCorridore(
+        corridoreEsistente,
+        leggiNazioneId,
+        leggiSquadraId,
+        opzioni,
+      ),
     );
 }
 
@@ -379,9 +386,7 @@ export async function apriDettaglioCorridore(corridoreId) {
       <button class="btn-secondary" id="dett_chiudi">chiudi</button>
     </div>
   `);
-  document
-    .getElementById("dett_chiudi")
-    .addEventListener("click", chiudiModal);
+  document.getElementById("dett_chiudi").addEventListener("click", chiudiModal);
 
   const dati = await apiGet("/api/risultati/corridore/" + corridoreId);
   const maglie = document.getElementById("dettaglioMaglie");
@@ -389,11 +394,27 @@ export async function apriDettaglioCorridore(corridoreId) {
   if (!dati || !maglie || !corpoBody) return; // il modale è stato chiuso nel frattempo
 
   maglie.innerHTML =
-    htmlMaglia("maglia rosa (generale)", "var(--rosa-maglia)", dati.classifiche.generale) +
-    htmlMaglia("maglia ciclamino (punti)", "var(--viola)", dati.classifiche.punti) +
-    htmlMaglia("maglia verde (montagna)", "var(--verde-montagna)", dati.classifiche.montagna) +
+    htmlMaglia(
+      "maglia rosa (generale)",
+      "var(--rosa-maglia)",
+      dati.classifiche.generale,
+    ) +
+    htmlMaglia(
+      "maglia ciclamino (punti)",
+      "var(--viola)",
+      dati.classifiche.punti,
+    ) +
+    htmlMaglia(
+      "maglia verde (montagna)",
+      "var(--verde-montagna)",
+      dati.classifiche.montagna,
+    ) +
     (dati.classifiche.giovani
-      ? htmlMaglia("maglia bianca (giovani)", "var(--bianca-maglia)", dati.classifiche.giovani)
+      ? htmlMaglia(
+          "maglia bianca (giovani)",
+          "var(--bianca-maglia)",
+          dati.classifiche.giovani,
+        )
       : "");
 
   corpoBody.innerHTML =

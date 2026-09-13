@@ -27,7 +27,11 @@ import {
   attivaCampoNazione,
 } from "./nazione-autocomplete.js";
 import { icona } from "../icone.js";
-import { apriFormCorridore, apriDettaglioCorridore, MOTIVI_RITIRO } from "./corridori.js";
+import {
+  apriFormCorridore,
+  apriDettaglioCorridore,
+  MOTIVI_RITIRO,
+} from "./corridori.js";
 
 let sottoTabAttiva = "elenco";
 let queryCorrente = "";
@@ -252,11 +256,13 @@ function disegnaRosa() {
       .join("") ||
     `<div class="stato-vuoto">${queryRosa ? "Nessun corridore trovato" : "Rosa vuota — aggiungi il primo corridore"}</div>`;
 
-  lista.querySelectorAll("[data-rosa-dettaglio]").forEach((b) =>
-    b.addEventListener("click", () =>
-      apriDettaglioCorridore(+b.dataset.rosaDettaglio),
-    ),
-  );
+  lista
+    .querySelectorAll("[data-rosa-dettaglio]")
+    .forEach((b) =>
+      b.addEventListener("click", () =>
+        apriDettaglioCorridore(+b.dataset.rosaDettaglio),
+      ),
+    );
   lista.querySelectorAll("[data-rosa-modifica]").forEach((b) =>
     b.addEventListener("click", () => {
       const c = cache.corridori.find((c) => c.id === +b.dataset.rosaModifica);

@@ -147,8 +147,7 @@ function apriFormRisultato(risultatoEsistente) {
   // tappa in poi; la tappa in corso resta invece consentita ai corridori
   // ritirati proprio in questa tappa o in una successiva
   const numeroTappaCorrente =
-    cache.tappe.find((t) => t.id === tappaSelezionataId)?.numero_tappa ??
-    null;
+    cache.tappe.find((t) => t.id === tappaSelezionataId)?.numero_tappa ?? null;
   const escludiIds = risultatiCorrenti
     .filter((x) => !risultatoEsistente || x.id !== risultatoEsistente.id)
     .map((x) => x.corridore_id);

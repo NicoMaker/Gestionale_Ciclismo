@@ -65,7 +65,8 @@ module.exports = (io) => {
           tipo,
           data,
           stato,
-          abbuoni_attivi: abbuoni_attivi === false || abbuoni_attivi === 0 ? 0 : 1,
+          abbuoni_attivi:
+            abbuoni_attivi === false || abbuoni_attivi === 0 ? 0 : 1,
         };
         io.emit("tappe:aggiornate", { tipo: "creata", dato: nuova });
         res.status(201).json(nuova);
