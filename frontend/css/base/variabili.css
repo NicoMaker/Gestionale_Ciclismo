@@ -1,0 +1,57 @@
+:root {
+  --asfalto: #14151a;
+  --asfalto-2: #1d1e26;
+  --asfalto-3: #262835;
+  --bianco-strada: #f4f3f8;
+  --carta: #ffffff;
+  --rosa-maglia: #ec1f80;
+  --rosa-maglia-2: #ff4f9a;
+  --rosa-glow: rgba(236, 31, 128, 0.35);
+  --viola: #7c3aed;
+  --verde-montagna: #17a06b;
+  --bianca-maglia: #ffffff;
+  --testo: #1c1d24;
+  --testo-soft: #74758a;
+  --bordo: #e9e8f2;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --ombra:
+    0 1px 2px rgba(20, 20, 30, 0.04), 0 8px 24px -8px rgba(20, 20, 30, 0.08);
+  --ombra-hover:
+    0 4px 12px rgba(20, 20, 30, 0.06), 0 16px 32px -12px rgba(20, 20, 30, 0.14);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family:
+    "Archivo",
+    -apple-system,
+    sans-serif;
+  background: var(--bianco-strada);
+  color: var(--testo);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d8d7e4;
+  border-radius: 10px;
+  border: 2px solid var(--bianco-strada);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c2c1d4;
+}
+

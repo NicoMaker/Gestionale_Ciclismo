@@ -1,0 +1,345 @@
+/* ---- TABLE ---- */
+.table-wrap {
+  background: var(--carta);
+  border: 1px solid var(--bordo);
+  border-radius: var(--radius);
+  overflow: hidden;
+  overflow-x: auto;
+  box-shadow: var(--ombra);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+thead th {
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--testo-soft);
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--bordo);
+  background: #fbfaff;
+  white-space: nowrap;
+}
+tbody td {
+  padding: 13px 18px;
+  border-bottom: 1px solid #f2f1f8;
+  font-size: 14px;
+  white-space: nowrap;
+}
+tbody tr {
+  transition: background 0.12s;
+}
+tbody tr:last-child td {
+  border-bottom: none;
+}
+tbody tr:hover {
+  background: #fdf3f8;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 11px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+.badge-pianura {
+  background: #e6f1ff;
+  color: #1565c0;
+}
+.badge-collina {
+  background: #fff2e0;
+  color: #c25c00;
+}
+.badge-montagna {
+  background: #e3f7ec;
+  color: var(--verde-montagna);
+}
+.badge-cronometro {
+  background: #f1e8fd;
+  color: #7327c9;
+}
+.badge-programmata {
+  background: #f0eff7;
+  color: #68697d;
+}
+.badge-in_corso {
+  background: #ffe6ec;
+  color: #d92c4b;
+}
+.badge-conclusa {
+  background: #e3f7ec;
+  color: #17a06b;
+}
+
+/* stati / enum aggiuntivi, usati da tutte le tabelle collegate */
+.badge-negativo {
+  background: #e3f7ec;
+  color: #17a06b;
+}
+.badge-positivo {
+  background: #ffe1e6;
+  color: #c81743;
+}
+.badge-in_attesa {
+  background: #fff4d9;
+  color: #b07a00;
+}
+.badge-stampa {
+  background: #f0eff7;
+  color: #4c4d63;
+}
+.badge-tv {
+  background: #e6f1ff;
+  color: #1565c0;
+}
+.badge-radio {
+  background: #f1e8fd;
+  color: #7327c9;
+}
+.badge-foto {
+  background: #fff2e0;
+  color: #c25c00;
+}
+.badge-online {
+  background: #e3f7ec;
+  color: var(--verde-montagna);
+}
+.badge-ammiraglia {
+  background: #ffe6ec;
+  color: #d92c4b;
+}
+.badge-furgone {
+  background: #e6f1ff;
+  color: #1565c0;
+}
+.badge-bus {
+  background: #f1e8fd;
+  color: #7327c9;
+}
+.badge-camper {
+  background: #fff2e0;
+  color: #c25c00;
+}
+.badge-main_sponsor {
+  background: #fff4d9;
+  color: #b07a00;
+}
+.badge-co_sponsor {
+  background: #f0eff7;
+  color: #68697d;
+}
+.badge-fornitore_tecnico {
+  background: #e6f1ff;
+  color: #1565c0;
+}
+.badge-direttore_sportivo {
+  background: #ffe6ec;
+  color: #d92c4b;
+}
+.badge-meccanico {
+  background: #e6f1ff;
+  color: #1565c0;
+}
+.badge-medico {
+  background: #e3f7ec;
+  color: var(--verde-montagna);
+}
+.badge-massaggiatore {
+  background: #f1e8fd;
+  color: #7327c9;
+}
+.badge-preparatore_atletico {
+  background: #fff2e0;
+  color: #c25c00;
+}
+.badge-sprint {
+  background: #e6f1ff;
+  color: #1565c0;
+}
+.badge-gpm {
+  background: #e3f7ec;
+  color: var(--verde-montagna);
+}
+.badge-codice,
+.badge-pettorale,
+.badge-numero {
+  background: #f0eff7;
+  color: #4c4d63;
+  font-variant-numeric: tabular-nums;
+}
+.badge-punti {
+  background: linear-gradient(135deg, #fff4d9, #ffe9b3);
+  color: #8a5a00;
+}
+.badge-in-gara {
+  background: #e3f7ec;
+  color: #17a06b;
+}
+.badge-ritirato {
+  background: #ffe1e6;
+  color: #c81743;
+  gap: 5px;
+}
+.badge-giovane {
+  background: #f7f7fb;
+  border: 1.5px solid var(--rosa-maglia);
+  color: var(--rosa-maglia);
+  font-weight: 600;
+}
+.badge-abbuono {
+  background: #e3f7ec;
+  color: var(--verde-montagna);
+  font-variant-numeric: tabular-nums;
+}
+.badge-ritirato-doping {
+  background: #f1e8fd;
+  color: var(--viola);
+}
+.badge-ritirato .icona {
+  width: 13px;
+  height: 13px;
+}
+tr.riga-ritirato {
+  opacity: 0.6;
+}
+tr.riga-ritirato td strong {
+  text-decoration: line-through;
+  text-decoration-color: #c81743;
+}
+
+.dot-colore {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 7px;
+  vertical-align: 1px;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.04);
+}
+
+.banner-maglia {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  background: var(--carta);
+  border: 1px solid var(--bordo);
+  border-left: 5px solid var(--colore-maglia, var(--rosa-maglia));
+  box-shadow: var(--ombra);
+  margin-bottom: 14px;
+}
+.banner-maglia .maglia-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--colore-maglia, var(--rosa-maglia));
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+.banner-maglia strong {
+  font-size: 14.5px;
+}
+.banner-maglia .maglia-label {
+  display: block;
+  font-size: 12px;
+  color: var(--testo-soft);
+  margin-top: 2px;
+}
+
+.medaglia-podio {
+  font-size: 17px;
+}
+.riga-podio td:first-child {
+  font-weight: 800;
+}
+tbody tr.riga-podio:nth-child(1) {
+  background: linear-gradient(90deg, rgba(255, 214, 102, 0.16), transparent);
+}
+tbody tr.riga-podio:nth-child(2) {
+  background: linear-gradient(90deg, rgba(192, 192, 207, 0.18), transparent);
+}
+tbody tr.riga-podio:nth-child(3) {
+  background: linear-gradient(90deg, rgba(205, 140, 80, 0.14), transparent);
+}
+
+.select-tappa {
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--bordo);
+  background: var(--carta);
+  cursor: pointer;
+}
+
+.bandiera {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 7px;
+}
+.bandiera-img {
+  display: inline-block;
+  vertical-align: -3px;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(20, 20, 30, 0.1);
+  object-fit: cover;
+  background: #eceeff;
+}
+
+
+/* ---- Raffinamento tabella (dal file originale, tenuto in coda per
+   mantenere lo stesso ordine di cascata) ---- */
+/* ---- TABLE ---- */
+.table-wrap {
+  background: var(--carta);
+  border: 1px solid var(--bordo);
+  border-radius: var(--radius);
+  overflow: auto;
+  max-height: 74vh;
+  box-shadow: var(--ombra);
+  -webkit-overflow-scrolling: touch;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+thead th {
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--testo-soft);
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--bordo);
+  background: #fbfaff;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  box-shadow: 0 1px 0 var(--bordo);
+}
+tbody td {
+  padding: 13px 18px;
+  border-bottom: 1px solid #f2f1f8;
+  font-size: 14px;
+  white-space: nowrap;
+}
+tbody tr {
+  transition: background 0.12s;
+}
+tbody tr:last-child td {
+  border-bottom: none;
+}
+tbody tr:hover {
+  background: #fdf3f8;
+}

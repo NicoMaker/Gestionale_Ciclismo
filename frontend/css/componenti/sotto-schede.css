@@ -1,0 +1,65 @@
+/* ---- SOTTO-SCHEDE ---- */
+.subtabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--bordo);
+  padding-bottom: 16px;
+}
+.subtab {
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 8px 15px;
+  border-radius: 20px;
+  border: 1.5px solid var(--bordo);
+  background: var(--carta);
+  color: var(--testo-soft);
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+.subtab:hover {
+  border-color: var(--rosa-maglia);
+  color: var(--rosa-maglia);
+  transform: translateY(-1px);
+}
+.subtab.active {
+  background: linear-gradient(135deg, var(--rosa-maglia), #d61a72);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 12px -4px var(--rosa-glow);
+}
+
+.subtab-body {
+  animation: fadein 0.2s ease;
+}
+.subtab-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.subtab-sezione {
+  margin-bottom: 30px;
+}
+.subtab-sezione h4 {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--testo-soft);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.btn-piccolo {
+  margin-top: 0;
+  padding: 9px 16px;
+  font-size: 12.5px;
+}
+.btn-secondary.danger:hover {
+  border-color: #d92c4b;
+  color: #d92c4b;
+}
+

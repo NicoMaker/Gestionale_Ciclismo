@@ -10,7 +10,7 @@ const { Server } = require("socket.io");
 
 const db = require("./db/database"); // inizializza lo schema al boot
 const { eliminaScaduti } = require("./db/cestino");
-const creaRouterGenerico = require("./routes/generic");
+const creaRouterGenerico = require("./routes/generic/generic");
 
 // Validazione condivisa: un corridore ritirato/squalificato non può avere
 // una riga (risultato, traguardo volante, GPM...) per le tappe successive
@@ -61,13 +61,13 @@ const statoLive = {
 };
 
 // ---- Route con logica dedicata (join, validazioni specifiche) ----
-app.use("/api/nazioni", require("./routes/nazioni")(io));
-app.use("/api/squadre", require("./routes/squadre")(io));
-app.use("/api/corridori", require("./routes/corridori")(io));
-app.use("/api/tappe", require("./routes/tappe")(io));
-app.use("/api/risultati", require("./routes/risultati")(io));
-app.use("/api/sponsor", require("./routes/sponsor")(io));
-app.use("/api/cestino", require("./routes/cestino")(io));
+app.use("/api/nazioni", require("./routes/nazioni/nazioni")(io));
+app.use("/api/squadre", require("./routes/squadre/squadre")(io));
+app.use("/api/corridori", require("./routes/corridori/corridori")(io));
+app.use("/api/tappe", require("./routes/tappe/tappe")(io));
+app.use("/api/risultati", require("./routes/risultati/risultati")(io));
+app.use("/api/sponsor", require("./routes/sponsor/sponsor")(io));
+app.use("/api/cestino", require("./routes/cestino/cestino")(io));
 
 // ---- Route generiche CRUD per le tabelle secondarie (14 tabelle) ----
 app.use(
@@ -146,7 +146,7 @@ app.use(
 // automatico il corridore e lo esclude dalle tappe successive.
 app.use(
   "/api/controlli-antidoping",
-  require("./routes/controlli-antidoping")(io),
+  require("./routes/controlli-antidoping/controlli-antidoping")(io),
 );
 app.use(
   "/api/biciclette",

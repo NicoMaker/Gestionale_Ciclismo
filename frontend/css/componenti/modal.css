@@ -1,0 +1,106 @@
+/* ---- MODAL ---- */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(16, 16, 24, 0.55);
+  backdrop-filter: blur(3px);
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fadein 0.15s ease;
+}
+.modal-overlay.active {
+  display: flex;
+}
+.modal {
+  background: var(--carta);
+  border-radius: 16px;
+  padding: 30px;
+  width: 440px;
+  max-width: 92vw;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 30px 60px -12px rgba(16, 16, 24, 0.35);
+  animation: modalIn 0.22s cubic-bezier(0.2, 0.8, 0.3, 1.2);
+}
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.modal h2 {
+  font-family: "Archivo Black", sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  margin-bottom: 20px;
+  letter-spacing: -0.2px;
+}
+.field {
+  margin-bottom: 15px;
+  position: relative;
+}
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--testo-soft);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.field input,
+.field select {
+  width: 100%;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 10px 13px;
+  border: 1.5px solid var(--bordo);
+  border-radius: var(--radius-sm);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+  background: var(--carta);
+}
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-color: var(--rosa-maglia);
+  box-shadow: 0 0 0 3.5px var(--rosa-glow);
+}
+.campo-hint {
+  font-size: 13px;
+  color: var(--testo-soft);
+  padding: 10px 0;
+}
+.testo-soft {
+  color: var(--testo-soft);
+  font-weight: 400;
+  font-size: 0.93em;
+}
+.campo-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13.5px;
+  color: var(--testo);
+  background: #f7f7fb;
+  border: 1.5px solid var(--bordo);
+  border-radius: var(--radius-sm);
+  padding: 11px 13px;
+  margin-bottom: 15px;
+  cursor: pointer;
+}
+.campo-checkbox input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--rosa-maglia);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+

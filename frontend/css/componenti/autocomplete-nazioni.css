@@ -1,0 +1,55 @@
+/* ---- AUTOCOMPLETE NAZIONI ---- */
+.autocomplete-wrap {
+  position: relative;
+}
+.autocomplete-input-row {
+  position: relative;
+}
+.autocomplete-flag {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  pointer-events: none;
+}
+.autocomplete-input--con-bandiera {
+  padding-left: 40px !important;
+}
+.autocomplete-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--carta);
+  border: 1px solid var(--bordo);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 12px 28px -6px rgba(20, 20, 30, 0.18);
+  max-height: 210px;
+  overflow-y: auto;
+  z-index: 50;
+  display: none;
+}
+.autocomplete-list.open {
+  display: block;
+  animation: fadein 0.15s ease;
+}
+.autocomplete-item {
+  padding: 10px 13px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.1s;
+}
+.autocomplete-item:hover {
+  background: #fdf3f8;
+}
+.autocomplete-empty {
+  padding: 10px 13px;
+  font-size: 13px;
+  color: var(--testo-soft);
+}
+
