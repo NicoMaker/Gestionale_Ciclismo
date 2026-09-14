@@ -25,7 +25,10 @@ import {
   htmlCampoNazione,
   attivaCampoNazione,
 } from "../nazione-autocomplete/nazione-autocomplete.js";
-import { htmlCampoEntita, attivaCampoEntita } from "../entita-autocomplete/entita-autocomplete.js";
+import {
+  htmlCampoEntita,
+  attivaCampoEntita,
+} from "../entita-autocomplete/entita-autocomplete.js";
 import { icona } from "../../core/icone.js";
 
 export const MOTIVI_RITIRO = {

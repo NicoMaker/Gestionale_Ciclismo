@@ -18,9 +18,16 @@ import {
 } from "../../core/state.js";
 import { socket } from "../../core/socket.js";
 import { montaListaConForm } from "../tabella-dati/tabella-dati.js";
-import { htmlCampoEntita, attivaCampoEntita } from "../entita-autocomplete/entita-autocomplete.js";
+import {
+  htmlCampoEntita,
+  attivaCampoEntita,
+} from "../entita-autocomplete/entita-autocomplete.js";
 import { icona, medaglia } from "../../core/icone.js";
-import { apriFormRitiro, riammettiCorridore, badgeStato } from "../corridori/corridori.js";
+import {
+  apriFormRitiro,
+  riammettiCorridore,
+  badgeStato,
+} from "../corridori/corridori.js";
 
 let sottoTabAttiva = "arrivo";
 let tappaSelezionataId = null;
@@ -94,7 +101,9 @@ async function ricaricaArrivo() {
         // lo stato di ritiro non è nella tabella risultati ma nell'anagrafica
         // corridori, già in cache (caricata da garantisciCorridori in
         // renderArrivo): la usiamo per mostrare il badge e il pulsante giusto
-        const corridoreInfo = cache.corridori.find((c) => c.id === r.corridore_id);
+        const corridoreInfo = cache.corridori.find(
+          (c) => c.id === r.corridore_id,
+        );
         const ritirato = !!corridoreInfo?.ritirato;
         return `
     <tr class="${ritirato ? "riga-ritirato" : ""}">
@@ -134,14 +143,22 @@ async function ricaricaArrivo() {
     .forEach((b) =>
       b.addEventListener("click", () => eliminaRisultato(+b.dataset.elimina)),
     );
-  tbody.querySelectorAll("[data-ritira]").forEach((b) =>
-    b.addEventListener("click", () => apriRitiroDaRisultati(+b.dataset.ritira)),
-  );
-  tbody.querySelectorAll("[data-riammetti]").forEach((b) =>
-    b.addEventListener("click", () =>
-      riammettiCorridore(+b.dataset.riammetti, { alSalvataggio: aggiornaDopoRitiro }),
-    ),
-  );
+  tbody
+    .querySelectorAll("[data-ritira]")
+    .forEach((b) =>
+      b.addEventListener("click", () =>
+        apriRitiroDaRisultati(+b.dataset.ritira),
+      ),
+    );
+  tbody
+    .querySelectorAll("[data-riammetti]")
+    .forEach((b) =>
+      b.addEventListener("click", () =>
+        riammettiCorridore(+b.dataset.riammetti, {
+          alSalvataggio: aggiornaDopoRitiro,
+        }),
+      ),
+    );
 }
 
 // dopo un ritiro/riammissione avviato dalla pagina Risultati, va ricaricata
@@ -340,11 +357,15 @@ function disegnaRitiri() {
       .join("") ||
     `<tr><td colspan="7" class="stato-vuoto">${queryRitiri ? "Nessun ritiro trovato" : "Nessun corridore ritirato"}</td></tr>`;
 
-  tbody.querySelectorAll("[data-riammetti]").forEach((b) =>
-    b.addEventListener("click", () =>
-      riammettiCorridore(+b.dataset.riammetti, { alSalvataggio: aggiornaDopoRitiroRitiri }),
-    ),
-  );
+  tbody
+    .querySelectorAll("[data-riammetti]")
+    .forEach((b) =>
+      b.addEventListener("click", () =>
+        riammettiCorridore(+b.dataset.riammetti, {
+          alSalvataggio: aggiornaDopoRitiroRitiri,
+        }),
+      ),
+    );
 }
 
 async function aggiornaDopoRitiroRitiri() {
