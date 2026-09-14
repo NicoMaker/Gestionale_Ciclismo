@@ -20,6 +20,7 @@ import { socket } from "../socket.js";
 import { montaListaConForm } from "./tabella-dati.js";
 import { htmlCampoEntita, attivaCampoEntita } from "./entita-autocomplete.js";
 import { icona, medaglia } from "../icone.js";
+import { apriFormRitiro, riammettiCorridore, badgeStato } from "./corridori.js";
 
 let sottoTabAttiva = "arrivo";
 let tappaSelezionataId = null;
@@ -90,17 +91,30 @@ async function ricaricaArrivo() {
     filtrati
       .map((r) => {
         const m = medaglia(r.posizione);
+        // lo stato di ritiro non è nella tabella risultati ma nell'anagrafica
+        // corridori, già in cache (caricata da garantisciCorridori in
+        // renderArrivo): la usiamo per mostrare il badge e il pulsante giusto
+        const corridoreInfo = cache.corridori.find((c) => c.id === r.corridore_id);
+        const ritirato = !!corridoreInfo?.ritirato;
         return `
-    <tr>
+    <tr class="${ritirato ? "riga-ritirato" : ""}">
       <td>${m ? `<span class="medaglia-podio">${m}</span>` : (r.posizione ?? "—")}</td>
       <td>${r.numero_pettorale ?? "—"}</td>
-      <td><strong>${r.nazione_codice ? bandiera(r.nazione_codice, 16) + " " : ""}${r.nome} ${r.cognome}</strong></td>
+      <td>
+        <strong>${r.nazione_codice ? bandiera(r.nazione_codice, 16) + " " : ""}${r.nome} ${r.cognome}</strong>
+        ${ritirato ? `<div>${badgeStato(corridoreInfo)}</div>` : ""}
+      </td>
       <td>${r.squadra_nome ? `${r.squadra_nazione_codice ? bandiera(r.squadra_nazione_codice, 16) + " " : ""}${r.squadra_nome}` : "—"}</td>
       <td>${r.tempo ?? "—"}</td>
       <td>${r.distacco}</td>
       <td><span class="badge badge-punti">${r.punti}</span></td>
       <td class="td-azioni">
         <button class="btn-icon" title="modifica" data-modifica='${JSON.stringify({ id: r.id, corridore_id: r.corridore_id, posizione: r.posizione, tempo: r.tempo, distacco: r.distacco, punti: r.punti })}'>${icona("modifica")}</button>
+        ${
+          ritirato
+            ? `<button class="btn-icon" title="riammetti in gara" data-riammetti="${r.corridore_id}">${icona("ripristina")}</button>`
+            : `<button class="btn-icon" title="segna ritiro da questa tappa" data-ritira="${r.corridore_id}">${icona("infortunio")}</button>`
+        }
         <button class="btn-icon danger" title="elimina" data-elimina="${r.id}">${icona("elimina")}</button>
       </td>
     </tr>
@@ -120,6 +134,40 @@ async function ricaricaArrivo() {
     .forEach((b) =>
       b.addEventListener("click", () => eliminaRisultato(+b.dataset.elimina)),
     );
+  tbody.querySelectorAll("[data-ritira]").forEach((b) =>
+    b.addEventListener("click", () => apriRitiroDaRisultati(+b.dataset.ritira)),
+  );
+  tbody.querySelectorAll("[data-riammetti]").forEach((b) =>
+    b.addEventListener("click", () =>
+      riammettiCorridore(+b.dataset.riammetti, { alSalvataggio: aggiornaDopoRitiro }),
+    ),
+  );
+}
+
+// dopo un ritiro/riammissione avviato dalla pagina Risultati, va ricaricata
+// l'anagrafica corridori (per il badge e per escludere il corridore dalle
+// prossime tappe) e ridisegnata la tabella corrente
+async function aggiornaDopoRitiro() {
+  await caricaCorridori();
+  ricaricaArrivo();
+}
+
+// apre il modale di ritiro preselezionando come tappa di riferimento
+// proprio la tappa attualmente visualizzata in questa pagina, così da poter
+// registrare in un colpo solo "il corridore è arrivato/si è ritirato qui,
+// e da qui in poi non gareggia più"
+function apriRitiroDaRisultati(corridoreId) {
+  const r = risultatiCorrenti.find((x) => x.corridore_id === corridoreId);
+  if (!r) return;
+  const numeroTappaCorrente =
+    cache.tappe.find((t) => t.id === tappaSelezionataId)?.numero_tappa ?? null;
+  apriFormRitiro(
+    { id: r.corridore_id, nome: r.nome, cognome: r.cognome },
+    {
+      tappaNumeroPreselezionata: numeroTappaCorrente,
+      alSalvataggio: aggiornaDopoRitiro,
+    },
+  );
 }
 
 function apriFormRisultato(risultatoEsistente) {
@@ -248,5 +296,12 @@ export function init(container) {
 
   socket.on("risultati:aggiornati", () => {
     if (sottoTabAttiva === "arrivo") ricaricaArrivo();
+  });
+  // un ritiro/riammissione può arrivare anche dalla pagina Corridori (o da
+  // un altro utente collegato): riallineiamo l'anagrafica e ridisegniamo
+  socket.on("corridori:aggiornati", async () => {
+    if (sottoTabAttiva !== "arrivo") return;
+    await caricaCorridori();
+    ricaricaArrivo();
   });
 }

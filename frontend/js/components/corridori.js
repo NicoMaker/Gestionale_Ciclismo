@@ -63,7 +63,7 @@ function renderElenco(corpo) {
   ricaricaElenco();
 }
 
-function badgeStato(c) {
+export function badgeStato(c) {
   if (!c.ritirato) return '<span class="badge badge-in-gara">in gara</span>';
   const motivo = MOTIVI_RITIRO[c.motivo_ritiro] || "Ritirato";
   const iconaMotivo = c.motivo_ritiro === "doping" ? "doping" : "infortunio";
@@ -277,14 +277,32 @@ async function eliminaCorridore(id) {
  * nessuna nuova tappa e sparisce da tutte le classifiche, pur restando
  * visibile in anagrafica con lo storico dei risultati già ottenuti.
  * ------------------------------------------------------------------- */
-function apriFormRitiro(corridore) {
+/**
+ * Apre il modale di ritiro per un corridore.
+ *
+ * @param {{id:number, nome:string, cognome:string}} corridore
+ * @param {object} [opzioni]
+ * @param {number|null} [opzioni.tappaNumeroPreselezionata] - numero tappa da
+ *   preselezionare nel menu "non parteciperà più a partire dalla tappa"
+ *   (es. la tappa di riferimento aperta nella pagina Risultati). Se
+ *   omesso, si propone di default la prima tappa non ancora conclusa.
+ * @param {Function} [opzioni.alSalvataggio] - callback eseguita dopo un
+ *   ritiro salvato con successo, al posto del refresh predefinito
+ *   dell'elenco corridori (utile per aggiornare la pagina chiamante,
+ *   es. la tabella dei risultati di tappa).
+ */
+export function apriFormRitiro(corridore, opzioni = {}) {
   const c = corridore;
   // di default si propone la prima tappa "programmata" successiva come
   // ultima tappa NON disputata: comodo per il caso comune "esce ora,
-  // dalla prossima tappa non corre più"
+  // dalla prossima tappa non corre più"; se il chiamante indica già una
+  // tappa di riferimento (es. la tappa aperta nella pagina Risultati) si
+  // preseleziona invece quella
   const prossimaTappa = [...cache.tappe]
     .sort((a, b) => a.numero_tappa - b.numero_tappa)
     .find((t) => t.stato !== "conclusa");
+  const numeroPreselezionato =
+    opzioni.tappaNumeroPreselezionata ?? prossimaTappa?.numero_tappa ?? null;
 
   apriModal(`
     <h2>Segna ritiro — ${c.nome} ${c.cognome}</h2>
@@ -302,7 +320,7 @@ function apriFormRitiro(corridore) {
           .sort((a, b) => a.numero_tappa - b.numero_tappa)
           .map(
             (t) =>
-              `<option value="${t.numero_tappa}" ${prossimaTappa && t.id === prossimaTappa.id ? "selected" : ""}>Tappa ${t.numero_tappa} — ${t.nome}</option>`,
+              `<option value="${t.numero_tappa}" ${t.numero_tappa === numeroPreselezionato ? "selected" : ""}>Tappa ${t.numero_tappa} — ${t.nome}</option>`,
           )
           .join("")}
       </select>
@@ -324,10 +342,12 @@ function apriFormRitiro(corridore) {
   document.getElementById("rit_annulla").addEventListener("click", chiudiModal);
   document
     .getElementById("rit_conferma")
-    .addEventListener("click", () => confermaRitiro(c.id));
+    .addEventListener("click", () =>
+      confermaRitiro(c.id, opzioni.alSalvataggio),
+    );
 }
 
-async function confermaRitiro(corridoreId) {
+async function confermaRitiro(corridoreId, alSalvataggio) {
   const body = {
     ritirato_tappa_numero: +document.getElementById("rit_tappa").value || null,
     motivo_ritiro: document.getElementById("rit_motivo").value,
@@ -337,16 +357,25 @@ async function confermaRitiro(corridoreId) {
   if (res.ok) {
     chiudiModal();
     mostraToast("Corridore segnato come ritirato");
-    ricaricaElenco();
+    if (alSalvataggio) await alSalvataggio();
+    else ricaricaElenco();
   } else mostraToast(await erroreDaResponse(res, "Errore nel salvataggio"));
 }
 
-async function riammettiCorridore(corridoreId) {
+/**
+ * Riammette in gara un corridore precedentemente ritirato.
+ * @param {number} corridoreId
+ * @param {object} [opzioni]
+ * @param {Function} [opzioni.alSalvataggio] - callback dopo la riammissione,
+ *   al posto del refresh predefinito dell'elenco corridori.
+ */
+export async function riammettiCorridore(corridoreId, opzioni = {}) {
   if (!confirm("Riammettere questo corridore in gara?")) return;
   const res = await apiPost(`/api/corridori/${corridoreId}/riammetti`, {});
   if (res.ok) {
     mostraToast("Corridore riammesso in gara");
-    ricaricaElenco();
+    if (opzioni.alSalvataggio) await opzioni.alSalvataggio();
+    else ricaricaElenco();
   } else mostraToast(await erroreDaResponse(res, "Impossibile riammettere"));
 }
 
