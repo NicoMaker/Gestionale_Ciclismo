@@ -25,7 +25,10 @@ import {
   htmlCampoNazione,
   attivaCampoNazione,
 } from "../nazione-autocomplete/nazione-autocomplete.js";
-import { htmlCampoEntita, attivaCampoEntita } from "../entita-autocomplete/entita-autocomplete.js";
+import {
+  htmlCampoEntita,
+  attivaCampoEntita,
+} from "../entita-autocomplete/entita-autocomplete.js";
 import { icona } from "../../core/icone.js";
 
 export const MOTIVI_RITIRO = {
@@ -311,7 +314,10 @@ async function salvaCorridore(
     );
     if (!resRitiro.ok) {
       mostraToast(
-        await erroreDaResponse(resRitiro, "Corridore salvato, ma il ritiro non è stato aggiornato"),
+        await erroreDaResponse(
+          resRitiro,
+          "Corridore salvato, ma il ritiro non è stato aggiornato",
+        ),
       );
       chiudiModal();
       opzioni?.alSalvataggio?.(await res.json());
@@ -378,7 +384,9 @@ export function apriFormRitiro(corridore, opzioni = {}) {
     .find((t) => t.stato !== "conclusa");
   const numeroPreselezionato = modifica
     ? (c.ritirato_tappa_numero ?? null)
-    : (opzioni.tappaNumeroPreselezionata ?? prossimaTappa?.numero_tappa ?? null);
+    : (opzioni.tappaNumeroPreselezionata ??
+      prossimaTappa?.numero_tappa ??
+      null);
   const motivoPreselezionato = modifica ? c.motivo_ritiro : null;
   const notePreselezionate = modifica ? (c.note_ritiro ?? "") : "";
 
@@ -387,7 +395,7 @@ export function apriFormRitiro(corridore, opzioni = {}) {
     <p style="color:var(--testo-soft);font-size:13.5px;margin:-6px 0 16px;">
       ${
         modifica
-          ? "Correggi la tappa, il motivo o le note del ritiro già registrato. Per far rientrare in gara il corridore usa invece \"riammetti\"."
+          ? 'Correggi la tappa, il motivo o le note del ritiro già registrato. Per far rientrare in gara il corridore usa invece "riammetti".'
           : "Da questo momento il corridore non potrà più essere selezionato per risultati di tappa, traguardi volanti o GPM, e non comparirà più in nessuna classifica."
       }
     </p>
@@ -439,7 +447,11 @@ async function confermaRitiro(corridoreId, alSalvataggio, modifica = false) {
   const res = await apiPost(`/api/corridori/${corridoreId}/ritira`, body);
   if (res.ok) {
     chiudiModal();
-    mostraToast(modifica ? "Dati del ritiro aggiornati" : "Corridore segnato come ritirato");
+    mostraToast(
+      modifica
+        ? "Dati del ritiro aggiornati"
+        : "Corridore segnato come ritirato",
+    );
     if (alSalvataggio) await alSalvataggio();
     else ricaricaElenco();
   } else mostraToast(await erroreDaResponse(res, "Errore nel salvataggio"));
