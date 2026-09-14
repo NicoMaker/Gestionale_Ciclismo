@@ -18,16 +18,9 @@ import {
 } from "../../core/state.js";
 import { socket } from "../../core/socket.js";
 import { montaListaConForm } from "../tabella-dati/tabella-dati.js";
-import {
-  htmlCampoEntita,
-  attivaCampoEntita,
-} from "../entita-autocomplete/entita-autocomplete.js";
+import { htmlCampoEntita, attivaCampoEntita } from "../entita-autocomplete/entita-autocomplete.js";
 import { icona, medaglia } from "../../core/icone.js";
-import {
-  apriFormRitiro,
-  riammettiCorridore,
-  badgeStato,
-} from "../corridori/corridori.js";
+import { apriFormRitiro, riammettiCorridore, badgeStato } from "../corridori/corridori.js";
 
 let sottoTabAttiva = "arrivo";
 let tappaSelezionataId = null;
@@ -101,9 +94,7 @@ async function ricaricaArrivo() {
         // lo stato di ritiro non è nella tabella risultati ma nell'anagrafica
         // corridori, già in cache (caricata da garantisciCorridori in
         // renderArrivo): la usiamo per mostrare il badge e il pulsante giusto
-        const corridoreInfo = cache.corridori.find(
-          (c) => c.id === r.corridore_id,
-        );
+        const corridoreInfo = cache.corridori.find((c) => c.id === r.corridore_id);
         const ritirato = !!corridoreInfo?.ritirato;
         return `
     <tr class="${ritirato ? "riga-ritirato" : ""}">
@@ -143,22 +134,14 @@ async function ricaricaArrivo() {
     .forEach((b) =>
       b.addEventListener("click", () => eliminaRisultato(+b.dataset.elimina)),
     );
-  tbody
-    .querySelectorAll("[data-ritira]")
-    .forEach((b) =>
-      b.addEventListener("click", () =>
-        apriRitiroDaRisultati(+b.dataset.ritira),
-      ),
-    );
-  tbody
-    .querySelectorAll("[data-riammetti]")
-    .forEach((b) =>
-      b.addEventListener("click", () =>
-        riammettiCorridore(+b.dataset.riammetti, {
-          alSalvataggio: aggiornaDopoRitiro,
-        }),
-      ),
-    );
+  tbody.querySelectorAll("[data-ritira]").forEach((b) =>
+    b.addEventListener("click", () => apriRitiroDaRisultati(+b.dataset.ritira)),
+  );
+  tbody.querySelectorAll("[data-riammetti]").forEach((b) =>
+    b.addEventListener("click", () =>
+      riammettiCorridore(+b.dataset.riammetti, { alSalvataggio: aggiornaDopoRitiro }),
+    ),
+  );
 }
 
 // dopo un ritiro/riammissione avviato dalla pagina Risultati, va ricaricata
@@ -305,6 +288,7 @@ async function renderRitiri(corpo) {
   corpo.innerHTML = `
     <div class="subtab-head">
       ${htmlCampoRicerca("cerca corridore, squadra o motivo...")}
+      <button class="btn-secondary btn-piccolo" id="btnNuovoRitiroRisultati">${icona("aggiungi")}nuovo ritiro</button>
     </div>
     <div class="table-wrap">
       <table>
@@ -313,11 +297,57 @@ async function renderRitiri(corpo) {
       </table>
     </div>
   `;
+  document
+    .getElementById("btnNuovoRitiroRisultati")
+    .addEventListener("click", apriNuovoRitiroRisultati);
   attivaCampoRicerca(corpo, (q) => {
     queryRitiri = q;
     disegnaRitiri();
   });
   disegnaRitiri();
+}
+
+// piccolo modale "ponte": si sceglie il corridore ancora in gara, poi si
+// passa al modale di ritiro vero e proprio (già usato in Corridori e
+// Classifiche) con motivo/tappa/note; preseleziona come tappa di
+// riferimento quella eventualmente aperta in questa pagina Risultati
+function apriNuovoRitiroRisultati() {
+  apriModal(`
+    <h2>Nuovo ritiro</h2>
+    <p style="color:var(--testo-soft);font-size:13.5px;margin:-6px 0 16px;">
+      Scegli il corridore da segnare come ritirato. Al passo successivo
+      potrai indicare tappa, motivo e note.
+    </p>
+    ${htmlCampoEntita("nr_corridore", "Corridore", "corridore")}
+    <div class="modal-actions">
+      <button class="btn-secondary" id="nr_annulla">annulla</button>
+      <button class="btn-primary" id="nr_avanti">avanti</button>
+    </div>
+  `);
+  const idGiaRitirati = cache.corridori
+    .filter((c) => c.ritirato)
+    .map((c) => c.id);
+  const leggiCorridoreId = attivaCampoEntita(
+    "nr_corridore",
+    "corridore",
+    null,
+    { escludiIds: idGiaRitirati },
+  );
+  document.getElementById("nr_annulla").addEventListener("click", chiudiModal);
+  document.getElementById("nr_avanti").addEventListener("click", () => {
+    const corridoreId = leggiCorridoreId();
+    if (!corridoreId) {
+      mostraToast("Seleziona un corridore");
+      return;
+    }
+    const c = cache.corridori.find((c) => c.id === corridoreId);
+    if (!c) return;
+    const tappaCorrente = cache.tappe.find((t) => t.id === tappaSelezionataId);
+    apriFormRitiro(c, {
+      tappaNumeroPreselezionata: tappaCorrente?.numero_tappa ?? null,
+      alSalvataggio: aggiornaDopoRitiroRitiri,
+    });
+  });
 }
 
 function disegnaRitiri() {
@@ -349,6 +379,7 @@ function disegnaRitiri() {
       <td>${badgeStato(c)}</td>
       <td>${c.note_ritiro ?? "—"}</td>
       <td class="td-azioni">
+        <button class="btn-icon" title="modifica dati del ritiro" data-modifica-ritiro="${c.id}">${icona("modifica")}</button>
         <button class="btn-icon" title="riammetti in gara" data-riammetti="${c.id}">${icona("ripristina")}</button>
       </td>
     </tr>
@@ -357,15 +388,17 @@ function disegnaRitiri() {
       .join("") ||
     `<tr><td colspan="7" class="stato-vuoto">${queryRitiri ? "Nessun ritiro trovato" : "Nessun corridore ritirato"}</td></tr>`;
 
-  tbody
-    .querySelectorAll("[data-riammetti]")
-    .forEach((b) =>
-      b.addEventListener("click", () =>
-        riammettiCorridore(+b.dataset.riammetti, {
-          alSalvataggio: aggiornaDopoRitiroRitiri,
-        }),
-      ),
-    );
+  tbody.querySelectorAll("[data-modifica-ritiro]").forEach((b) =>
+    b.addEventListener("click", () => {
+      const c = cache.corridori.find((c) => c.id === +b.dataset.modificaRitiro);
+      if (c) apriFormRitiro(c, { alSalvataggio: aggiornaDopoRitiroRitiri });
+    }),
+  );
+  tbody.querySelectorAll("[data-riammetti]").forEach((b) =>
+    b.addEventListener("click", () =>
+      riammettiCorridore(+b.dataset.riammetti, { alSalvataggio: aggiornaDopoRitiroRitiri }),
+    ),
+  );
 }
 
 async function aggiornaDopoRitiroRitiri() {

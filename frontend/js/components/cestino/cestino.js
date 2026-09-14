@@ -1,9 +1,5 @@
 import { apiGet, apiPost, apiDelete } from "../../core/api.js";
-import {
-  mostraToast,
-  attivaCampoRicerca,
-  erroreDaResponse,
-} from "../../core/utils.js";
+import { mostraToast, attivaCampoRicerca, erroreDaResponse } from "../../core/utils.js";
 import {
   caricaSquadre,
   caricaCorridori,

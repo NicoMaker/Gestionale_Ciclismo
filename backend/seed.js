@@ -923,7 +923,8 @@ async function main() {
   // effettivamente saltare l'ultima tappa (esempio più realistico rispetto
   // a un controllo sull'ultima tappa, dopo la quale non ci sarebbe più
   // nulla da far saltare)
-  const tappaControlloDoping = tappeConRisultati[tappeConRisultati.length - 2];
+  const tappaControlloDoping =
+    tappeConRisultati[tappeConRisultati.length - 2];
   await run(
     "INSERT INTO controlli_antidoping (corridore_id, tappa_id, data, esito) VALUES (?, ?, ?, ?)",
     [
@@ -950,10 +951,10 @@ async function main() {
   for (const tappaSuccessiva of tappeConRisultati.filter(
     (t) => t.numero >= tappaControlloDoping.numero + 1,
   )) {
-    await run("DELETE FROM risultati WHERE tappa_id = ? AND corridore_id = ?", [
-      tappaSuccessiva.id,
-      corridoreDoping.id,
-    ]);
+    await run(
+      "DELETE FROM risultati WHERE tappa_id = ? AND corridore_id = ?",
+      [tappaSuccessiva.id, corridoreDoping.id],
+    );
     await run(
       "DELETE FROM traguardi_volanti WHERE tappa_id = ? AND corridore_id = ?",
       [tappaSuccessiva.id, corridoreDoping.id],

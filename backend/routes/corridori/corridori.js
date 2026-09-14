@@ -139,13 +139,17 @@ module.exports = (io) => {
     if (!motiviValidi.includes(motivo_ritiro)) {
       return res.status(400).json({ errore: "Motivo del ritiro non valido" });
     }
+    // COALESCE su ritirato_il: se il corridore era già ritirato e questa
+    // chiamata è in realtà una MODIFICA dei dati del ritiro (tappa, motivo,
+    // note corretti in un secondo momento), la data del ritiro originale
+    // non viene sovrascritta — solo una prima "ritira" imposta il timestamp.
     db.run(
       `UPDATE corridori SET
          ritirato = 1,
          ritirato_tappa_numero = ?,
          motivo_ritiro = ?,
          note_ritiro = ?,
-         ritirato_il = CURRENT_TIMESTAMP
+         ritirato_il = COALESCE(ritirato_il, CURRENT_TIMESTAMP)
        WHERE id = ?`,
       [ritirato_tappa_numero || null, motivo_ritiro, note_ritiro || null, id],
       function (err) {

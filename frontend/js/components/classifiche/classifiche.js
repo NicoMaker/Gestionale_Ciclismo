@@ -17,15 +17,8 @@ import {
   garantisciCorridori,
   garantisciTappe,
 } from "../../core/state.js";
-import {
-  htmlCampoEntita,
-  attivaCampoEntita,
-} from "../entita-autocomplete/entita-autocomplete.js";
-import {
-  apriFormRitiro,
-  riammettiCorridore,
-  badgeStato,
-} from "../corridori/corridori.js";
+import { htmlCampoEntita, attivaCampoEntita } from "../entita-autocomplete/entita-autocomplete.js";
+import { apriFormRitiro, riammettiCorridore, badgeStato } from "../corridori/corridori.js";
 
 let sottoTabAttiva = "tempo";
 
@@ -447,6 +440,7 @@ function disegnaRitiri() {
       <td>${badgeStato(c)}</td>
       <td>${c.note_ritiro ?? "—"}</td>
       <td class="td-azioni">
+        <button class="btn-icon" title="modifica dati del ritiro" data-modifica-ritiro="${c.id}">${icona("modifica")}</button>
         <button class="btn-icon" title="riammetti in gara" data-riammetti="${c.id}">${icona("ripristina")}</button>
       </td>
     </tr>
@@ -455,15 +449,17 @@ function disegnaRitiri() {
       .join("") ||
     `<tr><td colspan="7" class="stato-vuoto">${queryRitiri ? "Nessun ritiro trovato" : "Nessun corridore ritirato"}</td></tr>`;
 
-  tbody
-    .querySelectorAll("[data-riammetti]")
-    .forEach((b) =>
-      b.addEventListener("click", () =>
-        riammettiCorridore(+b.dataset.riammetti, {
-          alSalvataggio: aggiornaDopoRitiro,
-        }),
-      ),
-    );
+  tbody.querySelectorAll("[data-modifica-ritiro]").forEach((b) =>
+    b.addEventListener("click", () => {
+      const c = cache.corridori.find((c) => c.id === +b.dataset.modificaRitiro);
+      if (c) apriFormRitiro(c, { alSalvataggio: aggiornaDopoRitiro });
+    }),
+  );
+  tbody.querySelectorAll("[data-riammetti]").forEach((b) =>
+    b.addEventListener("click", () =>
+      riammettiCorridore(+b.dataset.riammetti, { alSalvataggio: aggiornaDopoRitiro }),
+    ),
+  );
 }
 
 async function aggiornaDopoRitiro() {

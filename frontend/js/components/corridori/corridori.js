@@ -25,10 +25,7 @@ import {
   htmlCampoNazione,
   attivaCampoNazione,
 } from "../nazione-autocomplete/nazione-autocomplete.js";
-import {
-  htmlCampoEntita,
-  attivaCampoEntita,
-} from "../entita-autocomplete/entita-autocomplete.js";
+import { htmlCampoEntita, attivaCampoEntita } from "../entita-autocomplete/entita-autocomplete.js";
 import { icona } from "../../core/icone.js";
 
 export const MOTIVI_RITIRO = {
@@ -103,7 +100,8 @@ function disegnaElenco() {
         <button class="btn-icon" title="vedi dettaglio" data-dettaglio="${c.id}">${icona("occhio")}</button>
         ${
           c.ritirato
-            ? `<button class="btn-icon" title="riammetti in gara" data-riammetti="${c.id}">${icona("ripristina")}</button>`
+            ? `<button class="btn-icon" title="modifica dati del ritiro" data-modifica-ritiro="${c.id}">${icona("modifica")}</button>
+               <button class="btn-icon" title="riammetti in gara" data-riammetti="${c.id}">${icona("ripristina")}</button>`
             : `<button class="btn-icon" title="segna infortunio / ritiro" data-ritira="${c.id}">${icona("infortunio")}</button>`
         }
         <button class="btn-icon" title="modifica" data-modifica="${c.id}">${icona("modifica")}</button>
@@ -133,6 +131,13 @@ function disegnaElenco() {
     .forEach((b) =>
       b.addEventListener("click", () => eliminaCorridore(+b.dataset.elimina)),
     );
+  tbody.querySelectorAll("[data-modifica-ritiro]").forEach((b) =>
+    b.addEventListener("click", async () => {
+      await garantisciTappe();
+      const c = cache.corridori.find((c) => c.id === +b.dataset.modificaRitiro);
+      if (c) apriFormRitiro(c);
+    }),
+  );
   tbody.querySelectorAll("[data-ritira]").forEach((b) =>
     b.addEventListener("click", async () => {
       await garantisciTappe();
@@ -183,6 +188,41 @@ export async function apriFormCorridore(corridoreEsistente, opzioni) {
       </div>
     </div>
     ${htmlCampoEntita("c_squadra", "Squadra", "squadra")}
+    ${
+      c.ritirato
+        ? `
+    <hr style="border:none;border-top:1px solid var(--bordo,#e5e5e5);margin:18px 0 14px;">
+    <p style="color:var(--testo-soft);font-size:13.5px;margin:0 0 10px;font-weight:600;">Stato ritiro</p>
+    <div class="field">
+      <label>Non parteciperà più a partire dalla tappa</label>
+      <select id="c_rit_tappa">
+        <option value="">— non specificato —</option>
+        ${cache.tappe
+          .slice()
+          .sort((a, b) => a.numero_tappa - b.numero_tappa)
+          .map(
+            (t) =>
+              `<option value="${t.numero_tappa}" ${t.numero_tappa === c.ritirato_tappa_numero ? "selected" : ""}>Tappa ${t.numero_tappa} — ${t.nome}</option>`,
+          )
+          .join("")}
+      </select>
+    </div>
+    <div class="field">
+      <label>Motivo</label>
+      <select id="c_rit_motivo">
+        ${Object.entries(MOTIVI_RITIRO)
+          .map(
+            ([v, l]) =>
+              `<option value="${v}" ${v === c.motivo_ritiro ? "selected" : ""}>${l}</option>`,
+          )
+          .join("")}
+      </select>
+    </div>
+    <div class="field"><label>Note (opzionale)</label><input id="c_rit_note" placeholder="es. caduta al km 80, frattura al polso" value="${(c.note_ritiro ?? "").replace(/"/g, "&quot;")}"></div>
+    <p style="color:var(--testo-soft);font-size:12.5px;margin:2px 0 0;">Per far rientrare in gara il corridore usa "riammetti" dall'elenco, non questo modulo.</p>
+    `
+        : ""
+    }
     <div class="modal-actions">
       <button class="btn-secondary" id="c_annulla">annulla</button>
       <button class="btn-primary" id="c_salva">${corridoreEsistente ? "salva modifiche" : "salva corridore"}</button>
@@ -250,13 +290,39 @@ async function salvaCorridore(
   const res = corridoreEsistente
     ? await apiPut("/api/corridori/" + corridoreEsistente.id, body)
     : await apiPost("/api/corridori", body);
-  if (res.ok) {
-    chiudiModal();
-    mostraToast(
-      corridoreEsistente ? "Corridore modificato" : "Corridore aggiunto",
+  if (!res.ok) {
+    mostraToast(await erroreDaResponse(res, "Errore nel salvataggio"));
+    return;
+  }
+  // se il modulo mostrava anche la sezione "Stato ritiro" (corridore già
+  // ritirato), si salvano in un colpo solo pure tappa/motivo/note del
+  // ritiro, così non serve passare dal bottone dedicato per ogni modifica
+  const campoRitMotivo = document.getElementById("c_rit_motivo");
+  if (corridoreEsistente?.ritirato && campoRitMotivo) {
+    const bodyRitiro = {
+      ritirato_tappa_numero:
+        +document.getElementById("c_rit_tappa").value || null,
+      motivo_ritiro: campoRitMotivo.value,
+      note_ritiro: document.getElementById("c_rit_note").value || null,
+    };
+    const resRitiro = await apiPost(
+      `/api/corridori/${corridoreEsistente.id}/ritira`,
+      bodyRitiro,
     );
-    opzioni?.alSalvataggio?.(await res.json());
-  } else mostraToast(await erroreDaResponse(res, "Errore nel salvataggio"));
+    if (!resRitiro.ok) {
+      mostraToast(
+        await erroreDaResponse(resRitiro, "Corridore salvato, ma il ritiro non è stato aggiornato"),
+      );
+      chiudiModal();
+      opzioni?.alSalvataggio?.(await res.json());
+      return;
+    }
+  }
+  chiudiModal();
+  mostraToast(
+    corridoreEsistente ? "Corridore modificato" : "Corridore aggiunto",
+  );
+  opzioni?.alSalvataggio?.(await res.json());
 }
 
 async function eliminaCorridore(id) {
@@ -296,23 +362,34 @@ async function eliminaCorridore(id) {
  */
 export function apriFormRitiro(corridore, opzioni = {}) {
   const c = corridore;
+  // modalità modifica: il corridore è già segnato come ritirato, quindi si
+  // precompilano tappa/motivo/note con i valori già registrati invece di
+  // riproporre i default del "nuovo ritiro"
+  const modifica = !!c.ritirato;
+
   // di default si propone la prima tappa "programmata" successiva come
   // ultima tappa NON disputata: comodo per il caso comune "esce ora,
   // dalla prossima tappa non corre più"; se il chiamante indica già una
   // tappa di riferimento (es. la tappa aperta nella pagina Risultati) si
-  // preseleziona invece quella
+  // preseleziona invece quella. In modifica si preselezionano invece i
+  // valori già salvati per quel ritiro.
   const prossimaTappa = [...cache.tappe]
     .sort((a, b) => a.numero_tappa - b.numero_tappa)
     .find((t) => t.stato !== "conclusa");
-  const numeroPreselezionato =
-    opzioni.tappaNumeroPreselezionata ?? prossimaTappa?.numero_tappa ?? null;
+  const numeroPreselezionato = modifica
+    ? (c.ritirato_tappa_numero ?? null)
+    : (opzioni.tappaNumeroPreselezionata ?? prossimaTappa?.numero_tappa ?? null);
+  const motivoPreselezionato = modifica ? c.motivo_ritiro : null;
+  const notePreselezionate = modifica ? (c.note_ritiro ?? "") : "";
 
   apriModal(`
-    <h2>Segna ritiro — ${c.nome} ${c.cognome}</h2>
+    <h2>${modifica ? "Modifica ritiro" : "Segna ritiro"} — ${c.nome} ${c.cognome}</h2>
     <p style="color:var(--testo-soft);font-size:13.5px;margin:-6px 0 16px;">
-      Da questo momento il corridore non potrà più essere selezionato per
-      risultati di tappa, traguardi volanti o GPM, e non comparirà più in
-      nessuna classifica.
+      ${
+        modifica
+          ? "Correggi la tappa, il motivo o le note del ritiro già registrato. Per far rientrare in gara il corridore usa invece \"riammetti\"."
+          : "Da questo momento il corridore non potrà più essere selezionato per risultati di tappa, traguardi volanti o GPM, e non comparirà più in nessuna classifica."
+      }
     </p>
     <div class="field">
       <label>Non parteciperà più a partire dalla tappa</label>
@@ -332,25 +409,28 @@ export function apriFormRitiro(corridore, opzioni = {}) {
       <label>Motivo</label>
       <select id="rit_motivo">
         ${Object.entries(MOTIVI_RITIRO)
-          .map(([v, l]) => `<option value="${v}">${l}</option>`)
+          .map(
+            ([v, l]) =>
+              `<option value="${v}" ${v === motivoPreselezionato ? "selected" : ""}>${l}</option>`,
+          )
           .join("")}
       </select>
     </div>
-    <div class="field"><label>Note (opzionale)</label><input id="rit_note" placeholder="es. caduta al km 80, frattura al polso"></div>
+    <div class="field"><label>Note (opzionale)</label><input id="rit_note" placeholder="es. caduta al km 80, frattura al polso" value="${notePreselezionate.replace(/"/g, "&quot;")}"></div>
     <div class="modal-actions">
       <button class="btn-secondary" id="rit_annulla">annulla</button>
-      <button class="btn-primary" id="rit_conferma">conferma ritiro</button>
+      <button class="btn-primary" id="rit_conferma">${modifica ? "salva modifiche" : "conferma ritiro"}</button>
     </div>
   `);
   document.getElementById("rit_annulla").addEventListener("click", chiudiModal);
   document
     .getElementById("rit_conferma")
     .addEventListener("click", () =>
-      confermaRitiro(c.id, opzioni.alSalvataggio),
+      confermaRitiro(c.id, opzioni.alSalvataggio, modifica),
     );
 }
 
-async function confermaRitiro(corridoreId, alSalvataggio) {
+async function confermaRitiro(corridoreId, alSalvataggio, modifica = false) {
   const body = {
     ritirato_tappa_numero: +document.getElementById("rit_tappa").value || null,
     motivo_ritiro: document.getElementById("rit_motivo").value,
@@ -359,7 +439,7 @@ async function confermaRitiro(corridoreId, alSalvataggio) {
   const res = await apiPost(`/api/corridori/${corridoreId}/ritira`, body);
   if (res.ok) {
     chiudiModal();
-    mostraToast("Corridore segnato come ritirato");
+    mostraToast(modifica ? "Dati del ritiro aggiornati" : "Corridore segnato come ritirato");
     if (alSalvataggio) await alSalvataggio();
     else ricaricaElenco();
   } else mostraToast(await erroreDaResponse(res, "Errore nel salvataggio"));
