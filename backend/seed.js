@@ -685,13 +685,18 @@ async function main() {
     }
   }
 
-  // ---- 7) Risultati, traguardi volanti e GPM per le prime 6 tappe ----------
+  // ---- 7) Risultati, traguardi volanti e GPM per TUTTE le tappe ------------
+  // Il giro è seminato come corsa completa e già disputata: tutte le 12
+  // tappe hanno un arrivo regolare per ogni corridore ancora in gara. I
+  // corridori ritirati (vedi sezione 9bis più sotto) vengono rimossi dai
+  // risultati delle tappe successive al loro ritiro, così restano solo i
+  // risultati coerenti con lo stato "ritirato dalla tappa N".
   console.log("🏁 Risultati di tappa, traguardi volanti e GPM...");
   const puntiPerPosizione = [
     50, 40, 32, 26, 22, 18, 15, 13, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1,
   ];
   const puntiIntermedi = [8, 5, 2];
-  const tappeConRisultati = idTappa.slice(0, 6);
+  const tappeConRisultati = idTappa;
 
   for (const tappa of tappeConRisultati) {
     // ordina i corridori: chi ha più "livello" + un fattore casuale finisce più avanti
@@ -888,6 +893,23 @@ async function main() {
        WHERE id = ?`,
       [r.dallaTappa, r.motivo, r.note, r.corridore.id],
     );
+    // niente più risultati/traguardi/GPM dalla tappa del ritiro in poi
+    for (const tappaSuccessiva of tappeConRisultati.filter(
+      (t) => t.numero >= r.dallaTappa,
+    )) {
+      await run(
+        "DELETE FROM risultati WHERE tappa_id = ? AND corridore_id = ?",
+        [tappaSuccessiva.id, r.corridore.id],
+      );
+      await run(
+        "DELETE FROM traguardi_volanti WHERE tappa_id = ? AND corridore_id = ?",
+        [tappaSuccessiva.id, r.corridore.id],
+      );
+      await run(
+        "DELETE FROM gpm_risultati WHERE tappa_id = ? AND corridore_id = ?",
+        [tappaSuccessiva.id, r.corridore.id],
+      );
+    }
   }
 
   // Caso "controllo antidoping positivo" → squalifica automatica: il
@@ -897,7 +919,12 @@ async function main() {
     "🧪 Caso doping positivo, con squalifica automatica collegata...",
   );
   const corridoreDoping = candidatiRitiro[4];
-  const tappaControlloDoping = tappeConRisultati[tappeConRisultati.length - 1];
+  // penultima tappa disputata: così la squalifica automatica gli fa
+  // effettivamente saltare l'ultima tappa (esempio più realistico rispetto
+  // a un controllo sull'ultima tappa, dopo la quale non ci sarebbe più
+  // nulla da far saltare)
+  const tappaControlloDoping =
+    tappeConRisultati[tappeConRisultati.length - 2];
   await run(
     "INSERT INTO controlli_antidoping (corridore_id, tappa_id, data, esito) VALUES (?, ?, ?, ?)",
     [
@@ -918,6 +945,25 @@ async function main() {
       corridoreDoping.id,
     ],
   );
+  // niente risultati dalla tappa successiva al controllo positivo in poi
+  // (in questo seed è oltre l'ultima tappa disputata, quindi di norma non
+  // c'è nulla da ripulire — ma lasciamo la logica generica e corretta)
+  for (const tappaSuccessiva of tappeConRisultati.filter(
+    (t) => t.numero >= tappaControlloDoping.numero + 1,
+  )) {
+    await run(
+      "DELETE FROM risultati WHERE tappa_id = ? AND corridore_id = ?",
+      [tappaSuccessiva.id, corridoreDoping.id],
+    );
+    await run(
+      "DELETE FROM traguardi_volanti WHERE tappa_id = ? AND corridore_id = ?",
+      [tappaSuccessiva.id, corridoreDoping.id],
+    );
+    await run(
+      "DELETE FROM gpm_risultati WHERE tappa_id = ? AND corridore_id = ?",
+      [tappaSuccessiva.id, corridoreDoping.id],
+    );
+  }
 
   // ---- 10) Alloggi (hotel per squadra sulle prime tappe) ---------------------
   console.log("🏨 Alloggi...");
@@ -1043,7 +1089,7 @@ async function main() {
     `   • ${sponsor.length} sponsor e le relative sponsorizzazioni per squadra`,
   );
   console.log(
-    `   • ${idTappa.length} tappe con percorso e meteo, risultati per le prime ${tappeConRisultati.length}`,
+    `   • ${idTappa.length} tappe con percorso, meteo e risultati completi (tutte le ${tappeConRisultati.length} tappe)`,
   );
   console.log(
     "   • penalità, controlli antidoping, alloggi, media accreditati e comunicati stampa",

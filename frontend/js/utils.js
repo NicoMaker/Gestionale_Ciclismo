@@ -135,7 +135,7 @@ export function creaSottoSchede(contenitore, schede, onCambio) {
     <div class="subtab-body"></div>
   `;
   const tabsBar = contenitore.querySelector(".subtabs");
-  const corpo = contenitore.querySelector(".subtab-body");
+  let corpo = contenitore.querySelector(".subtab-body");
 
   tabsBar.innerHTML = schede
     .map(
@@ -148,7 +148,19 @@ export function creaSottoSchede(contenitore, schede, onCambio) {
     tabsBar
       .querySelectorAll(".subtab")
       .forEach((b) => b.classList.toggle("active", b.dataset.key === key));
-    corpo.innerHTML = "";
+    // Alcune sotto-schede (es. Penalità/Abbuoni in Regolamento, Arrivo/GPM
+    // in Risultati) agganciano un addEventListener("click", ...) di
+    // delega direttamente su "corpo" tramite montaListaConForm. Se
+    // riusassimo sempre lo stesso nodo, quei listener si accumulerebbero
+    // ad ogni cambio scheda (non vengono mai rimossi da innerHTML=""), e
+    // al click su una riga scatterebbero ANCHE i gestori delle schede
+    // visitate in precedenza, riaprendo il modale sbagliato (es.
+    // "Modifica — Penalità" invece di "Modifica — Abbuoni"). Sostituire il
+    // nodo con un clone vuoto ad ogni cambio elimina i vecchi listener
+    // insieme al nodo a cui erano agganciati.
+    const corpoNuovo = corpo.cloneNode(false);
+    corpo.replaceWith(corpoNuovo);
+    corpo = corpoNuovo;
     onCambio(key, corpo);
   }
 

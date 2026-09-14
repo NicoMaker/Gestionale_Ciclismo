@@ -279,6 +279,79 @@ function renderGpm(corpo) {
   });
 }
 
+let queryRitiri = "";
+
+async function renderRitiri(corpo) {
+  sottoTabAttiva = "ritiri";
+  await garantisciCorridori();
+  await garantisciTappe();
+  corpo.innerHTML = `
+    <div class="subtab-head">
+      ${htmlCampoRicerca("cerca corridore, squadra o motivo...")}
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Pett.</th><th>Corridore</th><th>Squadra</th><th>Ritirato dalla tappa</th><th>Motivo</th><th>Note</th><th class="th-azioni"></th></tr></thead>
+        <tbody id="tabellaRitiri"></tbody>
+      </table>
+    </div>
+  `;
+  attivaCampoRicerca(corpo, (q) => {
+    queryRitiri = q;
+    disegnaRitiri();
+  });
+  disegnaRitiri();
+}
+
+function disegnaRitiri() {
+  const tbody = document.getElementById("tabellaRitiri");
+  if (!tbody) return;
+  const ritirati = cache.corridori
+    .filter((c) => c.ritirato)
+    .filter((c) => {
+      if (!queryRitiri) return true;
+      return `${c.nome} ${c.cognome} ${c.squadra_nome ?? ""} ${c.note_ritiro ?? ""}`
+        .toLowerCase()
+        .includes(queryRitiri);
+    })
+    .sort(
+      (a, b) =>
+        (a.ritirato_tappa_numero ?? 0) - (b.ritirato_tappa_numero ?? 0) ||
+        a.cognome.localeCompare(b.cognome),
+    );
+
+  tbody.innerHTML =
+    ritirati
+      .map(
+        (c) => `
+    <tr class="riga-ritirato">
+      <td><span class="badge badge-pettorale">${c.numero_pettorale ?? "—"}</span></td>
+      <td><strong>${c.nazione_codice ? bandiera(c.nazione_codice, 16) + " " : ""}${c.nome} ${c.cognome}</strong></td>
+      <td>${c.squadra_nome ? `${c.squadra_nazione_codice ? bandiera(c.squadra_nazione_codice, 16) + " " : ""}${c.squadra_nome}` : "—"}</td>
+      <td>${c.ritirato_tappa_numero ? `Tappa ${c.ritirato_tappa_numero}` : "—"}</td>
+      <td>${badgeStato(c)}</td>
+      <td>${c.note_ritiro ?? "—"}</td>
+      <td class="td-azioni">
+        <button class="btn-icon" title="riammetti in gara" data-riammetti="${c.id}">${icona("ripristina")}</button>
+      </td>
+    </tr>
+  `,
+      )
+      .join("") ||
+    `<tr><td colspan="7" class="stato-vuoto">${queryRitiri ? "Nessun ritiro trovato" : "Nessun corridore ritirato"}</td></tr>`;
+
+  tbody.querySelectorAll("[data-riammetti]").forEach((b) =>
+    b.addEventListener("click", () =>
+      riammettiCorridore(+b.dataset.riammetti, { alSalvataggio: aggiornaDopoRitiroRitiri }),
+    ),
+  );
+}
+
+async function aggiornaDopoRitiroRitiri() {
+  await caricaCorridori();
+  disegnaRitiri();
+}
+
 export function init(container) {
   creaSottoSchede(
     container,
@@ -286,11 +359,13 @@ export function init(container) {
       { key: "arrivo", label: "Arrivo di tappa" },
       { key: "traguardi", label: "Traguardi volanti" },
       { key: "gpm", label: "Gran Premi Montagna" },
+      { key: "ritiri", label: "Ritiri" },
     ],
     (key, corpo) => {
       if (key === "arrivo") renderArrivo(corpo);
       else if (key === "traguardi") renderTraguardiVolanti(corpo);
-      else renderGpm(corpo);
+      else if (key === "gpm") renderGpm(corpo);
+      else renderRitiri(corpo);
     },
   );
 
@@ -300,8 +375,12 @@ export function init(container) {
   // un ritiro/riammissione può arrivare anche dalla pagina Corridori (o da
   // un altro utente collegato): riallineiamo l'anagrafica e ridisegniamo
   socket.on("corridori:aggiornati", async () => {
-    if (sottoTabAttiva !== "arrivo") return;
-    await caricaCorridori();
-    ricaricaArrivo();
+    if (sottoTabAttiva === "arrivo") {
+      await caricaCorridori();
+      ricaricaArrivo();
+    } else if (sottoTabAttiva === "ritiri") {
+      await caricaCorridori();
+      disegnaRitiri();
+    }
   });
 }
