@@ -4,7 +4,6 @@ import {
   chiudiModal,
   mostraToast,
   bandiera,
-  creaSottoSchede,
   htmlCampoRicerca,
   attivaCampoRicerca,
   erroreDaResponse,
@@ -39,11 +38,9 @@ export const MOTIVI_RITIRO = {
   altro: "Altro",
 };
 
-let sottoTabAttiva = "elenco";
 let queryCorrente = "";
 
 function renderElenco(corpo) {
-  sottoTabAttiva = "elenco";
   corpo.innerHTML = `
     <div class="subtab-head">
       ${htmlCampoRicerca("cerca corridore, nazione, squadra o motivo ritiro...")}
@@ -559,7 +556,6 @@ export async function apriDettaglioCorridore(corridoreId) {
 }
 
 function renderBiciclette(corpo) {
-  sottoTabAttiva = "biciclette";
   montaListaConForm(corpo, {
     titolo: "Biciclette",
     apiPath: "/api/biciclette",
@@ -572,20 +568,14 @@ function renderBiciclette(corpo) {
   });
 }
 
-export function init(container) {
-  creaSottoSchede(
-    container,
-    [
-      { key: "elenco", label: "Elenco corridori" },
-      { key: "biciclette", label: "Biciclette" },
-    ],
-    (key, corpo) => {
-      if (key === "elenco") renderElenco(corpo);
-      else renderBiciclette(corpo);
-    },
-  );
+// "Elenco corridori" e "Biciclette" erano sotto-schede della stessa
+// sezione: ora sono due voci di navbar separate, ciascuna con il proprio
+// init, così ogni pagina mostra solo la propria funzionalità.
+export function initElenco(container) {
+  renderElenco(container);
+  socket.on("corridori:aggiornati", ricaricaElenco);
+}
 
-  socket.on("corridori:aggiornati", () => {
-    if (sottoTabAttiva === "elenco") ricaricaElenco();
-  });
+export function initBiciclette(container) {
+  renderBiciclette(container);
 }

@@ -14,22 +14,54 @@ import * as Corridori from "../components/corridori/corridori.js";
 import * as Squadre from "../components/squadre/squadre.js";
 import * as Risultati from "../components/risultati/risultati.js";
 import * as Classifiche from "../components/classifiche/classifiche.js";
+import * as Ritiri from "../components/ritiri/ritiri.js";
 import * as Regolamento from "../components/regolamento/regolamento.js";
 import * as Stampa from "../components/stampa/stampa.js";
 import * as Nazioni from "../components/nazioni/nazioni.js";
 import * as Cestino from "../components/cestino/cestino.js";
 
+// Ogni voce di navbar corrisponde ormai a UNA sola funzionalità: ognuna ha
+// il proprio init dedicato nel modulo del componente (prima erano tutte
+// raggruppate come sotto-schede di poche sezioni). La chiave qui sotto è
+// lo stesso "data-view" usato in index.html e lo stesso id "view-<key>"
+// della sezione di contenuto corrispondente.
 const sezioni = {
-  dashboard: Dashboard,
-  tappe: Tappe,
-  corridori: Corridori,
-  squadre: Squadre,
-  risultati: Risultati,
-  classifiche: Classifiche,
-  regolamento: Regolamento,
-  stampa: Stampa,
-  nazioni: Nazioni,
-  cestino: Cestino,
+  dashboard: Dashboard.init,
+
+  "tappe-elenco": Tappe.initElenco,
+  "tappe-percorso": Tappe.initPercorso,
+  "tappe-meteo": Tappe.initMeteo,
+
+  "corridori-elenco": Corridori.initElenco,
+  "corridori-biciclette": Corridori.initBiciclette,
+
+  "squadre-elenco": Squadre.initElenco,
+  "squadre-staff": Squadre.initStaff,
+  "squadre-veicoli": Squadre.initVeicoli,
+  "squadre-sponsor": Squadre.initSponsor,
+  "squadre-alloggi": Squadre.initAlloggi,
+
+  "risultati-arrivo": Risultati.initArrivo,
+  "risultati-traguardi": Risultati.initTraguardi,
+  "risultati-gpm": Risultati.initGpm,
+
+  "classifiche-tempo": Classifiche.initTempo,
+  "classifiche-punti": Classifiche.initPunti,
+  "classifiche-giovani": Classifiche.initGiovani,
+  "classifiche-montagna": Classifiche.initMontagna,
+  "classifiche-squadre": Classifiche.initSquadre,
+  "classifiche-tipi": Classifiche.initTipi,
+
+  ritiri: Ritiri.init,
+
+  "regolamento-penalita": Regolamento.initPenalita,
+  "regolamento-antidoping": Regolamento.initAntidoping,
+  "regolamento-abbuoni": Regolamento.initAbbuoni,
+
+  "stampa-media": Stampa.initMedia,
+  "stampa-comunicati": Stampa.initComunicati,
+  nazioni: Nazioni.init,
+  cestino: Cestino.init,
 };
 
 const inizializzate = new Set();
@@ -56,8 +88,9 @@ function mostraSezione(key) {
 
   if (!inizializzate.has(key)) {
     const container = document.getElementById("view-" + key);
-    if (sezioni[key]) {
-      sezioni[key].init(container);
+    const init = sezioni[key];
+    if (container && init) {
+      init(container);
       inizializzate.add(key);
     }
   }

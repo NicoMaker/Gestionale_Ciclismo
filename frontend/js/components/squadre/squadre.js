@@ -4,7 +4,6 @@ import {
   chiudiModal,
   mostraToast,
   bandiera,
-  creaSottoSchede,
   htmlCampoRicerca,
   attivaCampoRicerca,
   erroreDaResponse,
@@ -33,11 +32,9 @@ import {
   MOTIVI_RITIRO,
 } from "../corridori/corridori.js";
 
-let sottoTabAttiva = "elenco";
 let queryCorrente = "";
 
 function renderElenco(corpo) {
-  sottoTabAttiva = "elenco";
   corpo.innerHTML = `
     <div class="subtab-head">
       ${htmlCampoRicerca("cerca squadra o nazione...")}
@@ -276,7 +273,6 @@ function disegnaRosa() {
 }
 
 function renderStaff(corpo) {
-  sottoTabAttiva = "staff";
   montaListaConForm(corpo, {
     titolo: "Staff tecnico",
     apiPath: "/api/staff-tecnico",
@@ -301,7 +297,6 @@ function renderStaff(corpo) {
 }
 
 function renderVeicoli(corpo) {
-  sottoTabAttiva = "veicoli";
   montaListaConForm(corpo, {
     titolo: "Veicoli squadra",
     apiPath: "/api/veicoli-squadra",
@@ -320,7 +315,6 @@ function renderVeicoli(corpo) {
 }
 
 function renderSponsor(corpo) {
-  sottoTabAttiva = "sponsor";
   corpo.innerHTML = `<div class="subtab-sezione"><h4>Anagrafica sponsor</h4><div id="listaSponsorAnagrafica"></div></div>
                       <div class="subtab-sezione"><h4>Sponsor per squadra</h4><div id="listaSponsorSquadra"></div></div>`;
   montaListaConForm(document.getElementById("listaSponsorAnagrafica"), {
@@ -351,7 +345,6 @@ function renderSponsor(corpo) {
 }
 
 function renderAlloggi(corpo) {
-  sottoTabAttiva = "alloggi";
   montaListaConForm(corpo, {
     titolo: "Alloggi",
     apiPath: "/api/hotel",
@@ -365,31 +358,30 @@ function renderAlloggi(corpo) {
   });
 }
 
-export function init(container) {
-  creaSottoSchede(
-    container,
-    [
-      { key: "elenco", label: "Elenco squadre" },
-      { key: "staff", label: "Staff tecnico" },
-      { key: "veicoli", label: "Veicoli" },
-      { key: "sponsor", label: "Sponsor" },
-      { key: "alloggi", label: "Alloggi" },
-    ],
-    (key, corpo) => {
-      if (key === "elenco") renderElenco(corpo);
-      else if (key === "staff") renderStaff(corpo);
-      else if (key === "veicoli") renderVeicoli(corpo);
-      else if (key === "sponsor") renderSponsor(corpo);
-      else renderAlloggi(corpo);
-    },
-  );
-
-  socket.on("squadre:aggiornate", () => {
-    if (sottoTabAttiva === "elenco") ricaricaElenco();
-  });
+// Ognuna delle vecchie sotto-schede di "Squadre" è ora una voce di navbar
+// indipendente con il proprio init.
+export function initElenco(container) {
+  renderElenco(container);
+  socket.on("squadre:aggiornate", ricaricaElenco);
   // se un corridore viene aggiunto/modificato/spostato di squadra altrove
   // nell'app, la rosa aperta qui (se c'è) resta sempre allineata
   socket.on("corridori:aggiornati", () => {
     if (squadraRosaId != null) disegnaRosa();
   });
+}
+
+export function initStaff(container) {
+  renderStaff(container);
+}
+
+export function initVeicoli(container) {
+  renderVeicoli(container);
+}
+
+export function initSponsor(container) {
+  renderSponsor(container);
+}
+
+export function initAlloggi(container) {
+  renderAlloggi(container);
 }

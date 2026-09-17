@@ -1,33 +1,8 @@
 import { apiGet } from "../../core/api.js";
-import {
-  creaSottoSchede,
-  htmlCampoRicerca,
-  attivaCampoRicerca,
-  bandiera,
-  apriModal,
-  chiudiModal,
-  mostraToast,
-} from "../../core/utils.js";
+import { htmlCampoRicerca, attivaCampoRicerca, bandiera } from "../../core/utils.js";
 import { socket } from "../../core/socket.js";
 import { montaListaConForm } from "../tabella-dati/tabella-dati.js";
-import { medaglia, icona } from "../../core/icone.js";
-import {
-  cache,
-  caricaCorridori,
-  garantisciCorridori,
-  garantisciTappe,
-} from "../../core/state.js";
-import {
-  htmlCampoEntita,
-  attivaCampoEntita,
-} from "../entita-autocomplete/entita-autocomplete.js";
-import {
-  apriFormRitiro,
-  riammettiCorridore,
-  badgeStato,
-} from "../corridori/corridori.js";
-
-let sottoTabAttiva = "tempo";
+import { medaglia } from "../../core/icone.js";
 
 // stato di ciascuna scheda: query di ricerca corrente + ultimo elenco caricato
 const stato = {
@@ -67,7 +42,6 @@ function bannerMaglia(leader, coloreVar, etichetta, bordoExtra) {
  * Classifica generale a tempo (maglia rosa)
  * ------------------------------------------------------------------- */
 async function renderTempo(corpo) {
-  sottoTabAttiva = "tempo";
   corpo.innerHTML = `
     <div class="subtab-head">${htmlCampoRicerca("cerca corridore o squadra...")}</div>
     <div id="bannerTempo"></div>
@@ -132,7 +106,6 @@ async function ricaricaTempo() {
  * Classifica a punti (maglia ciclamino)
  * ------------------------------------------------------------------- */
 async function renderPunti(corpo) {
-  sottoTabAttiva = "punti";
   corpo.innerHTML = `
     <div class="subtab-head">${htmlCampoRicerca("cerca corridore o squadra...")}</div>
     <div id="bannerPunti"></div>
@@ -195,7 +168,6 @@ async function ricaricaPunti() {
  * Classifica giovani (maglia bianca) — under 25 in base all'anno di corsa
  * ------------------------------------------------------------------- */
 async function renderGiovani(corpo) {
-  sottoTabAttiva = "giovani";
   corpo.innerHTML = `
     <div class="subtab-head">${htmlCampoRicerca("cerca corridore o squadra...")}</div>
     <div id="bannerGiovani"></div>
@@ -260,7 +232,6 @@ async function ricaricaGiovani() {
  * Classifica scalatori / GPM (maglia verde)
  * ------------------------------------------------------------------- */
 async function renderMontagna(corpo) {
-  sottoTabAttiva = "montagna";
   corpo.innerHTML = `
     <div class="subtab-head">${htmlCampoRicerca("cerca corridore o squadra...")}</div>
     <div id="bannerMontagna"></div>
@@ -323,7 +294,6 @@ async function ricaricaMontagna() {
  * Classifica a squadre — somma dei tempi di tutti i corridori della squadra
  * ------------------------------------------------------------------- */
 async function renderSquadre(corpo) {
-  sottoTabAttiva = "squadre";
   corpo.innerHTML = `
     <div class="subtab-head">${htmlCampoRicerca("cerca squadra...")}</div>
     <div id="bannerSquadre"></div>
@@ -385,138 +355,7 @@ async function ricaricaSquadre() {
   disegnaSquadre();
 }
 
-/* ---------------------------------------------------------------------
- * Ritiri — elenco dei corridori ritirati, con possibilità di registrarne
- * di nuovi direttamente da qui (stesso modale di conferma usato nella
- * pagina Corridori/Risultati) e di riammetterli in gara.
- * ------------------------------------------------------------------- */
-let queryRitiri = "";
-
-async function renderRitiri(corpo) {
-  sottoTabAttiva = "ritiri";
-  await garantisciCorridori();
-  await garantisciTappe();
-  corpo.innerHTML = `
-    <div class="subtab-head">
-      ${htmlCampoRicerca("cerca corridore, squadra o motivo...")}
-      <button class="btn-secondary btn-piccolo" id="btnNuovoRitiro">${icona("aggiungi")}nuovo ritiro</button>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Pett.</th><th>Corridore</th><th>Squadra</th><th>Ritirato dalla tappa</th><th>Motivo</th><th>Note</th><th class="th-azioni"></th></tr></thead>
-        <tbody id="tabellaClassificaRitiri"></tbody>
-      </table>
-    </div>
-  `;
-  document
-    .getElementById("btnNuovoRitiro")
-    .addEventListener("click", apriNuovoRitiro);
-  attivaCampoRicerca(corpo, (q) => {
-    queryRitiri = q;
-    disegnaRitiri();
-  });
-  disegnaRitiri();
-}
-
-function disegnaRitiri() {
-  const tbody = document.getElementById("tabellaClassificaRitiri");
-  if (!tbody) return;
-  const ritirati = cache.corridori
-    .filter((c) => c.ritirato)
-    .filter((c) => {
-      if (!queryRitiri) return true;
-      return `${c.nome} ${c.cognome} ${c.squadra_nome ?? ""} ${c.note_ritiro ?? ""}`
-        .toLowerCase()
-        .includes(queryRitiri);
-    })
-    .sort(
-      (a, b) =>
-        (a.ritirato_tappa_numero ?? 0) - (b.ritirato_tappa_numero ?? 0) ||
-        a.cognome.localeCompare(b.cognome),
-    );
-
-  tbody.innerHTML =
-    ritirati
-      .map(
-        (c) => `
-    <tr class="riga-ritirato">
-      <td><span class="badge badge-pettorale">${c.numero_pettorale ?? "—"}</span></td>
-      <td><strong>${c.nazione_codice ? bandiera(c.nazione_codice, 16) + " " : ""}${c.nome} ${c.cognome}</strong></td>
-      <td>${c.squadra_nome ? `${c.squadra_nazione_codice ? bandiera(c.squadra_nazione_codice, 16) + " " : ""}${c.squadra_nome}` : "—"}</td>
-      <td>${c.ritirato_tappa_numero ? `Tappa ${c.ritirato_tappa_numero}` : "—"}</td>
-      <td>${badgeStato(c)}</td>
-      <td>${c.note_ritiro ?? "—"}</td>
-      <td class="td-azioni">
-        <button class="btn-icon" title="modifica dati del ritiro" data-modifica-ritiro="${c.id}">${icona("modifica")}</button>
-        <button class="btn-icon" title="riammetti in gara" data-riammetti="${c.id}">${icona("ripristina")}</button>
-      </td>
-    </tr>
-  `,
-      )
-      .join("") ||
-    `<tr><td colspan="7" class="stato-vuoto">${queryRitiri ? "Nessun ritiro trovato" : "Nessun corridore ritirato"}</td></tr>`;
-
-  tbody.querySelectorAll("[data-modifica-ritiro]").forEach((b) =>
-    b.addEventListener("click", () => {
-      const c = cache.corridori.find((c) => c.id === +b.dataset.modificaRitiro);
-      if (c) apriFormRitiro(c, { alSalvataggio: aggiornaDopoRitiro });
-    }),
-  );
-  tbody.querySelectorAll("[data-riammetti]").forEach((b) =>
-    b.addEventListener("click", () =>
-      riammettiCorridore(+b.dataset.riammetti, {
-        alSalvataggio: aggiornaDopoRitiro,
-      }),
-    ),
-  );
-}
-
-async function aggiornaDopoRitiro() {
-  await caricaCorridori();
-  disegnaRitiri();
-}
-
-// piccolo modale "ponte": si sceglie il corridore ancora in gara, poi si
-// passa al modale di ritiro vero e proprio (già usato in Corridori e
-// Risultati) con motivo/tappa/note
-function apriNuovoRitiro() {
-  apriModal(`
-    <h2>Nuovo ritiro</h2>
-    <p style="color:var(--testo-soft);font-size:13.5px;margin:-6px 0 16px;">
-      Scegli il corridore da segnare come ritirato. Al passo successivo
-      potrai indicare tappa, motivo e note.
-    </p>
-    ${htmlCampoEntita("nr_corridore", "Corridore", "corridore")}
-    <div class="modal-actions">
-      <button class="btn-secondary" id="nr_annulla">annulla</button>
-      <button class="btn-primary" id="nr_avanti">avanti</button>
-    </div>
-  `);
-  // i corridori già ritirati non hanno senso qui: per loro c'è "riammetti"
-  const idGiaRitirati = cache.corridori
-    .filter((c) => c.ritirato)
-    .map((c) => c.id);
-  const leggiCorridoreId = attivaCampoEntita(
-    "nr_corridore",
-    "corridore",
-    null,
-    { escludiIds: idGiaRitirati },
-  );
-  document.getElementById("nr_annulla").addEventListener("click", chiudiModal);
-  document.getElementById("nr_avanti").addEventListener("click", () => {
-    const corridoreId = leggiCorridoreId();
-    if (!corridoreId) {
-      mostraToast("Seleziona un corridore");
-      return;
-    }
-    const c = cache.corridori.find((c) => c.id === corridoreId);
-    if (!c) return;
-    apriFormRitiro(c, { alSalvataggio: aggiornaDopoRitiro });
-  });
-}
-
 function renderTipiClassifica(corpo) {
-  sottoTabAttiva = "tipi";
   montaListaConForm(corpo, {
     titolo: "Tipo di classifica",
     apiPath: "/api/classifiche-tipo",
@@ -527,48 +366,37 @@ function renderTipiClassifica(corpo) {
   });
 }
 
-function ricaricaAttiva() {
-  if (sottoTabAttiva === "tempo") ricaricaTempo();
-  else if (sottoTabAttiva === "punti") ricaricaPunti();
-  else if (sottoTabAttiva === "giovani") ricaricaGiovani();
-  else if (sottoTabAttiva === "montagna") ricaricaMontagna();
-  else if (sottoTabAttiva === "squadre") ricaricaSquadre();
+// Ognuna delle vecchie sotto-schede di "Classifiche" è ora una voce di
+// navbar indipendente con il proprio init. La sotto-scheda "Ritiri" (che
+// era identica a quella duplicata dentro Risultati) è confluita nella
+// pagina unica components/ritiri/ritiri.js.
+export function initTempo(container) {
+  renderTempo(container);
+  socket.on("risultati:aggiornati", ricaricaTempo);
+  socket.on("penalita:aggiornati", ricaricaTempo);
 }
 
-export function init(container) {
-  creaSottoSchede(
-    container,
-    [
-      { key: "tempo", label: "Generale (maglia rosa)" },
-      { key: "punti", label: "Punti (maglia ciclamino)" },
-      { key: "giovani", label: "Giovani (maglia bianca)" },
-      { key: "montagna", label: "Scalatori GPM (maglia verde)" },
-      { key: "squadre", label: "Classifica squadre" },
-      { key: "ritiri", label: "Ritiri" },
-      { key: "tipi", label: "Tipi di classifica" },
-    ],
-    (key, corpo) => {
-      if (key === "tempo") renderTempo(corpo);
-      else if (key === "punti") renderPunti(corpo);
-      else if (key === "giovani") renderGiovani(corpo);
-      else if (key === "montagna") renderMontagna(corpo);
-      else if (key === "squadre") renderSquadre(corpo);
-      else if (key === "ritiri") renderRitiri(corpo);
-      else renderTipiClassifica(corpo);
-    },
-  );
+export function initPunti(container) {
+  renderPunti(container);
+  socket.on("risultati:aggiornati", ricaricaPunti);
+  socket.on("penalita:aggiornati", ricaricaPunti);
+}
 
-  // i risultati di tappa influenzano tempo/punti/giovani/squadre;
-  // i GPM influenzano la classifica scalatori; le penalità influenzano
-  // sia i tempi che i punti totali
-  socket.on("risultati:aggiornati", ricaricaAttiva);
-  socket.on("gpm-risultati:aggiornati", ricaricaAttiva);
-  socket.on("penalita:aggiornati", ricaricaAttiva);
-  // un ritiro/riammissione può arrivare anche da un'altra pagina o da un
-  // altro utente collegato: se siamo sulla scheda Ritiri, riallineiamo
-  socket.on("corridori:aggiornati", async () => {
-    if (sottoTabAttiva !== "ritiri") return;
-    await caricaCorridori();
-    disegnaRitiri();
-  });
+export function initGiovani(container) {
+  renderGiovani(container);
+  socket.on("risultati:aggiornati", ricaricaGiovani);
+}
+
+export function initMontagna(container) {
+  renderMontagna(container);
+  socket.on("gpm-risultati:aggiornati", ricaricaMontagna);
+}
+
+export function initSquadre(container) {
+  renderSquadre(container);
+  socket.on("risultati:aggiornati", ricaricaSquadre);
+}
+
+export function initTipi(container) {
+  renderTipiClassifica(container);
 }

@@ -3,7 +3,6 @@ import {
   apriModal,
   chiudiModal,
   mostraToast,
-  creaSottoSchede,
   htmlCampoRicerca,
   attivaCampoRicerca,
   erroreDaResponse,
@@ -14,11 +13,9 @@ import { socket } from "../../core/socket.js";
 import { montaListaConForm } from "../tabella-dati/tabella-dati.js";
 import { icona, iconaValore } from "../../core/icone.js";
 
-let sottoTabAttiva = "elenco";
 let queryCorrente = "";
 
 function renderElenco(corpo) {
-  sottoTabAttiva = "elenco";
   corpo.innerHTML = `
     <div class="subtab-head">
       ${htmlCampoRicerca("cerca tappa, città o tipo...")}
@@ -188,7 +185,6 @@ function avviaDiretta(tappaId) {
 }
 
 function renderPercorso(corpo) {
-  sottoTabAttiva = "percorso";
   montaListaConForm(corpo, {
     titolo: "Percorso di tappa",
     apiPath: "/api/tappe-percorso",
@@ -208,7 +204,6 @@ function renderPercorso(corpo) {
 }
 
 function renderMeteo(corpo) {
-  sottoTabAttiva = "meteo";
   montaListaConForm(corpo, {
     titolo: "Meteo di tappa",
     apiPath: "/api/meteo-tappa",
@@ -226,22 +221,18 @@ function renderMeteo(corpo) {
   });
 }
 
-export function init(container) {
-  creaSottoSchede(
-    container,
-    [
-      { key: "elenco", label: "Elenco tappe" },
-      { key: "percorso", label: "Percorso (sprint / GPM)" },
-      { key: "meteo", label: "Meteo" },
-    ],
-    (key, corpo) => {
-      if (key === "elenco") renderElenco(corpo);
-      else if (key === "percorso") renderPercorso(corpo);
-      else renderMeteo(corpo);
-    },
-  );
+// Ogni sotto-funzionalità che prima era una sotto-scheda di "Tappe" ora è
+// una voce di navbar a sé stante, con il proprio init: si vede solo quella,
+// senza schede annidate.
+export function initElenco(container) {
+  renderElenco(container);
+  socket.on("tappe:aggiornate", ricaricaElenco);
+}
 
-  socket.on("tappe:aggiornate", () => {
-    if (sottoTabAttiva === "elenco") ricaricaElenco();
-  });
+export function initPercorso(container) {
+  renderPercorso(container);
+}
+
+export function initMeteo(container) {
+  renderMeteo(container);
 }

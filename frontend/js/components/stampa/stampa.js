@@ -1,4 +1,3 @@
-import { creaSottoSchede } from "../../core/utils.js";
 import { montaListaConForm } from "../tabella-dati/tabella-dati.js";
 
 function renderMedia(corpo) {
@@ -32,16 +31,12 @@ function renderComunicati(corpo) {
   });
 }
 
-export function init(container) {
-  creaSottoSchede(
-    container,
-    [
-      { key: "media", label: "Media accreditati" },
-      { key: "comunicati", label: "Comunicati stampa" },
-    ],
-    (key, corpo) => {
-      if (key === "media") renderMedia(corpo);
-      else renderComunicati(corpo);
-    },
-  );
+// "Media accreditati" e "Comunicati stampa" erano sotto-schede di
+// "Stampa": ora sono due voci di navbar separate.
+export function initMedia(container) {
+  renderMedia(container);
+}
+
+export function initComunicati(container) {
+  renderComunicati(container);
 }

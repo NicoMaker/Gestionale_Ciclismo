@@ -1,4 +1,3 @@
-import { creaSottoSchede } from "../../core/utils.js";
 import { montaListaConForm } from "../tabella-dati/tabella-dati.js";
 
 function renderPenalita(corpo) {
@@ -54,18 +53,16 @@ function renderAbbuoni(corpo) {
   });
 }
 
-export function init(container) {
-  creaSottoSchede(
-    container,
-    [
-      { key: "penalita", label: "Penalità" },
-      { key: "antidoping", label: "Controlli antidoping" },
-      { key: "abbuoni", label: "Abbuoni" },
-    ],
-    (key, corpo) => {
-      if (key === "penalita") renderPenalita(corpo);
-      else if (key === "antidoping") renderAntidoping(corpo);
-      else renderAbbuoni(corpo);
-    },
-  );
+// Penalità, Controlli antidoping e Abbuoni erano sotto-schede di
+// "Regolamento": ora sono tre voci di navbar separate.
+export function initPenalita(container) {
+  renderPenalita(container);
+}
+
+export function initAntidoping(container) {
+  renderAntidoping(container);
+}
+
+export function initAbbuoni(container) {
+  renderAbbuoni(container);
 }

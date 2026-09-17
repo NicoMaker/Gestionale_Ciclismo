@@ -3,7 +3,6 @@ import {
   apriModal,
   chiudiModal,
   mostraToast,
-  creaSottoSchede,
   htmlCampoRicerca,
   attivaCampoRicerca,
   bandiera,
@@ -29,11 +28,9 @@ import {
   badgeStato,
 } from "../corridori/corridori.js";
 
-let sottoTabAttiva = "arrivo";
 let tappaSelezionataId = null;
 
 async function renderArrivo(corpo) {
-  sottoTabAttiva = "arrivo";
   await garantisciTappe();
   await garantisciCorridori();
   if (!tappaSelezionataId && cache.tappe.length)
@@ -265,7 +262,6 @@ async function eliminaRisultato(id) {
 }
 
 function renderTraguardiVolanti(corpo) {
-  sottoTabAttiva = "traguardi";
   montaListaConForm(corpo, {
     titolo: "Traguardi volanti",
     apiPath: "/api/traguardi-volanti",
@@ -280,7 +276,6 @@ function renderTraguardiVolanti(corpo) {
 }
 
 function renderGpm(corpo) {
-  sottoTabAttiva = "gpm";
   montaListaConForm(corpo, {
     titolo: "Risultati GPM",
     apiPath: "/api/gpm-risultati",
@@ -294,164 +289,25 @@ function renderGpm(corpo) {
   });
 }
 
-let queryRitiri = "";
-
-async function renderRitiri(corpo) {
-  sottoTabAttiva = "ritiri";
-  await garantisciCorridori();
-  await garantisciTappe();
-  corpo.innerHTML = `
-    <div class="subtab-head">
-      ${htmlCampoRicerca("cerca corridore, squadra o motivo...")}
-      <button class="btn-secondary btn-piccolo" id="btnNuovoRitiroRisultati">${icona("aggiungi")}nuovo ritiro</button>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Pett.</th><th>Corridore</th><th>Squadra</th><th>Ritirato dalla tappa</th><th>Motivo</th><th>Note</th><th class="th-azioni"></th></tr></thead>
-        <tbody id="tabellaRitiri"></tbody>
-      </table>
-    </div>
-  `;
-  document
-    .getElementById("btnNuovoRitiroRisultati")
-    .addEventListener("click", apriNuovoRitiroRisultati);
-  attivaCampoRicerca(corpo, (q) => {
-    queryRitiri = q;
-    disegnaRitiri();
-  });
-  disegnaRitiri();
-}
-
-// piccolo modale "ponte": si sceglie il corridore ancora in gara, poi si
-// passa al modale di ritiro vero e proprio (già usato in Corridori e
-// Classifiche) con motivo/tappa/note; preseleziona come tappa di
-// riferimento quella eventualmente aperta in questa pagina Risultati
-function apriNuovoRitiroRisultati() {
-  apriModal(`
-    <h2>Nuovo ritiro</h2>
-    <p style="color:var(--testo-soft);font-size:13.5px;margin:-6px 0 16px;">
-      Scegli il corridore da segnare come ritirato. Al passo successivo
-      potrai indicare tappa, motivo e note.
-    </p>
-    ${htmlCampoEntita("nr_corridore", "Corridore", "corridore")}
-    <div class="modal-actions">
-      <button class="btn-secondary" id="nr_annulla">annulla</button>
-      <button class="btn-primary" id="nr_avanti">avanti</button>
-    </div>
-  `);
-  const idGiaRitirati = cache.corridori
-    .filter((c) => c.ritirato)
-    .map((c) => c.id);
-  const leggiCorridoreId = attivaCampoEntita(
-    "nr_corridore",
-    "corridore",
-    null,
-    { escludiIds: idGiaRitirati },
-  );
-  document.getElementById("nr_annulla").addEventListener("click", chiudiModal);
-  document.getElementById("nr_avanti").addEventListener("click", () => {
-    const corridoreId = leggiCorridoreId();
-    if (!corridoreId) {
-      mostraToast("Seleziona un corridore");
-      return;
-    }
-    const c = cache.corridori.find((c) => c.id === corridoreId);
-    if (!c) return;
-    const tappaCorrente = cache.tappe.find((t) => t.id === tappaSelezionataId);
-    apriFormRitiro(c, {
-      tappaNumeroPreselezionata: tappaCorrente?.numero_tappa ?? null,
-      alSalvataggio: aggiornaDopoRitiroRitiri,
-    });
-  });
-}
-
-function disegnaRitiri() {
-  const tbody = document.getElementById("tabellaRitiri");
-  if (!tbody) return;
-  const ritirati = cache.corridori
-    .filter((c) => c.ritirato)
-    .filter((c) => {
-      if (!queryRitiri) return true;
-      return `${c.nome} ${c.cognome} ${c.squadra_nome ?? ""} ${c.note_ritiro ?? ""}`
-        .toLowerCase()
-        .includes(queryRitiri);
-    })
-    .sort(
-      (a, b) =>
-        (a.ritirato_tappa_numero ?? 0) - (b.ritirato_tappa_numero ?? 0) ||
-        a.cognome.localeCompare(b.cognome),
-    );
-
-  tbody.innerHTML =
-    ritirati
-      .map(
-        (c) => `
-    <tr class="riga-ritirato">
-      <td><span class="badge badge-pettorale">${c.numero_pettorale ?? "—"}</span></td>
-      <td><strong>${c.nazione_codice ? bandiera(c.nazione_codice, 16) + " " : ""}${c.nome} ${c.cognome}</strong></td>
-      <td>${c.squadra_nome ? `${c.squadra_nazione_codice ? bandiera(c.squadra_nazione_codice, 16) + " " : ""}${c.squadra_nome}` : "—"}</td>
-      <td>${c.ritirato_tappa_numero ? `Tappa ${c.ritirato_tappa_numero}` : "—"}</td>
-      <td>${badgeStato(c)}</td>
-      <td>${c.note_ritiro ?? "—"}</td>
-      <td class="td-azioni">
-        <button class="btn-icon" title="modifica dati del ritiro" data-modifica-ritiro="${c.id}">${icona("modifica")}</button>
-        <button class="btn-icon" title="riammetti in gara" data-riammetti="${c.id}">${icona("ripristina")}</button>
-      </td>
-    </tr>
-  `,
-      )
-      .join("") ||
-    `<tr><td colspan="7" class="stato-vuoto">${queryRitiri ? "Nessun ritiro trovato" : "Nessun corridore ritirato"}</td></tr>`;
-
-  tbody.querySelectorAll("[data-modifica-ritiro]").forEach((b) =>
-    b.addEventListener("click", () => {
-      const c = cache.corridori.find((c) => c.id === +b.dataset.modificaRitiro);
-      if (c) apriFormRitiro(c, { alSalvataggio: aggiornaDopoRitiroRitiri });
-    }),
-  );
-  tbody.querySelectorAll("[data-riammetti]").forEach((b) =>
-    b.addEventListener("click", () =>
-      riammettiCorridore(+b.dataset.riammetti, {
-        alSalvataggio: aggiornaDopoRitiroRitiri,
-      }),
-    ),
-  );
-}
-
-async function aggiornaDopoRitiroRitiri() {
-  await caricaCorridori();
-  disegnaRitiri();
-}
-
-export function init(container) {
-  creaSottoSchede(
-    container,
-    [
-      { key: "arrivo", label: "Arrivo di tappa" },
-      { key: "traguardi", label: "Traguardi volanti" },
-      { key: "gpm", label: "Gran Premi Montagna" },
-      { key: "ritiri", label: "Ritiri" },
-    ],
-    (key, corpo) => {
-      if (key === "arrivo") renderArrivo(corpo);
-      else if (key === "traguardi") renderTraguardiVolanti(corpo);
-      else if (key === "gpm") renderGpm(corpo);
-      else renderRitiri(corpo);
-    },
-  );
-
-  socket.on("risultati:aggiornati", () => {
-    if (sottoTabAttiva === "arrivo") ricaricaArrivo();
-  });
+// La vecchia sotto-scheda "Ritiri" (identica a quella duplicata dentro
+// Classifiche) è confluita nella pagina unica components/ritiri/ritiri.js,
+// raggiungibile come voce di navbar a sé stante. "Arrivo di tappa",
+// "Traguardi volanti" e "Gran Premi Montagna" sono ora tre voci separate.
+export function initArrivo(container) {
+  renderArrivo(container);
+  socket.on("risultati:aggiornati", ricaricaArrivo);
   // un ritiro/riammissione può arrivare anche dalla pagina Corridori (o da
   // un altro utente collegato): riallineiamo l'anagrafica e ridisegniamo
   socket.on("corridori:aggiornati", async () => {
-    if (sottoTabAttiva === "arrivo") {
-      await caricaCorridori();
-      ricaricaArrivo();
-    } else if (sottoTabAttiva === "ritiri") {
-      await caricaCorridori();
-      disegnaRitiri();
-    }
+    await caricaCorridori();
+    ricaricaArrivo();
   });
+}
+
+export function initTraguardi(container) {
+  renderTraguardiVolanti(container);
+}
+
+export function initGpm(container) {
+  renderGpm(container);
 }

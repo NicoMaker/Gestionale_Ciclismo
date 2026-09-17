@@ -25,7 +25,11 @@ body {
 /* ---- SIDEBAR ----
    Non è più "sticky": essendo .frame un contenitore che non scorre mai,
    la sidebar è semplicemente una colonna a altezza fissa, sempre ferma e
-   mai ridisegnata durante lo scroll del contenuto accanto. */
+   mai ridisegnata durante lo scroll del contenuto accanto.
+   min-height: 0 è ESSENZIALE: essendo .frame un grid, .sidebar è un grid
+   item e di default ha min-height: auto (= non si restringe sotto il suo
+   contenuto). Senza questa riga la sidebar si allarga fino a contenere
+   tutta la .nav e lo scroll interno non parte mai. */
 .sidebar {
   background:
     radial-gradient(
@@ -44,6 +48,8 @@ body {
   flex-direction: column;
   padding: 26px 18px;
   height: 100%;
+  min-height: 0;      /* permette alla sidebar di restringersi dentro il grid */
+  overflow: hidden;   /* il contenuto in eccesso non esce dalla sidebar */
   border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -86,13 +92,37 @@ body {
   color: #8c8da3;
 }
 
+/* ---- NAV ----
+   Scrollabile in verticale quando le voci superano lo spazio disponibile.
+   min-height: 0 è essenziale anche qui: .sidebar è un flex container e
+   .nav è un flex item con flex:1; senza min-height:0 non si restringe
+   sotto il suo contenuto e lo scroll non partirebbe mai. */
 .nav {
   display: flex;
   flex-direction: column;
   gap: 3px;
   flex: 1;
-  min-height: 0; /* permette lo scroll interno solo come ultima rete di sicurezza */
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+/* Scrollbar sottile e discreta per la navbar scura */
+.nav::-webkit-scrollbar {
+  width: 6px;
+}
+.nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+.nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+}
+.nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
 }
 
 /* Etichetta sopra ciascun gruppo di voci ("Sezioni principali",

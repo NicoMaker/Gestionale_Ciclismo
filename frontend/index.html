@@ -36,7 +36,6 @@
         </div>
 
         <nav class="nav">
-          <span class="nav-title">Sezioni principali</span>
           <button class="nav-item active" data-view="dashboard">
             <svg viewBox="0 0 24 24" class="nav-icon">
               <rect x="3" y="3" width="7" height="9" rx="1.5" />
@@ -46,7 +45,9 @@
             </svg>
             <span>Dashboard</span>
           </button>
-          <button class="nav-item" data-view="tappe">
+
+          <span class="nav-title">Tappe</span>
+          <button class="nav-item" data-view="tappe-elenco">
             <svg viewBox="0 0 24 24" class="nav-icon">
               <path
                 d="M4 20 L10 4 L14 4 L20 20"
@@ -55,9 +56,30 @@
               />
               <path d="M8 14 L16 14" stroke-linecap="round" />
             </svg>
-            <span>Tappe</span>
+            <span>Elenco tappe</span>
           </button>
-          <button class="nav-item" data-view="corridori">
+          <button class="nav-item" data-view="tappe-percorso">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <path
+                d="M2 19 L8 6 L11.5 12 L14 8 L22 19 Z"
+                stroke-linejoin="round"
+              />
+              <path d="M6.3 11.5 L9.6 11.5 M12.6 10 L14 10" stroke-linecap="round" />
+            </svg>
+            <span>Percorso (sprint / GPM)</span>
+          </button>
+          <button class="nav-item" data-view="tappe-meteo">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <path
+                d="M7 18.5 C4.5 18.5 3 16.6 3 14.6 C3 12.6 4.6 11 6.5 11 C6.8 8.3 9.1 6.3 11.8 6.3 C14.6 6.3 16.9 8.5 17.1 11.2 C19.2 11.4 21 13.2 21 15.4 C21 17.7 19.1 18.5 17.5 18.5 Z"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span>Meteo</span>
+          </button>
+
+          <span class="nav-title">Corridori</span>
+          <button class="nav-item" data-view="corridori-elenco">
             <svg viewBox="0 0 24 24" class="nav-icon">
               <circle cx="6" cy="17" r="3" />
               <circle cx="18" cy="17" r="3" />
@@ -67,9 +89,23 @@
                 stroke-linejoin="round"
               />
             </svg>
-            <span>Corridori</span>
+            <span>Elenco corridori</span>
           </button>
-          <button class="nav-item" data-view="squadre">
+          <button class="nav-item" data-view="corridori-biciclette">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <circle cx="6" cy="17" r="3.4" />
+              <circle cx="18" cy="17" r="3.4" />
+              <path
+                d="M6 17 L10 8 L15 8 M10 8 L8.3 4.7 H11.5 M10 8 L14.3 13.6 L18 17"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span>Biciclette</span>
+          </button>
+
+          <span class="nav-title">Squadre</span>
+          <button class="nav-item" data-view="squadre-elenco">
             <svg viewBox="0 0 24 24" class="nav-icon">
               <circle cx="9" cy="8" r="3" />
               <circle cx="16" cy="9" r="2.5" />
@@ -78,42 +114,205 @@
                 stroke-linecap="round"
               />
             </svg>
-            <span>Squadre</span>
+            <span>Elenco squadre</span>
           </button>
-          <button class="nav-item" data-view="risultati">
+          <button class="nav-item" data-view="squadre-staff">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <circle cx="12" cy="8" r="3.6" />
+              <path
+                d="M4.5 20 C4.5 15.6 7.8 13.4 12 13.4 C16.2 13.4 19.5 15.6 19.5 20"
+                stroke-linecap="round"
+              />
+            </svg>
+            <span>Staff tecnico</span>
+          </button>
+          <button class="nav-item" data-view="squadre-veicoli">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <path
+                d="M3.5 16 V11.5 L5.5 7.5 H16 L19 11.2 H20.5 V16"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle cx="7.5" cy="16.3" r="1.9" />
+              <circle cx="16.5" cy="16.3" r="1.9" />
+            </svg>
+            <span>Veicoli</span>
+          </button>
+          <button class="nav-item" data-view="squadre-sponsor">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <path
+                d="M12 3 L14.4 8.6 L20.5 9.2 L15.9 13.2 L17.3 19.2 L12 15.9 L6.7 19.2 L8.1 13.2 L3.5 9.2 L9.6 8.6 Z"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span>Sponsor</span>
+          </button>
+          <button class="nav-item" data-view="squadre-alloggi">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <path
+                d="M4 20 V6 M4 6 H15 C17 6 18.5 7.5 18.5 9.5 V12 M4 12 H18.5 M4 20 H20 V12"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle cx="8" cy="9" r="1.3" />
+            </svg>
+            <span>Alloggi</span>
+          </button>
+
+          <span class="nav-title">Risultati</span>
+          <button class="nav-item" data-view="risultati-arrivo">
             <svg viewBox="0 0 24 24" class="nav-icon">
               <path d="M6 3 V21" stroke-linecap="round" />
               <path d="M6 4 L18 4 L14 8 L18 12 L6 12" stroke-linejoin="round" />
             </svg>
-            <span>Risultati</span>
+            <span>Arrivo di tappa</span>
           </button>
-          <button class="nav-item" data-view="classifiche">
+          <button class="nav-item" data-view="risultati-traguardi">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <path
+                d="M6 21 V4 M6 4 L18 4 L15 8 L18 12 L6 12"
+                stroke-linejoin="round"
+                stroke-linecap="round"
+              />
+            </svg>
+            <span>Traguardi volanti</span>
+          </button>
+          <button class="nav-item" data-view="risultati-gpm">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <path
+                d="M2 19 L8 6 L11.5 12 L14 8 L22 19 Z"
+                stroke-linejoin="round"
+              />
+              <path d="M6.3 11.5 L9.6 11.5 M12.6 10 L14 10" stroke-linecap="round" />
+            </svg>
+            <span>Gran Premi Montagna</span>
+          </button>
+
+          <span class="nav-title">Classifiche</span>
+          <button class="nav-item" data-view="classifiche-tempo">
             <svg viewBox="0 0 24 24" class="nav-icon">
               <path d="M5 20 V13 M12 20 V6 M19 20 V10" stroke-linecap="round" />
             </svg>
-            <span>Classifiche</span>
+            <span>Generale (maglia rosa)</span>
           </button>
-          <span class="nav-title">Altre funzionalità</span>
-          <button class="nav-item" data-view="regolamento">
+          <button class="nav-item" data-view="classifiche-punti">
             <svg viewBox="0 0 24 24" class="nav-icon">
+              <circle cx="12" cy="14.5" r="6" />
               <path
-                d="M12 3 L19 6 V11 C19 16 16 19.5 12 21 C8 19.5 5 16 5 11 V6 Z"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M9 12 L11 14 L15.5 9.5"
+                d="M9 3.5 L7 9.6 L12 8.3 L17 9.6 L15 3.5"
                 stroke-linecap="round"
                 stroke-linejoin="round"
               />
             </svg>
-            <span>Regolamento</span>
+            <span>Punti (maglia ciclamino)</span>
           </button>
-          <button class="nav-item" data-view="stampa">
+          <button class="nav-item" data-view="classifiche-giovani">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <path d="M5 20 V13 M12 20 V6 M19 20 V10" stroke-linecap="round" />
+            </svg>
+            <span>Giovani (maglia bianca)</span>
+          </button>
+          <button class="nav-item" data-view="classifiche-montagna">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <path
+                d="M2 19 L8 6 L11.5 12 L14 8 L22 19 Z"
+                stroke-linejoin="round"
+              />
+              <path d="M6.3 11.5 L9.6 11.5 M12.6 10 L14 10" stroke-linecap="round" />
+            </svg>
+            <span>Scalatori GPM (maglia verde)</span>
+          </button>
+          <button class="nav-item" data-view="classifiche-squadre">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <circle cx="9" cy="8" r="3" />
+              <circle cx="16" cy="9" r="2.5" />
+              <path
+                d="M3 20 C3 15.5 5.5 14 9 14 C12.5 14 15 15.5 15 20 M14.5 14.5 C17.5 14.7 20 16 20 19.5"
+                stroke-linecap="round"
+              />
+            </svg>
+            <span>Classifica a squadre</span>
+          </button>
+          <button class="nav-item" data-view="classifiche-tipi">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <path d="M5 20 V13 M12 20 V6 M19 20 V10" stroke-linecap="round" />
+            </svg>
+            <span>Tipi di classifica</span>
+          </button>
+
+          <span class="nav-title">Ritiri</span>
+          <button class="nav-item" data-view="ritiri">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <rect x="3" y="9" width="18" height="8" rx="1.6" />
+              <path
+                d="M8 13 H11 M13 13 H16 M11 10.5 V15.5"
+                stroke-linecap="round"
+              />
+              <path
+                d="M7 9 V6.8 C7 5.8 7.8 5 8.8 5 H15.2 C16.2 5 17 5.8 17 6.8 V9"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span>Ritiri</span>
+          </button>
+
+          <span class="nav-title">Regolamento</span>
+          <button class="nav-item" data-view="regolamento-penalita">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <path
+                d="M12 3 L20 6.3 V11.5 C20 16.4 16.8 19.9 12 21.5 C7.2 19.9 4 16.4 4 11.5 V6.3 Z"
+                stroke-linejoin="round"
+              />
+              <path d="M12 8 V13 M12 16 V16.1" stroke-linecap="round" />
+            </svg>
+            <span>Penalità</span>
+          </button>
+          <button class="nav-item" data-view="regolamento-antidoping">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <path
+                d="M9 3 H15 M10 3 V14.5 C10 17 8 19 8 19.5 C8 20.5 9 21 12 21 C15 21 16 20.5 16 19.5 C16 19 14 17 14 14.5 V3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path d="M10.2 15.2 H13.8" stroke-linecap="round" />
+            </svg>
+            <span>Controlli antidoping</span>
+          </button>
+          <button class="nav-item" data-view="regolamento-abbuoni">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <path
+                d="M7 12 L4 20 L9 18.3 L11 21 L14 13"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M17 12 L20 20 L15 18.3 L13 21"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle cx="12" cy="9" r="5.5" />
+            </svg>
+            <span>Abbuoni</span>
+          </button>
+
+          <span class="nav-title">Altre funzionalità</span>
+          <button class="nav-item" data-view="stampa-media">
             <svg viewBox="0 0 24 24" class="nav-icon">
               <rect x="4" y="5" width="16" height="15" rx="1.5" />
               <path d="M7 9 H13 M7 12.5 H17 M7 16 H17" stroke-linecap="round" />
             </svg>
-            <span>Stampa</span>
+            <span>Media accreditati</span>
+          </button>
+          <button class="nav-item" data-view="stampa-comunicati">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <path
+                d="M4 5.5 H20 V16 H9 L5 19.5 V16 H4 Z"
+                stroke-linejoin="round"
+              />
+              <path d="M8 9.5 H16 M8 12.5 H13" stroke-linecap="round" />
+            </svg>
+            <span>Comunicati stampa</span>
           </button>
           <button class="nav-item" data-view="nazioni">
             <svg viewBox="0 0 24 24" class="nav-icon">
@@ -154,13 +353,39 @@
         </header>
 
         <section class="view active" id="view-dashboard"></section>
-        <section class="view" id="view-tappe"></section>
-        <section class="view" id="view-corridori"></section>
-        <section class="view" id="view-squadre"></section>
-        <section class="view" id="view-risultati"></section>
-        <section class="view" id="view-classifiche"></section>
-        <section class="view" id="view-regolamento"></section>
-        <section class="view" id="view-stampa"></section>
+
+        <section class="view" id="view-tappe-elenco"></section>
+        <section class="view" id="view-tappe-percorso"></section>
+        <section class="view" id="view-tappe-meteo"></section>
+
+        <section class="view" id="view-corridori-elenco"></section>
+        <section class="view" id="view-corridori-biciclette"></section>
+
+        <section class="view" id="view-squadre-elenco"></section>
+        <section class="view" id="view-squadre-staff"></section>
+        <section class="view" id="view-squadre-veicoli"></section>
+        <section class="view" id="view-squadre-sponsor"></section>
+        <section class="view" id="view-squadre-alloggi"></section>
+
+        <section class="view" id="view-risultati-arrivo"></section>
+        <section class="view" id="view-risultati-traguardi"></section>
+        <section class="view" id="view-risultati-gpm"></section>
+
+        <section class="view" id="view-classifiche-tempo"></section>
+        <section class="view" id="view-classifiche-punti"></section>
+        <section class="view" id="view-classifiche-giovani"></section>
+        <section class="view" id="view-classifiche-montagna"></section>
+        <section class="view" id="view-classifiche-squadre"></section>
+        <section class="view" id="view-classifiche-tipi"></section>
+
+        <section class="view" id="view-ritiri"></section>
+
+        <section class="view" id="view-regolamento-penalita"></section>
+        <section class="view" id="view-regolamento-antidoping"></section>
+        <section class="view" id="view-regolamento-abbuoni"></section>
+
+        <section class="view" id="view-stampa-media"></section>
+        <section class="view" id="view-stampa-comunicati"></section>
         <section class="view" id="view-nazioni"></section>
         <section class="view" id="view-cestino"></section>
       </main>
