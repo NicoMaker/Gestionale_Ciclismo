@@ -20,15 +20,15 @@
   transition: all 0.16s ease;
 }
 .subtab:hover {
-  border-color: var(--rosa-maglia);
-  color: var(--rosa-maglia);
+  border-color: var(--primario);
+  color: var(--primario);
   transform: translateY(-1px);
 }
 .subtab.active {
-  background: linear-gradient(135deg, var(--rosa-maglia), #d61a72);
+  background: var(--gradiente-primario);
   border-color: transparent;
   color: #fff;
-  box-shadow: 0 4px 12px -4px var(--rosa-glow);
+  box-shadow: 0 4px 12px -4px var(--primario-glow);
 }
 
 .subtab-body {

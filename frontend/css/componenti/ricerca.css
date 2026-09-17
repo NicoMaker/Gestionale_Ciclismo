@@ -30,8 +30,8 @@
 }
 .search-input:focus {
   outline: none;
-  border-color: var(--rosa-maglia);
-  box-shadow: 0 0 0 3.5px var(--rosa-glow);
+  border-color: var(--primario);
+  box-shadow: 0 0 0 3.5px var(--primario-glow);
 }
 .search-input::placeholder {
   color: #b6b5c8;

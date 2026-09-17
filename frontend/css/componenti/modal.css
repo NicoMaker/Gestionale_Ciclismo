@@ -15,9 +15,9 @@
 }
 .modal {
   background: var(--carta);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 30px;
-  width: 440px;
+  width: 480px;
   max-width: 92vw;
   max-height: 88vh;
   overflow-y: auto;
@@ -35,8 +35,8 @@
   }
 }
 .modal h2 {
-  font-family: "Archivo Black", sans-serif;
-  font-weight: 400;
+  font-family: "Manrope", sans-serif;
+  font-weight: 800;
   font-size: 20px;
   margin-bottom: 20px;
   letter-spacing: -0.2px;
@@ -70,8 +70,8 @@
 .field input:focus,
 .field select:focus {
   outline: none;
-  border-color: var(--rosa-maglia);
-  box-shadow: 0 0 0 3.5px var(--rosa-glow);
+  border-color: var(--primario);
+  box-shadow: 0 0 0 3.5px var(--primario-glow);
 }
 .campo-hint {
   font-size: 13px;
@@ -99,7 +99,7 @@
 .campo-checkbox input {
   width: 16px;
   height: 16px;
-  accent-color: var(--rosa-maglia);
+  accent-color: var(--primario);
   cursor: pointer;
   flex-shrink: 0;
 }

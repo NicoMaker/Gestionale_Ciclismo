@@ -9,15 +9,15 @@
 
 /* ---- Selezione testo col colore del brand ---- */
 ::selection {
-  background: var(--rosa-glow);
+  background: var(--primario-glow);
   color: var(--testo);
 }
 
 /* ---- Accessibilità: focus da tastiera sempre visibile ---- */
 :focus-visible {
-  outline: 2.5px solid var(--rosa-maglia);
+  outline: 2.5px solid var(--primario);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 .nav-item:focus-visible {
   outline-color: #fff;
@@ -80,12 +80,12 @@ thead th {
   background-image:
     radial-gradient(
       circle at 15% 0%,
-      rgba(236, 31, 128, 0.18),
+      rgba(109, 91, 246, 0.22),
       transparent 45%
     ),
     radial-gradient(
       circle at 90% 90%,
-      rgba(124, 58, 237, 0.15),
+      rgba(236, 31, 128, 0.16),
       transparent 50%
     ),
     radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
@@ -116,7 +116,7 @@ thead th {
 .modal {
   position: relative;
   border-top: 4px solid transparent;
-  border-image: linear-gradient(90deg, var(--rosa-maglia), var(--viola)) 1;
+  border-image: var(--gradiente-primario) 1;
 }
 
 /* ---- Badge: un filo interno per staccarli meglio dallo sfondo card ---- */

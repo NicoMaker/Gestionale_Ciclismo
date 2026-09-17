@@ -2,7 +2,7 @@
 .table-wrap {
   background: var(--carta);
   border: 1px solid var(--bordo);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   overflow-x: auto;
   box-shadow: var(--ombra);
@@ -20,7 +20,8 @@ thead th {
   color: var(--testo-soft);
   padding: 13px 18px;
   border-bottom: 1px solid var(--bordo);
-  background: #fbfaff;
+  background: var(--carta-soft);
+  backdrop-filter: blur(6px);
   white-space: nowrap;
 }
 tbody td {
@@ -301,7 +302,7 @@ tbody tr.riga-podio:nth-child(3) {
 .table-wrap {
   background: var(--carta);
   border: 1px solid var(--bordo);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   overflow: auto;
   max-height: 74vh;
   box-shadow: var(--ombra);
@@ -320,7 +321,8 @@ thead th {
   color: var(--testo-soft);
   padding: 13px 18px;
   border-bottom: 1px solid var(--bordo);
-  background: #fbfaff;
+  background: var(--carta-soft);
+  backdrop-filter: blur(6px);
   white-space: nowrap;
   position: sticky;
   top: 0;

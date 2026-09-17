@@ -8,6 +8,7 @@ import {
   caricaSquadre,
 } from "./state.js";
 
+import * as Dashboard from "../components/dashboard/dashboard.js";
 import * as Tappe from "../components/tappe/tappe.js";
 import * as Corridori from "../components/corridori/corridori.js";
 import * as Squadre from "../components/squadre/squadre.js";
@@ -19,6 +20,7 @@ import * as Nazioni from "../components/nazioni/nazioni.js";
 import * as Cestino from "../components/cestino/cestino.js";
 
 const sezioni = {
+  dashboard: Dashboard,
   tappe: Tappe,
   corridori: Corridori,
   squadre: Squadre,
@@ -83,4 +85,4 @@ Promise.all([
       "Impossibile contattare il server. Avvia il backend con 'npm start' sulla porta 3000.",
   );
 });
-mostraSezione("tappe");
+mostraSezione("dashboard");

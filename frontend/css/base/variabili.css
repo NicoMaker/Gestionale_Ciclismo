@@ -1,24 +1,38 @@
 :root {
-  --asfalto: #14151a;
-  --asfalto-2: #1d1e26;
-  --asfalto-3: #262835;
-  --bianco-strada: #f4f3f8;
+  --asfalto: #0c0e17;
+  --asfalto-2: #161a29;
+  --asfalto-3: #1f2436;
+  --bianco-strada: #f4f5fb;
   --carta: #ffffff;
+  --carta-soft: #fafaff;
   --rosa-maglia: #ec1f80;
   --rosa-maglia-2: #ff4f9a;
-  --rosa-glow: rgba(236, 31, 128, 0.35);
+  --rosa-glow: rgba(236, 31, 128, 0.3);
+  --primario: #6d5bf6;
+  --primario-2: #8b5cf6;
+  --primario-glow: rgba(109, 91, 246, 0.35);
   --viola: #7c3aed;
   --verde-montagna: #17a06b;
   --bianca-maglia: #ffffff;
-  --testo: #1c1d24;
-  --testo-soft: #74758a;
-  --bordo: #e9e8f2;
-  --radius: 12px;
-  --radius-sm: 8px;
+  --testo: #14162a;
+  --testo-soft: #6b7085;
+  --testo-fievole: #9497ab;
+  --bordo: #e7e7f4;
+  --bordo-forte: rgba(20, 22, 42, 0.14);
+  --radius-lg: 20px;
+  --radius: 14px;
+  --radius-sm: 10px;
   --ombra:
-    0 1px 2px rgba(20, 20, 30, 0.04), 0 8px 24px -8px rgba(20, 20, 30, 0.08);
+    0 1px 2px rgba(20, 20, 43, 0.04), 0 10px 26px -10px rgba(24, 20, 60, 0.12);
   --ombra-hover:
-    0 4px 12px rgba(20, 20, 30, 0.06), 0 16px 32px -12px rgba(20, 20, 30, 0.14);
+    0 6px 16px rgba(24, 20, 60, 0.08), 0 22px 44px -16px rgba(24, 20, 60, 0.2);
+  --ombra-primario: 0 8px 20px -6px rgba(109, 91, 246, 0.45);
+  --gradiente-primario: linear-gradient(
+    135deg,
+    var(--primario) 0%,
+    var(--rosa-maglia) 100%
+  );
+  --easing: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 * {
@@ -29,14 +43,27 @@
 
 body {
   font-family:
-    "Archivo",
+    "Inter",
     -apple-system,
+    "Segoe UI",
     sans-serif;
-  background: var(--bianco-strada);
+  background:
+    radial-gradient(1100px 520px at 100% -8%, rgba(109, 91, 246, 0.1), transparent 60%),
+    radial-gradient(900px 480px at -8% 0%, rgba(236, 31, 128, 0.07), transparent 55%),
+    var(--bianco-strada);
+  background-attachment: fixed;
   color: var(--testo);
   font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Manrope", "Inter", sans-serif;
+  letter-spacing: -0.02em;
 }
 
 ::-webkit-scrollbar {
@@ -47,10 +74,10 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d8d7e4;
+  background: #d5d6ec;
   border-radius: 10px;
   border: 2px solid var(--bianco-strada);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #c2c1d4;
+  background: #bfc1e6;
 }

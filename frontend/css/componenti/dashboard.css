@@ -1,0 +1,49 @@
+/* ---- DASHBOARD ---- */
+.griglia-statistiche {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.statistica {
+  position: relative;
+  background: var(--carta);
+  border: 1px solid var(--bordo);
+  border-radius: var(--radius-lg, var(--radius));
+  padding: 18px 20px;
+  box-shadow: var(--ombra);
+  overflow: hidden;
+  animation: fadein 0.35s var(--easing, ease);
+}
+.statistica::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--gradiente-primario);
+  opacity: 0.9;
+}
+.statistica .numero {
+  font-family: "Manrope", "Archivo Black", sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  background: var(--gradiente-primario);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  line-height: 1.15;
+}
+.statistica .etichetta {
+  color: var(--testo-soft);
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.griglia-card {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}

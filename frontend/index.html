@@ -6,12 +6,13 @@
     <title>Giro — Gestionale Tappe</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/base/variabili.css" />
     <link rel="stylesheet" href="css/base/layout.css" />
     <link rel="stylesheet" href="css/componenti/icone.css" />
+    <link rel="stylesheet" href="css/componenti/dashboard.css" />
     <link rel="stylesheet" href="css/componenti/ricerca.css" />
     <link rel="stylesheet" href="css/componenti/tabella.css" />
     <link rel="stylesheet" href="css/componenti/squadre-cards.css" />
@@ -35,7 +36,16 @@
         </div>
 
         <nav class="nav">
-          <button class="nav-item active" data-view="tappe">
+          <button class="nav-item active" data-view="dashboard">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <rect x="3" y="3" width="7" height="9" rx="1.5" />
+              <rect x="14" y="3" width="7" height="5" rx="1.5" />
+              <rect x="14" y="12" width="7" height="9" rx="1.5" />
+              <rect x="3" y="16" width="7" height="5" rx="1.5" />
+            </svg>
+            <span>Dashboard</span>
+          </button>
+          <button class="nav-item" data-view="tappe">
             <svg viewBox="0 0 24 24" class="nav-icon">
               <path
                 d="M4 20 L10 4 L14 4 L20 20"
@@ -136,7 +146,8 @@
       </aside>
 
       <main class="content">
-        <section class="view active" id="view-tappe"></section>
+        <section class="view active" id="view-dashboard"></section>
+        <section class="view" id="view-tappe"></section>
         <section class="view" id="view-corridori"></section>
         <section class="view" id="view-squadre"></section>
         <section class="view" id="view-risultati"></section>

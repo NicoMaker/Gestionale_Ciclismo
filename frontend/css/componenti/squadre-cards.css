@@ -7,7 +7,7 @@
 .squadra-card {
   background: var(--carta);
   border: 1px solid var(--bordo);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 20px;
   border-top: 4px solid var(--rosa-maglia);
   box-shadow: var(--ombra);
