@@ -24,8 +24,19 @@
 }
 
 @media (max-width: 760px) {
+  /* Sotto i 760px la sidebar torna una barra orizzontale in cima alla
+     pagina (non più una colonna fissa): qui il documento deve tornare a
+     scorrere normalmente come contenitore unico, esattamente come prima
+     dell'app-shell introdotta per desktop qui sopra. */
+  html,
+  body {
+    height: auto;
+    overflow: visible;
+  }
   .frame {
     grid-template-columns: 1fr;
+    height: auto;
+    overflow: visible;
   }
   .sidebar {
     position: relative;
@@ -44,6 +55,9 @@
     flex-wrap: wrap;
     overflow: visible;
   }
+  .nav-title {
+    display: none;
+  }
   .nav-item span {
     display: none;
   }
@@ -51,6 +65,8 @@
     padding: 10px;
   }
   .content {
+    height: auto;
+    overflow: visible;
     padding: 24px 20px;
   }
   .live-box {

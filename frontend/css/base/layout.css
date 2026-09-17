@@ -1,10 +1,31 @@
+/* ---- APP SHELL ----
+   Il documento (html/body) non scorre MAI: l'unico contenitore con scroll
+   verticale è .content, qui sotto. Prima .frame aveva solo un min-height,
+   quindi se una pagina era più alta della finestra era il DOCUMENTO a
+   diventare scrollabile, in aggiunta allo scroll interno delle tabelle
+   lunghe (.table-wrap). Con due scroll annidati, appena la rotellina
+   raggiungeva il fondo della tabella lo scroll "risaliva" al documento
+   (scroll chaining): la pagina intera si spostava di colpo e sidebar/
+   topbar, agganciate con position:sticky al vecchio scroll di pagina,
+   sembravano scomporsi per un istante. Bloccando lo scroll del documento
+   e lasciandolo solo a .content il problema sparisce alla radice. */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
 .frame {
   display: grid;
   grid-template-columns: 268px 1fr;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
-/* ---- SIDEBAR ---- */
+/* ---- SIDEBAR ----
+   Non è più "sticky": essendo .frame un contenitore che non scorre mai,
+   la sidebar è semplicemente una colonna a altezza fissa, sempre ferma e
+   mai ridisegnata durante lo scroll del contenuto accanto. */
 .sidebar {
   background:
     radial-gradient(
@@ -22,9 +43,7 @@
   display: flex;
   flex-direction: column;
   padding: 26px 18px;
-  position: sticky;
-  top: 0;
-  height: 100vh;
+  height: 100%;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -72,7 +91,23 @@
   flex-direction: column;
   gap: 3px;
   flex: 1;
+  min-height: 0; /* permette lo scroll interno solo come ultima rete di sicurezza */
   overflow-y: auto;
+}
+
+/* Etichetta sopra ciascun gruppo di voci ("Sezioni principali",
+   "Altre funzionalità"...), per separare visivamente i gruppi. */
+.nav-title {
+  display: block;
+  padding: 10px 13px 4px;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #74768d;
+}
+.nav-title:first-child {
+  padding-top: 0;
 }
 .nav-item {
   display: flex;
@@ -169,8 +204,18 @@
   margin-top: 1px;
 }
 
-/* ---- CONTENT ---- */
+/* ---- CONTENT ----
+   Unico contenitore che scorre in tutta la pagina (vedi nota "APP SHELL"
+   più sopra). overscroll-behavior:contain evita che, arrivati in fondo,
+   lo scroll "rimbalzi" chiedendo di scorrere un antenato: qui non
+   servirebbe comunque (il documento è bloccato), ma resta come ulteriore
+   garanzia sui browser che non rispettano l'overflow:hidden su html/body
+   durante i gesti di trascinamento su mobile. */
 .content {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
   padding: 0 48px 64px;
   max-width: 1360px;
   width: 100%;

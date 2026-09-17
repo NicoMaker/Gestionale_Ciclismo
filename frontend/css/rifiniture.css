@@ -41,17 +41,6 @@ tbody td {
   font-variant-numeric: tabular-nums;
 }
 
-/* ---- Intestazione tabella "appiccicata" per gli elenchi lunghi ---- */
-.table-wrap {
-  max-height: 74vh;
-}
-thead th {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  box-shadow: 0 1px 0 var(--bordo);
-}
-
 /* ---- Riga del traguardo: un tocco a scacchi, sottile, sotto ogni
    titolo di sezione — richiama lo striscione di arrivo senza essere
    un elemento decorativo fine a sé stesso ---- */

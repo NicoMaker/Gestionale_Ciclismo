@@ -1,45 +1,3 @@
-/* ---- TABLE ---- */
-.table-wrap {
-  background: var(--carta);
-  border: 1px solid var(--bordo);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  overflow-x: auto;
-  box-shadow: var(--ombra);
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-thead th {
-  text-align: left;
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  color: var(--testo-soft);
-  padding: 13px 18px;
-  border-bottom: 1px solid var(--bordo);
-  background: var(--carta-soft);
-  backdrop-filter: blur(6px);
-  white-space: nowrap;
-}
-tbody td {
-  padding: 13px 18px;
-  border-bottom: 1px solid #f2f1f8;
-  font-size: 14px;
-  white-space: nowrap;
-}
-tbody tr {
-  transition: background 0.12s;
-}
-tbody tr:last-child td {
-  border-bottom: none;
-}
-tbody tr:hover {
-  background: #fdf3f8;
-}
-
 .badge {
   display: inline-flex;
   align-items: center;
@@ -296,8 +254,6 @@ tbody tr.riga-podio:nth-child(3) {
   background: #eceeff;
 }
 
-/* ---- Raffinamento tabella (dal file originale, tenuto in coda per
-   mantenere lo stesso ordine di cascata) ---- */
 /* ---- TABLE ---- */
 .table-wrap {
   background: var(--carta);
@@ -307,6 +263,10 @@ tbody tr.riga-podio:nth-child(3) {
   max-height: 74vh;
   box-shadow: var(--ombra);
   -webkit-overflow-scrolling: touch;
+  /* Evita lo "scroll chaining": arrivati in cima/fondo alla tabella, la
+     rotellina non deve continuare a scorrere la pagina che la contiene
+     (era proprio questo salto improvviso a far "sformattare" la pagina). */
+  overscroll-behavior: contain;
 }
 table {
   width: 100%;

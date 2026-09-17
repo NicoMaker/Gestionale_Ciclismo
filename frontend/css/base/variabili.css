@@ -61,7 +61,6 @@ body {
       transparent 55%
     ),
     var(--bianco-strada);
-  background-attachment: fixed;
   color: var(--testo);
   font-size: 15px;
   line-height: 1.5;
