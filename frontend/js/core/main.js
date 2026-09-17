@@ -42,6 +42,18 @@ function mostraSezione(key) {
     .querySelectorAll(".view")
     .forEach((v) => v.classList.toggle("active", v.id === "view-" + key));
 
+  // topbar sempre visibile in cima al contenuto (sticky): mostra il titolo
+  // e l'icona della sezione corrente, così anche scorrendo la pagina resta
+  // chiaro in quale scheda ci si trova
+  const bottone = document.querySelector(`.nav-item[data-view="${key}"]`);
+  const titoloBar = document.getElementById("topbarTitle");
+  const iconaBar = document.getElementById("topbarIcon");
+  if (bottone && titoloBar && iconaBar) {
+    titoloBar.textContent = bottone.querySelector("span")?.textContent ?? "";
+    const svg = bottone.querySelector("svg");
+    iconaBar.innerHTML = svg ? svg.outerHTML : "";
+  }
+
   if (!inizializzate.has(key)) {
     const container = document.getElementById("view-" + key);
     if (sezioni[key]) {

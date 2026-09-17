@@ -171,13 +171,63 @@
 
 /* ---- CONTENT ---- */
 .content {
-  padding: 38px 48px 64px;
+  padding: 0 48px 64px;
   max-width: 1360px;
   width: 100%;
 }
 
+/* ---- TOPBAR ----
+   Titolo della sezione corrente, sempre visibile in cima al contenuto:
+   resta agganciata (sticky) durante lo scroll della pagina così non si
+   perde mai il riferimento a "dove si è" né l'accesso alle azioni delle
+   sotto-schede sottostanti (vedi .subtabs/.subtab-head qui sotto). */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: var(--topbar-h);
+  padding: 0 4px;
+  margin: 0 -4px;
+  background: rgba(244, 245, 251, 0.86);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--bordo);
+}
+.topbar-icon {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    rgba(109, 91, 246, 0.12),
+    rgba(236, 31, 128, 0.12)
+  );
+  border-radius: 9px;
+}
+.topbar-icon svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: var(--primario);
+  stroke-width: 1.9;
+}
+.topbar h1 {
+  font-family: "Manrope", sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--testo);
+}
+
 .view {
   display: none;
+  padding-top: 26px;
 }
 .view.active {
   display: block;

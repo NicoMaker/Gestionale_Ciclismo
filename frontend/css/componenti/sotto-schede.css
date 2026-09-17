@@ -1,11 +1,22 @@
-/* ---- SOTTO-SCHEDE ---- */
+/* ---- SOTTO-SCHEDE ----
+   La barra delle pillole e la riga ricerca/azioni (.subtab-head, es. il
+   pulsante "aggiungi" di Comunicati stampa) restano agganciate sotto la
+   .topbar durante lo scroll: prima scomparivano scorrendo la pagina e non
+   si vedevano più né la sezione attiva né i pulsanti di azione. */
 .subtabs {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 7px;
+  min-height: var(--subtabs-h);
   margin-bottom: 22px;
   border-bottom: 1px solid var(--bordo);
-  padding-bottom: 16px;
+  position: sticky;
+  top: var(--topbar-h);
+  z-index: 35;
+  background: rgba(244, 245, 251, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 .subtab {
   font-family: inherit;
@@ -41,6 +52,22 @@
   gap: 12px;
   margin-bottom: 18px;
   flex-wrap: wrap;
+  position: sticky;
+  /* di default (pagine senza pillole di sotto-scheda, es. Nazioni/Cestino)
+     resta agganciata subito sotto la topbar */
+  top: var(--topbar-h);
+  z-index: 30;
+  padding: 14px 2px;
+  background: rgba(244, 245, 251, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--bordo);
+}
+/* dentro una pagina con sotto-schede (Risultati, Classifiche, Stampa...) la
+   barra pillole .subtabs sticky la precede: la riga ricerca/azioni deve
+   agganciarsi più in basso, subito sotto di essa */
+.subtab-body .subtab-head {
+  top: calc(var(--topbar-h) + var(--subtabs-h));
 }
 .subtab-sezione {
   margin-bottom: 30px;
