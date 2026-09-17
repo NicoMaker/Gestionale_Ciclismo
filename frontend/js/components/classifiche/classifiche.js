@@ -462,15 +462,13 @@ function disegnaRitiri() {
       if (c) apriFormRitiro(c, { alSalvataggio: aggiornaDopoRitiro });
     }),
   );
-  tbody
-    .querySelectorAll("[data-riammetti]")
-    .forEach((b) =>
-      b.addEventListener("click", () =>
-        riammettiCorridore(+b.dataset.riammetti, {
-          alSalvataggio: aggiornaDopoRitiro,
-        }),
-      ),
-    );
+  tbody.querySelectorAll("[data-riammetti]").forEach((b) =>
+    b.addEventListener("click", () =>
+      riammettiCorridore(+b.dataset.riammetti, {
+        alSalvataggio: aggiornaDopoRitiro,
+      }),
+    ),
+  );
 }
 
 async function aggiornaDopoRitiro() {

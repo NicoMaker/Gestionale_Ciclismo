@@ -150,15 +150,13 @@ async function ricaricaArrivo() {
         apriRitiroDaRisultati(+b.dataset.ritira),
       ),
     );
-  tbody
-    .querySelectorAll("[data-riammetti]")
-    .forEach((b) =>
-      b.addEventListener("click", () =>
-        riammettiCorridore(+b.dataset.riammetti, {
-          alSalvataggio: aggiornaDopoRitiro,
-        }),
-      ),
-    );
+  tbody.querySelectorAll("[data-riammetti]").forEach((b) =>
+    b.addEventListener("click", () =>
+      riammettiCorridore(+b.dataset.riammetti, {
+        alSalvataggio: aggiornaDopoRitiro,
+      }),
+    ),
+  );
 }
 
 // dopo un ritiro/riammissione avviato dalla pagina Risultati, va ricaricata
@@ -411,15 +409,13 @@ function disegnaRitiri() {
       if (c) apriFormRitiro(c, { alSalvataggio: aggiornaDopoRitiroRitiri });
     }),
   );
-  tbody
-    .querySelectorAll("[data-riammetti]")
-    .forEach((b) =>
-      b.addEventListener("click", () =>
-        riammettiCorridore(+b.dataset.riammetti, {
-          alSalvataggio: aggiornaDopoRitiroRitiri,
-        }),
-      ),
-    );
+  tbody.querySelectorAll("[data-riammetti]").forEach((b) =>
+    b.addEventListener("click", () =>
+      riammettiCorridore(+b.dataset.riammetti, {
+        alSalvataggio: aggiornaDopoRitiroRitiri,
+      }),
+    ),
+  );
 }
 
 async function aggiornaDopoRitiroRitiri() {
