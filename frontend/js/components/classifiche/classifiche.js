@@ -1,5 +1,9 @@
 import { apiGet } from "../../core/api.js";
-import { htmlCampoRicerca, attivaCampoRicerca, bandiera } from "../../core/utils.js";
+import {
+  htmlCampoRicerca,
+  attivaCampoRicerca,
+  bandiera,
+} from "../../core/utils.js";
 import { socket } from "../../core/socket.js";
 import { montaListaConForm } from "../tabella-dati/tabella-dati.js";
 import { medaglia } from "../../core/icone.js";
