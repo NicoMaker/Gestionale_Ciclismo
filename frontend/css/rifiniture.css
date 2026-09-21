@@ -113,6 +113,52 @@ tbody td {
   box-shadow: inset 0 0 0 1px rgba(20, 20, 30, 0.05);
 }
 
+/* ---- Direzione visiva Maglia Rosa ---- */
+body {
+  background:
+    radial-gradient(900px 520px at 100% -8%, rgba(233, 30, 120, .13), transparent 62%),
+    radial-gradient(760px 440px at -8% 8%, rgba(255, 118, 174, .12), transparent 58%),
+    var(--bianco-strada);
+}
+.sidebar {
+  background-image:
+    radial-gradient(circle at 15% 0%, rgba(255, 91, 155, .25), transparent 43%),
+    radial-gradient(circle at 90% 90%, rgba(233, 30, 120, .2), transparent 50%),
+    radial-gradient(rgba(255,255,255,.055) 1px, transparent 1px),
+    linear-gradient(180deg, #180b19 0%, #2b1029 54%, #160d1e 100%);
+}
+.brand-mark,
+.topbar h1,
+.view-head h1 {
+  color: #b91460;
+}
+.nav-item.active {
+  background: linear-gradient(100deg, rgba(233, 30, 120, .96), rgba(190, 18, 94, .9));
+  box-shadow: 0 10px 22px rgba(233, 30, 120, .24);
+}
+.view-head::after {
+  background: repeating-linear-gradient(-45deg, #e91e78 0 6px, transparent 6px 12px);
+  opacity: .32;
+}
+.badge-numero,
+.badge-success {
+  border-color: rgba(233, 30, 120, .2);
+  background: rgba(233, 30, 120, .1);
+  color: #b91460;
+}
+.stat-icon,
+.profile-chip {
+  background: var(--gradiente-rosa);
+}
+.quick-actions {
+  border-color: rgba(233, 30, 120, .2);
+  background: linear-gradient(110deg, rgba(233, 30, 120, .12), rgba(255, 118, 174, .045));
+}
+.quick-action:hover {
+  border-color: #e91e78;
+  box-shadow: 0 10px 24px rgba(233, 30, 120, .16);
+}
+
 /* ---- Nuova shell responsive ---- */
 .brand-icon svg {
   width: 22px;
@@ -366,9 +412,16 @@ tbody td {
     overflow: auto;
   }
   .frame {
-    display: block;
+    display: block !important;
     min-height: 100vh;
     overflow: visible;
+  }
+  .content {
+    display: block;
+    width: 100%;
+    margin: 0 !important;
+    padding-left: 16px;
+    padding-right: 16px;
   }
   .sidebar {
     position: fixed;

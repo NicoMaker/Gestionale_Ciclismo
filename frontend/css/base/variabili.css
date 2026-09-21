@@ -8,10 +8,10 @@
   --rosa-maglia: #ec1f80;
   --rosa-maglia-2: #ff4f9a;
   --rosa-glow: rgba(236, 31, 128, 0.3);
-  --primario: #6d5bf6;
-  --primario-2: #8b5cf6;
-  --primario-glow: rgba(109, 91, 246, 0.35);
-  --viola: #7c3aed;
+  --primario: #e91e78;
+  --primario-2: #ff4f9a;
+  --primario-glow: rgba(233, 30, 120, 0.28);
+  --viola: #c31668;
   --verde-montagna: #17a06b;
   --bianca-maglia: #ffffff;
   --testo: #14162a;
@@ -27,11 +27,8 @@
   --ombra-hover:
     0 6px 16px rgba(24, 20, 60, 0.08), 0 22px 44px -16px rgba(24, 20, 60, 0.2);
   --ombra-primario: 0 8px 20px -6px rgba(109, 91, 246, 0.45);
-  --gradiente-primario: linear-gradient(
-    135deg,
-    var(--primario) 0%,
-    var(--rosa-maglia) 100%
-  );
+  --gradiente-primario: linear-gradient(135deg, #c91668 0%, #ef3c91 52%, #ff76ad 100%);
+  --gradiente-rosa: linear-gradient(135deg, #9d104f 0%, #e91e78 58%, #ff78ae 100%);
   --easing: cubic-bezier(0.16, 1, 0.3, 1);
   --topbar-h: 58px;
   --subtabs-h: 60px;
