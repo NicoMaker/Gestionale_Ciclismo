@@ -97,7 +97,22 @@ function mostraSezione(key) {
 }
 
 document.querySelectorAll(".nav-item").forEach((btn) => {
-  btn.addEventListener("click", () => mostraSezione(btn.dataset.view));
+  btn.addEventListener("click", () => {
+    mostraSezione(btn.dataset.view);
+    document.querySelector(".frame")?.classList.remove("menu-open");
+    document.getElementById("menuToggle")?.setAttribute("aria-expanded", "false");
+  });
+});
+
+const menuToggle = document.getElementById("menuToggle");
+menuToggle?.addEventListener("click", () => {
+  const frame = document.querySelector(".frame");
+  const isOpen = frame?.classList.toggle("menu-open") ?? false;
+  menuToggle.setAttribute("aria-expanded", String(isOpen));
+});
+
+document.getElementById("refreshButton")?.addEventListener("click", () => {
+  window.location.reload();
 });
 
 // ---------- Stato live ----------

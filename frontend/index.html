@@ -28,7 +28,7 @@
     <div class="frame">
       <aside class="sidebar">
         <div class="brand">
-          <span class="brand-icon">🚴</span>
+          <span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="6" cy="17" r="3"></circle><circle cx="18" cy="17" r="3"></circle><path d="M6 17l4-8h4l4 8M10 9 8 5h3M10 9l4 4"></path></svg></span>
           <div class="brand-testo">
             <span class="brand-mark">GIRO</span>
             <span class="brand-sub">gestionale tappe</span>
@@ -357,11 +357,33 @@
 
       <main class="content">
         <header class="topbar" id="topbar">
+          <button class="menu-toggle" id="menuToggle" type="button" aria-label="Apri menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+          </button>
           <span class="topbar-icon" id="topbarIcon"></span>
-          <h1 id="topbarTitle">Dashboard</h1>
+          <div class="topbar-copy">
+            <span class="topbar-kicker">GESTIONALE CICLISTICO</span>
+            <h1 id="topbarTitle">Dashboard</h1>
+          </div>
+          <div class="topbar-actions">
+            <button class="topbar-action" type="button" title="Aggiorna dati" aria-label="Aggiorna dati" id="refreshButton">↻</button>
+            <span class="profile-chip" aria-label="Profilo Nico">NM</span>
+          </div>
         </header>
 
-        <section class="view active" id="view-dashboard"></section>
+        <section class="view active" id="view-dashboard">
+          <div class="view-head">
+            <div><h1>Dashboard</h1><p>Il centro di controllo per seguire la corsa, le squadre e ogni risultato.</p></div>
+            <span class="badge badge-numero">Stagione 2025</span>
+          </div>
+          <div class="griglia-statistiche">
+            <div class="statistica"><div class="numero">—</div><div class="etichetta">tappe totali</div></div>
+            <div class="statistica"><div class="numero">—</div><div class="etichetta">corridori in gara</div></div>
+            <div class="statistica"><div class="numero">—</div><div class="etichetta">squadre</div></div>
+            <div class="statistica"><div class="numero">LIVE</div><div class="etichetta">stato corsa</div></div>
+          </div>
+          <div class="griglia-card"><div class="card"><h3>Prossima tappa</h3><p class="testo-soft">Caricamento dati gara…</p></div><div class="card"><h3>Panoramica squadra</h3><p class="testo-soft">Caricamento dati squadra…</p></div></div>
+        </section>
 
         <section class="view" id="view-tappe-elenco"></section>
         <section class="view" id="view-tappe-percorso"></section>

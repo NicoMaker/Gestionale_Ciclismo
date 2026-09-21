@@ -112,3 +112,221 @@ tbody td {
 .badge {
   box-shadow: inset 0 0 0 1px rgba(20, 20, 30, 0.05);
 }
+
+/* ---- Nuova shell responsive ---- */
+.brand-icon svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.topbar {
+  min-height: 70px;
+  height: auto;
+  padding: 12px 0;
+  gap: 12px;
+  border-bottom-color: rgba(109, 91, 246, 0.12);
+}
+.topbar-copy {
+  display: grid;
+  gap: 1px;
+}
+.topbar-kicker {
+  color: var(--testo-fievole);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+.topbar h1 {
+  font-size: 19px;
+}
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-left: auto;
+}
+.topbar-action,
+.profile-chip,
+.menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--bordo);
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--testo-soft);
+  box-shadow: 0 5px 14px rgba(24, 20, 60, 0.06);
+}
+.topbar-action {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.18s var(--easing), color 0.18s ease;
+}
+.topbar-action:hover {
+  color: var(--primario);
+  transform: rotate(25deg);
+}
+.profile-chip {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--gradiente-primario);
+  color: #fff;
+  border: 0;
+  font-size: 11px;
+  font-weight: 800;
+}
+.menu-toggle {
+  display: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  cursor: pointer;
+  flex-direction: column;
+  gap: 4px;
+}
+.menu-toggle span {
+  width: 15px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--testo);
+}
+
+.card,
+.statistica,
+.tabella-card,
+.squadra-card {
+  transition: transform 0.22s var(--easing), box-shadow 0.22s var(--easing), border-color 0.22s ease;
+}
+.card:hover,
+.statistica:hover,
+.squadra-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ombra-hover);
+  border-color: rgba(109, 91, 246, 0.22);
+}
+
+@media (max-width: 920px) {
+  .frame {
+    grid-template-columns: 82px 1fr;
+  }
+  .sidebar {
+    padding: 20px 12px;
+  }
+  .brand {
+    justify-content: center;
+    padding: 0;
+  }
+  .brand-testo,
+  .nav-title,
+  .nav-item span,
+  .live-text {
+    display: none;
+  }
+  .nav-item {
+    justify-content: center;
+    padding: 12px;
+  }
+  .live-box {
+    justify-content: center;
+    padding: 12px 4px;
+  }
+  .content {
+    padding-inline: 28px;
+  }
+}
+
+@media (max-width: 680px) {
+  html,
+  body {
+    overflow: auto;
+  }
+  .frame {
+    display: block;
+    min-height: 100vh;
+    overflow: visible;
+  }
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 100;
+    width: min(300px, 84vw);
+    padding: 22px 18px;
+    transform: translateX(-102%);
+    transition: transform 0.28s var(--easing);
+    box-shadow: 22px 0 50px rgba(12, 14, 23, 0.24);
+  }
+  .menu-open .sidebar {
+    transform: translateX(0);
+  }
+  .menu-open::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: rgba(12, 14, 23, 0.46);
+    backdrop-filter: blur(3px);
+  }
+  .brand {
+    justify-content: flex-start;
+    padding: 4px 6px;
+  }
+  .brand-testo,
+  .nav-title,
+  .nav-item span,
+  .live-text {
+    display: flex;
+  }
+  .nav-item {
+    justify-content: flex-start;
+  }
+  .content {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+    padding: 0 16px 38px;
+  }
+  .topbar {
+    position: sticky;
+    margin: 0 -2px;
+    padding-inline: 2px;
+  }
+  .menu-toggle {
+    display: inline-flex;
+  }
+  .topbar-icon {
+    width: 28px;
+    height: 28px;
+  }
+  .topbar-kicker {
+    font-size: 8px;
+  }
+  .topbar h1 {
+    font-size: 16px;
+  }
+  .topbar-action {
+    display: none;
+  }
+  .view {
+    padding-top: 20px;
+  }
+  .view-head h1 {
+    font-size: 24px;
+  }
+  .griglia-statistiche,
+  .griglia-card {
+    grid-template-columns: 1fr;
+  }
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
