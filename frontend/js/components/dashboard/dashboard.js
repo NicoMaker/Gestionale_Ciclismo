@@ -50,9 +50,13 @@ function render() {
   ).length;
 
   container.innerHTML = `
-    <div class="view-head">
-      <h1>${icona("diretta", "view-icon")}Dashboard</h1>
-      <p>Colpo d'occhio sulla corsa: tappe, corridori, squadre e controlli antidoping in tempo reale.</p>
+    <div class="view-head dashboard-heading">
+      <div>
+        <span class="eyebrow">CENTRO OPERATIVO · STAGIONE 2025</span>
+        <h1>${icona("diretta", "view-icon")}Dashboard</h1>
+        <p>Colpo d'occhio sulla corsa: tappe, corridori, squadre e controlli antidoping in tempo reale.</p>
+      </div>
+      <div class="dashboard-date"><span class="pulse-dot"></span><span>Sincronizzato ora</span></div>
     </div>
 
     ${
@@ -68,7 +72,8 @@ function render() {
     }
 
     <div class="griglia-statistiche">
-      <div class="statistica">
+      <div class="statistica stat-tappe">
+        <div class="stat-top"><span class="stat-icon">↗</span><span class="stat-trend">stagione</span></div>
         <div class="numero">${totaleTappe}</div>
         <div class="etichetta">tappe totali</div>
       </div>
@@ -102,11 +107,22 @@ function render() {
       </div>
     </div>
 
+    <div class="quick-actions">
+      <div><span class="eyebrow">AZIONI RAPIDE</span><h2>Gestisci la corsa</h2></div>
+      <button class="quick-action" data-quick-view="tappe-elenco"><span>＋</span><b>Nuova tappa</b><small>pianifica il percorso</small></button>
+      <button class="quick-action" data-quick-view="corridori-elenco"><span>＋</span><b>Aggiungi corridore</b><small>aggiorna la rosa</small></button>
+      <button class="quick-action" data-quick-view="risultati-arrivo"><span>↗</span><b>Inserisci risultato</b><small>chiudi una tappa</small></button>
+    </div>
+
     <div class="griglia-card" style="margin-top:6px;">
       <div class="card" id="dashProssimaTappa"></div>
       <div class="card" id="dashSquadre"></div>
     </div>
   `;
+
+  container.querySelectorAll("[data-quick-view]").forEach((button) => {
+    button.addEventListener("click", () => document.querySelector(`.nav-item[data-view="${button.dataset.quickView}"]`)?.click());
+  });
 
   const boxProssima = document.getElementById("dashProssimaTappa");
   if (prossima) {
