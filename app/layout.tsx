@@ -3,8 +3,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
+  title: 'VeloTrack — Gestionale Ciclismo',
+  description: 'Gestisci corridori, squadre, gare e risultati in un unico spazio.',
   generator: 'v0.app',
   icons: {
     icon: [
