@@ -495,7 +495,10 @@ body {
     padding-inline: 2px;
   }
   .menu-toggle {
+    position: relative;
+    z-index: 120;
     display: inline-flex;
+    flex: 0 0 38px;
   }
   .topbar-icon {
     width: 28px;

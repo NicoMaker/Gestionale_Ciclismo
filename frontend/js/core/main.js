@@ -105,10 +105,21 @@ document.querySelectorAll(".nav-item").forEach((btn) => {
 });
 
 const menuToggle = document.getElementById("menuToggle");
-menuToggle?.addEventListener("click", () => {
-  const frame = document.querySelector(".frame");
+const frame = document.querySelector(".frame");
+const closeMobileMenu = () => {
+  frame?.classList.remove("menu-open");
+  menuToggle?.setAttribute("aria-expanded", "false");
+};
+menuToggle?.addEventListener("click", (event) => {
+  event.stopPropagation();
   const isOpen = frame?.classList.toggle("menu-open") ?? false;
   menuToggle.setAttribute("aria-expanded", String(isOpen));
+});
+frame?.addEventListener("click", (event) => {
+  if (event.target === frame) closeMobileMenu();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeMobileMenu();
 });
 
 document.getElementById("refreshButton")?.addEventListener("click", () => {
