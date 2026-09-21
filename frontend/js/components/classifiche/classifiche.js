@@ -7,6 +7,7 @@ import {
 import { socket } from "../../core/socket.js";
 import { montaListaConForm } from "../tabella-dati/tabella-dati.js";
 import { medaglia } from "../../core/icone.js";
+import { templateClassificaSquadre, renderTeamSummary } from "./classifica-squadre.js";
 
 // stato di ciascuna scheda: query di ricerca corrente + ultimo elenco caricato
 const stato = {
@@ -298,18 +299,10 @@ async function ricaricaMontagna() {
  * Classifica a squadre — somma dei tempi di tutti i corridori della squadra
  * ------------------------------------------------------------------- */
 async function renderSquadre(corpo) {
-  corpo.innerHTML = `
-    <div class="subtab-head">${htmlCampoRicerca("cerca squadra...")}</div>
-    <div id="bannerSquadre"></div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Pos.</th><th>Squadra</th><th>Corridori conteggiati</th><th>Tempo totale</th><th>Distacco</th></tr></thead>
-        <tbody id="tabellaClassificaSquadre"></tbody>
-      </table>
-    </div>
-  `;
-  attivaCampoRicerca(corpo, (q) => {
-    stato.squadre.query = q;
+  corpo.innerHTML = templateClassificaSquadre();
+  const ricerca = corpo.querySelector("#ricercaClassificaSquadre");
+  ricerca?.addEventListener("input", (event) => {
+    stato.squadre.query = event.target.value.trim().toLowerCase();
     disegnaSquadre();
   });
   await ricaricaSquadre();
@@ -317,15 +310,10 @@ async function renderSquadre(corpo) {
 
 function disegnaSquadre() {
   const tbody = document.getElementById("tabellaClassificaSquadre");
-  const banner = document.getElementById("bannerSquadre");
+  const summary = document.getElementById("summaryClassificaSquadre");
   if (!tbody) return;
   const { dati, query } = stato.squadre;
-  if (banner)
-    banner.innerHTML = bannerMaglia(
-      dati[0],
-      dati[0]?.squadra_colore ?? "var(--rosa-maglia)",
-      "classifica a squadre",
-    );
+  renderTeamSummary(summary, dati[0], dati.length);
   const filtrati = dati.filter((r) => {
     if (!query) return true;
     return `${r.squadra_nome} ${r.nazione_nome ?? ""}`
