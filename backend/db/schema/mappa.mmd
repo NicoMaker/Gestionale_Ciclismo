@@ -1,0 +1,193 @@
+erDiagram
+    NAZIONI ||--o{ SQUADRE : ""
+    NAZIONI ||--o{ CORRIDORI : ""
+    SQUADRE ||--o{ CORRIDORI : ""
+    SQUADRE ||--o{ STAFF_TECNICO : ""
+    SQUADRE ||--o{ VEICOLI_SQUADRA : ""
+    SQUADRE ||--o{ SQUADRA_SPONSOR : ""
+    SPONSOR ||--o{ SQUADRA_SPONSOR : ""
+    SQUADRE ||--o{ HOTEL : ""
+    TAPPE ||--o{ HOTEL : ""
+    TAPPE ||--o{ RISULTATI : ""
+    CORRIDORI ||--o{ RISULTATI : ""
+    TAPPE ||--o{ TAPPE_PERCORSO : ""
+    TAPPE ||--o{ TRAGUARDI_VOLANTI : ""
+    CORRIDORI ||--o{ TRAGUARDI_VOLANTI : ""
+    TAPPE ||--o{ GPM_RISULTATI : ""
+    CORRIDORI ||--o{ GPM_RISULTATI : ""
+    CORRIDORI ||--o{ PENALITA : ""
+    TAPPE ||--o{ PENALITA : ""
+    CORRIDORI ||--o{ CONTROLLI_ANTIDOPING : ""
+    TAPPE ||--o{ CONTROLLI_ANTIDOPING : ""
+    CORRIDORI ||--o{ BICICLETTE : ""
+    TAPPE ||--o{ METEO_TAPPA : ""
+    TAPPE ||--o{ MEDIA_ACCREDITATI : ""
+    TAPPE ||--o{ COMUNICATI_STAMPA : ""
+
+    CESTINO {
+        integer id PK
+        text entita
+        integer entita_id
+        text dati
+        datetime eliminato_il
+        datetime scade_il
+    }
+
+    NAZIONI {
+        integer id PK
+        text nome
+        text codice_iso2
+    }
+    SQUADRE {
+        integer id PK
+        text nome
+        integer nazione_id FK
+        text colore
+        datetime creato_il
+    }
+    CORRIDORI {
+        integer id PK
+        text nome
+        text cognome
+        integer numero_pettorale
+        integer nazione_id FK
+        integer squadra_id FK
+        date data_nascita
+        integer ritirato
+        integer ritirato_tappa_numero
+        text motivo_ritiro
+        text note_ritiro
+        datetime ritirato_il
+        datetime creato_il
+    }
+    STAFF_TECNICO {
+        integer id PK
+        text nome
+        text cognome
+        text ruolo
+        integer squadra_id FK
+    }
+    TAPPE {
+        integer id PK
+        integer numero_tappa
+        text nome
+        text partenza
+        text arrivo
+        real distanza_km
+        integer dislivello_m
+        text tipo
+        date data
+        text stato
+        integer abbuoni_attivi
+    }
+    TAPPE_PERCORSO {
+        integer id PK
+        integer tappa_id FK
+        real km
+        text tipo
+        text nome_luogo
+        text categoria
+    }
+    RISULTATI {
+        integer id PK
+        integer tappa_id FK
+        integer corridore_id FK
+        integer posizione
+        text tempo
+        text distacco
+        integer punti
+    }
+    CLASSIFICHE_TIPO {
+        integer id PK
+        text nome
+        text descrizione
+    }
+    TRAGUARDI_VOLANTI {
+        integer id PK
+        integer tappa_id FK
+        integer corridore_id FK
+        integer posizione
+        integer punti
+    }
+    GPM_RISULTATI {
+        integer id PK
+        integer tappa_id FK
+        integer corridore_id FK
+        integer posizione
+        integer punti
+    }
+    PENALITA {
+        integer id PK
+        integer corridore_id FK
+        integer tappa_id FK
+        text motivo
+        integer secondi
+        integer punti
+    }
+    CONTROLLI_ANTIDOPING {
+        integer id PK
+        integer corridore_id FK
+        integer tappa_id FK
+        date data
+        text esito
+    }
+    BICICLETTE {
+        integer id PK
+        integer corridore_id FK
+        text marca
+        text modello
+        text telaio
+    }
+    SPONSOR {
+        integer id PK
+        text nome
+        text settore
+        text sito_web
+    }
+    SQUADRA_SPONSOR {
+        integer id PK
+        integer squadra_id FK
+        integer sponsor_id FK
+        text tipo
+    }
+    VEICOLI_SQUADRA {
+        integer id PK
+        integer squadra_id FK
+        text tipo
+        text targa
+        text modello
+    }
+    HOTEL {
+        integer id PK
+        integer tappa_id FK
+        integer squadra_id FK
+        text nome
+        text citta
+        text indirizzo
+    }
+    METEO_TAPPA {
+        integer id PK
+        integer tappa_id FK
+        real temperatura
+        text condizione
+        real vento_kmh
+    }
+    MEDIA_ACCREDITATI {
+        integer id PK
+        text nome
+        text testata
+        text tipo
+        integer tappa_id FK
+    }
+    COMUNICATI_STAMPA {
+        integer id PK
+        text titolo
+        text contenuto
+        date data
+        integer tappa_id FK
+    }
+    ABBUONI_CLASSIFICA {
+        integer id PK
+        integer posizione
+        integer secondi
+    }

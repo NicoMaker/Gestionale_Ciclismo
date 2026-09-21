@@ -1,0 +1,46 @@
+/* ---- SQUADRE CARDS ---- */
+.cards-wrap {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 16px;
+}
+.squadra-card {
+  background: var(--carta);
+  border: 1px solid var(--bordo);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  border-top: 4px solid var(--rosa-maglia);
+  box-shadow: var(--ombra);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.squadra-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--ombra-hover);
+}
+.squadra-card h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+.squadra-card .conteggio-corridori {
+  font-size: 12.5px;
+  color: var(--testo-soft);
+  margin: -6px 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.squadra-card p {
+  font-size: 13px;
+  color: var(--testo-soft);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+}
+.squadra-card .row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}

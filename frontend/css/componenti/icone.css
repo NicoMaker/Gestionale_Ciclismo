@@ -1,0 +1,23 @@
+/* ---- ICONE SVG ---- */
+.icona {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  vertical-align: -3px;
+}
+.btn-primary .icona,
+.btn-secondary .icona {
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  vertical-align: -2.5px;
+}
+.badge .icona {
+  width: 12px;
+  height: 12px;
+  margin-right: 5px;
+  vertical-align: -2px;
+}

@@ -1,0 +1,451 @@
+/* ---- APP SHELL ----
+   Il documento (html/body) non scorre MAI: l'unico contenitore con scroll
+   verticale è .content, qui sotto. Prima .frame aveva solo un min-height,
+   quindi se una pagina era più alta della finestra era il DOCUMENTO a
+   diventare scrollabile, in aggiunta allo scroll interno delle tabelle
+   lunghe (.table-wrap). Con due scroll annidati, appena la rotellina
+   raggiungeva il fondo della tabella lo scroll "risaliva" al documento
+   (scroll chaining): la pagina intera si spostava di colpo e sidebar/
+   topbar, agganciate con position:sticky al vecchio scroll di pagina,
+   sembravano scomporsi per un istante. Bloccando lo scroll del documento
+   e lasciandolo solo a .content il problema sparisce alla radice. */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+.frame {
+  display: grid;
+  grid-template-columns: 268px 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ---- SIDEBAR ----
+   Non è più "sticky": essendo .frame un contenitore che non scorre mai,
+   la sidebar è semplicemente una colonna a altezza fissa, sempre ferma e
+   mai ridisegnata durante lo scroll del contenuto accanto.
+   min-height: 0 è ESSENZIALE: essendo .frame un grid, .sidebar è un grid
+   item e di default ha min-height: auto (= non si restringe sotto il suo
+   contenuto). Senza questa riga la sidebar si allarga fino a contenere
+   tutta la .nav e lo scroll interno non parte mai. */
+.sidebar {
+  background:
+    radial-gradient(
+      circle at 15% 0%,
+      rgba(109, 91, 246, 0.22),
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 90% 90%,
+      rgba(236, 31, 128, 0.16),
+      transparent 50%
+    ),
+    linear-gradient(180deg, var(--asfalto) 0%, var(--asfalto-2) 100%);
+  color: var(--bianco-strada);
+  display: flex;
+  flex-direction: column;
+  padding: 26px 18px;
+  height: 100%;
+  min-height: 0; /* permette alla sidebar di restringersi dentro il grid */
+  overflow: hidden; /* il contenuto in eccesso non esce dalla sidebar */
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 30px;
+  padding: 4px 6px;
+}
+.brand-icon {
+  font-size: 26px;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradiente-primario);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px -4px var(--primario-glow);
+}
+.brand-testo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.brand-mark {
+  font-family: "Manrope", "Archivo Black", sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: 0.2px;
+  line-height: 1;
+  background: linear-gradient(90deg, #fff, #d8d5e8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.brand-sub {
+  font-size: 11.5px;
+  color: #8c8da3;
+}
+
+/* ---- NAV ----
+   Scrollabile in verticale quando le voci superano lo spazio disponibile.
+   min-height: 0 è essenziale anche qui: .sidebar è un flex container e
+   .nav è un flex item con flex:1; senza min-height:0 non si restringe
+   sotto il suo contenuto e lo scroll non partirebbe mai. */
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+/* Scrollbar sottile e discreta per la navbar scura */
+.nav::-webkit-scrollbar {
+  width: 6px;
+}
+.nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+.nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+}
+.nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+/* Etichetta sopra ciascun gruppo di voci ("Sezioni principali",
+   "Altre funzionalità"...), per separare visivamente i gruppi. */
+.nav-title {
+  display: block;
+  padding: 10px 13px 4px;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #74768d;
+}
+.nav-title:first-child {
+  padding-top: 0;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.66);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  padding: 10.5px 13px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.12s ease;
+}
+.nav-icon {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  opacity: 0.8;
+}
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #f5f5fa;
+}
+.nav-item:hover .nav-icon {
+  opacity: 1;
+}
+.nav-item:active {
+  transform: scale(0.98);
+}
+.nav-item.active {
+  background: var(--gradiente-primario);
+  color: #fff;
+  box-shadow: 0 6px 18px -6px var(--primario-glow);
+}
+.nav-item.active .nav-icon {
+  opacity: 1;
+}
+
+.live-box {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 13px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  margin-top: 18px;
+  backdrop-filter: blur(6px);
+}
+.live-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #54566b;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.live-dot.on {
+  background: var(--verde-montagna);
+  box-shadow: 0 0 0 4px rgba(23, 160, 107, 0.25);
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px rgba(23, 160, 107, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(23, 160, 107, 0.08);
+  }
+}
+.live-text {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+}
+.live-text span:first-child {
+  color: #e9e9f2;
+  font-weight: 600;
+}
+.live-text span:last-child {
+  color: #82839a;
+  margin-top: 1px;
+}
+
+/* ---- CONTENT ----
+   Unico contenitore che scorre in tutta la pagina (vedi nota "APP SHELL"
+   più sopra). overscroll-behavior:contain evita che, arrivati in fondo,
+   lo scroll "rimbalzi" chiedendo di scorrere un antenato: qui non
+   servirebbe comunque (il documento è bloccato), ma resta come ulteriore
+   garanzia sui browser che non rispettano l'overflow:hidden su html/body
+   durante i gesti di trascinamento su mobile. */
+.content {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding: 0 48px 64px;
+  max-width: 1360px;
+  width: 100%;
+}
+
+/* ---- TOPBAR ----
+   Titolo della sezione corrente, sempre visibile in cima al contenuto:
+   resta agganciata (sticky) durante lo scroll della pagina così non si
+   perde mai il riferimento a "dove si è" né l'accesso alle azioni delle
+   sotto-schede sottostanti (vedi .subtabs/.subtab-head qui sotto). */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: var(--topbar-h);
+  padding: 0 4px;
+  margin: 0 -4px;
+  background: rgba(244, 245, 251, 0.86);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--bordo);
+}
+.topbar-icon {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    rgba(109, 91, 246, 0.12),
+    rgba(236, 31, 128, 0.12)
+  );
+  border-radius: 9px;
+}
+.topbar-icon svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: var(--primario);
+  stroke-width: 1.9;
+}
+.topbar h1 {
+  font-family: "Manrope", sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--testo);
+}
+
+.view {
+  display: none;
+  padding-top: 26px;
+}
+.view.active {
+  display: block;
+  animation: fadein 0.32s var(--easing);
+}
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.view-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.view-head h1 {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  font-family: "Manrope", sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--testo);
+}
+.view-head p {
+  color: var(--testo-soft);
+  margin-top: 6px;
+  font-size: 14px;
+  max-width: 62ch;
+}
+.view-icon {
+  width: 25px;
+  height: 25px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: var(--primario);
+  stroke-width: 1.8;
+  padding: 5px;
+  box-sizing: content-box;
+  background: linear-gradient(
+    135deg,
+    rgba(109, 91, 246, 0.12),
+    rgba(236, 31, 128, 0.12)
+  );
+  border-radius: 10px;
+}
+
+.btn-primary,
+.btn-secondary {
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  padding: 10.5px 20px;
+  border-radius: 999px;
+  cursor: pointer;
+  border: none;
+  letter-spacing: -0.005em;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+.btn-primary {
+  background: var(--gradiente-primario);
+  color: #fff;
+  box-shadow: var(--ombra-primario);
+}
+.btn-primary:hover {
+  box-shadow: 0 10px 26px -6px var(--primario-glow);
+  transform: translateY(-1px);
+}
+.btn-secondary {
+  background: var(--carta);
+  color: var(--testo);
+  border: 1.5px solid var(--bordo-forte);
+  box-shadow: var(--ombra);
+  margin-top: 16px;
+}
+.btn-secondary:hover {
+  border-color: var(--primario);
+  color: var(--primario);
+  transform: translateY(-1px);
+}
+.btn-primary:active,
+.btn-secondary:active {
+  transform: scale(0.97);
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--testo-soft);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 7px;
+  border-radius: 8px;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    transform 0.12s;
+}
+.btn-icon:hover {
+  background: #f1effa;
+  color: var(--primario);
+  transform: translateY(-1px);
+}
+.btn-icon.danger:hover {
+  color: #d92c4b;
+  background: #fdecef;
+}
+.btn-icon:active {
+  transform: scale(0.92);
+}
+.td-azioni,
+.th-azioni {
+  white-space: nowrap;
+  text-align: right;
+}
+.td-azioni {
+  display: table-cell;
+}
+
+/* ---- CARD ---- */
+.card {
+  background: var(--carta);
+  border: 1px solid var(--bordo);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--ombra);
+  padding: 20px 22px;
+}

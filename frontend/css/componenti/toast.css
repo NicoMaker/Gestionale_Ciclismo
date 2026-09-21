@@ -1,0 +1,76 @@
+/* ---- TOAST ---- */
+.toast {
+  position: fixed;
+  bottom: 26px;
+  right: 26px;
+  background: linear-gradient(135deg, var(--asfalto-2), var(--asfalto));
+  color: #fff;
+  padding: 14px 22px;
+  border-radius: var(--radius);
+  font-size: 13.5px;
+  font-weight: 600;
+  box-shadow: 0 12px 30px -6px rgba(16, 16, 24, 0.4);
+  opacity: 0;
+  transform: translateY(14px) scale(0.97);
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
+  pointer-events: none;
+  z-index: 200;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+@media (max-width: 760px) {
+  /* Sotto i 760px la sidebar torna una barra orizzontale in cima alla
+     pagina (non più una colonna fissa): qui il documento deve tornare a
+     scorrere normalmente come contenitore unico, esattamente come prima
+     dell'app-shell introdotta per desktop qui sopra. */
+  html,
+  body {
+    height: auto;
+    overflow: visible;
+  }
+  .frame {
+    grid-template-columns: 1fr;
+    height: auto;
+    overflow: visible;
+  }
+  .sidebar {
+    position: relative;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 16px;
+  }
+  .brand {
+    margin-bottom: 0;
+    margin-right: auto;
+  }
+  .nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+  .nav-title {
+    display: none;
+  }
+  .nav-item span {
+    display: none;
+  }
+  .nav-item {
+    padding: 10px;
+  }
+  .content {
+    height: auto;
+    overflow: visible;
+    padding: 24px 20px;
+  }
+  .live-box {
+    width: 100%;
+    margin-top: 12px;
+  }
+}

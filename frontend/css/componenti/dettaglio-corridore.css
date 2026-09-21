@@ -1,0 +1,28 @@
+/* ---- DETTAGLIO CORRIDORE: posizioni in classifica in mini-card ---- */
+.dettaglio-maglie {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.dettaglio-maglia {
+  padding: 11px 13px;
+  gap: 10px;
+}
+.dettaglio-maglia .maglia-dot {
+  width: 22px;
+  height: 22px;
+}
+.dettaglio-maglia strong {
+  font-size: 13px;
+}
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
