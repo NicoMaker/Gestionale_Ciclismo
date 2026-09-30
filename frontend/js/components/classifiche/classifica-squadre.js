@@ -30,10 +30,10 @@ export function renderTeamSummary(container, leader, total) {
   container.innerHTML = `
     <div class="team-leader-card">
       <span class="team-leader-rank">1</span>
-      <div class="team-avatar" style="--team-color:${leader?.squadra_colore ?? '#e91e78'}">${leader ? leader.squadra_nome.slice(0, 2).toUpperCase() : '—'}</div>
-      <div><span class="eyebrow">IN TESTA ALLA CORSA</span><strong>${leader?.squadra_nome ?? 'Nessun leader'}</strong><small>${leader ? `${leader.corridori_contati ?? 0} corridori classificati` : 'Aggiungi i risultati per aggiornare la classifica'}</small></div>
+      <div class="team-avatar" style="--team-color:${leader?.squadra_colore ?? "#e91e78"}">${leader ? leader.squadra_nome.slice(0, 2).toUpperCase() : "—"}</div>
+      <div><span class="eyebrow">IN TESTA ALLA CORSA</span><strong>${leader?.squadra_nome ?? "Nessun leader"}</strong><small>${leader ? `${leader.corridori_contati ?? 0} corridori classificati` : "Aggiungi i risultati per aggiornare la classifica"}</small></div>
     </div>
     <div class="team-summary-stat"><span>Squadre classificate</span><strong>${total}</strong></div>
-    <div class="team-summary-stat"><span>Leader provvisorio</span><strong>${leader?.tempo_totale ?? '—'}</strong></div>
+    <div class="team-summary-stat"><span>Leader provvisorio</span><strong>${leader?.tempo_totale ?? "—"}</strong></div>
   `;
 }

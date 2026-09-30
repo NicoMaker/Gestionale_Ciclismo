@@ -121,7 +121,11 @@ function render() {
   `;
 
   container.querySelectorAll("[data-quick-view]").forEach((button) => {
-    button.addEventListener("click", () => document.querySelector(`.nav-item[data-view="${button.dataset.quickView}"]`)?.click());
+    button.addEventListener("click", () =>
+      document
+        .querySelector(`.nav-item[data-view="${button.dataset.quickView}"]`)
+        ?.click(),
+    );
   });
 
   const boxProssima = document.getElementById("dashProssimaTappa");

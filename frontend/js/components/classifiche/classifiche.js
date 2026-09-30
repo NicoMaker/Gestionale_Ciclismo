@@ -7,7 +7,10 @@ import {
 import { socket } from "../../core/socket.js";
 import { montaListaConForm } from "../tabella-dati/tabella-dati.js";
 import { medaglia } from "../../core/icone.js";
-import { templateClassificaSquadre, renderTeamSummary } from "./classifica-squadre.js";
+import {
+  templateClassificaSquadre,
+  renderTeamSummary,
+} from "./classifica-squadre.js";
 
 // stato di ciascuna scheda: query di ricerca corrente + ultimo elenco caricato
 const stato = {

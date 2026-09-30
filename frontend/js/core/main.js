@@ -100,7 +100,9 @@ document.querySelectorAll(".nav-item").forEach((btn) => {
   btn.addEventListener("click", () => {
     mostraSezione(btn.dataset.view);
     document.querySelector(".frame")?.classList.remove("menu-open");
-    document.getElementById("menuToggle")?.setAttribute("aria-expanded", "false");
+    document
+      .getElementById("menuToggle")
+      ?.setAttribute("aria-expanded", "false");
   });
 });
 
