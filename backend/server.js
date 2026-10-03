@@ -50,9 +50,28 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
+app.disable("x-powered-by");
 app.use(cors());
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, "..", "frontend")));
+app.use(bodyParser.json({ limit: "1mb" }));
+
+// Header di sicurezza di base (senza dipendenze extra)
+app.use((req, res, next) => {
+  res.set({
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "SAMEORIGIN",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+  });
+  next();
+});
+
+// Statici: revalidazione sempre (così gli aggiornamenti si vedono subito), ETag attivo
+app.use(
+  express.static(path.join(__dirname, "..", "frontend"), {
+    etag: true,
+    setHeaders: (res) => res.set("Cache-Control", "no-cache"),
+  }),
+);
 
 // Stato live in memoria (es. tappa attualmente "in diretta")
 const statoLive = {
@@ -272,22 +291,17 @@ cron.schedule("0 0 * * *", () => {
 });
 
 // ---------------------------------------------------------------------
-// Individua l'IP locale (rete privata) tra le interfacce di rete
+// Indirizzi di rete locali (tutte le interfacce IPv4 non interne)
 // ---------------------------------------------------------------------
-function ottieniIpLocale() {
-  const interfacce = os.networkInterfaces();
-  for (const nome of Object.keys(interfacce)) {
-    for (const dettaglio of interfacce[nome] || []) {
-      if (dettaglio.family === "IPv4" && !dettaglio.internal) {
-        return dettaglio.address;
-      }
-    }
-  }
-  return "127.0.0.1";
+function ottieniIpLocali() {
+  return Object.values(os.networkInterfaces())
+    .flat()
+    .filter((i) => i && i.family === "IPv4" && !i.internal)
+    .map((i) => i.address);
 }
 
-// Recupera l'IP pubblico tramite un servizio esterno (best-effort: se non
-// c'è connessione a internet, si limita a segnalarlo senza bloccare l'avvio)
+// IP pubblico: richiede un servizio esterno, quindi è solo su richiesta
+// (SHOW_PUBLIC_IP=1) e non rallenta mai l'avvio.
 function ottieniIpPubblico() {
   return new Promise((resolve) => {
     const richiesta = https.get(
@@ -300,33 +314,61 @@ function ottieniIpPubblico() {
           try {
             resolve(JSON.parse(corpo).ip);
           } catch {
-            resolve("non disponibile");
+            resolve(null);
           }
         });
       },
     );
-    richiesta.on("timeout", () => {
-      richiesta.destroy();
-      resolve("non disponibile");
-    });
-    richiesta.on("error", () => resolve("non disponibile"));
+    richiesta.on("timeout", () => richiesta.destroy());
+    richiesta.on("error", () => resolve(null));
   });
 }
 
-async function avviaServer() {
-  const localIP = ottieniIpLocale();
-  const publicIP = await ottieniIpPubblico();
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(
+      `\n✗ La porta ${PORT} è già in uso. Chiudi l'altro processo oppure avvia con PORT=<altra porta> npm start`,
+    );
+  } else {
+    console.error("\n✗ Errore del server:", err.message);
+  }
+  process.exit(1);
+});
 
+function avviaServer() {
   server.listen(PORT, "0.0.0.0", () => {
     console.log(`\n🚀 Server avviato con successo!`);
-    console.log(`🌐 IP Pubblico: http://${publicIP}:${PORT}`);
-    console.log(`🏠 IP Locale: http://${localIP}:${PORT}`);
-    console.log(`📍 Localhost: http://localhost:${PORT}`);
+    console.log(`📍 Localhost:  http://localhost:${PORT}`);
+    ottieniIpLocali().forEach((ip) =>
+      console.log(`🏠 Rete locale: http://${ip}:${PORT}`),
+    );
+    console.log(`❤️  Health check: http://localhost:${PORT}/api/health`);
     console.log(`\n--------------------------------------`);
     console.log(
       `⏰ Cron cestino attivo: eliminazione automatica ogni notte alle 00:00`,
     );
+
+    if (process.env.SHOW_PUBLIC_IP === "1") {
+      ottieniIpPubblico().then((ip) =>
+        console.log(
+          ip
+            ? `🌐 IP pubblico: ${ip} (raggiungibile solo con port forwarding)`
+            : "🌐 IP pubblico non disponibile",
+        ),
+      );
+    }
   });
 }
 
 avviaServer();
+
+// Chiusura pulita: smette di accettare connessioni e chiude il database
+function chiudi(segnale) {
+  console.log(`\n${segnale} ricevuto: chiusura in corso…`);
+  io.close();
+  server.close(() => {
+    db.close(() => process.exit(0));
+  });
+  setTimeout(() => process.exit(1), 5000).unref();
+}
+["SIGINT", "SIGTERM"].forEach((sig) => process.on(sig, () => chiudi(sig)));
