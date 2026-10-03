@@ -1,1 +1,18 @@
-{"name":"Giro Rosa — Gestionale Ciclismo","short_name":"Giro","description":"Gestionale per tappe, corridori, squadre e classifiche ciclistiche","lang":"it","start_url":"/","display":"standalone","background_color":"#0c0e17","theme_color":"#ec1f80","icons":[{"src":"/favicon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
+{
+  "name": "Giro Rosa — Gestionale Ciclismo",
+  "short_name": "Giro",
+  "description": "Gestionale per tappe, corridori, squadre e classifiche ciclistiche",
+  "lang": "it",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c0e17",
+  "theme_color": "#ec1f80",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
