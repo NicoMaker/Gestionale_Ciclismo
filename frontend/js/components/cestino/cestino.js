@@ -30,7 +30,13 @@ let selezione = null;
 // Ordine di ripristino: prima le entità da cui le altre dipendono
 // (nazioni/sponsor -> squadre -> tappe -> corridori), così se si selezionano
 // insieme una squadra e i suoi corridori, la squadra torna per prima.
-const ORDINE_RIPRISTINO = ["nazioni", "sponsor", "squadre", "tappe", "corridori"];
+const ORDINE_RIPRISTINO = [
+  "nazioni",
+  "sponsor",
+  "squadre",
+  "tappe",
+  "corridori",
+];
 const posRipristino = (voce) => {
   const i = ORDINE_RIPRISTINO.indexOf(voce?.entita);
   return i === -1 ? ORDINE_RIPRISTINO.length : i;

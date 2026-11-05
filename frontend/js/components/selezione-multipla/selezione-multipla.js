@@ -98,7 +98,6 @@ export async function eseguiInSequenza(
   return { ok, saltati };
 }
 
-
 // Entità che l'API elimina in modo "soft" (finiscono nel cestino per 15 giorni)
 const PERCORSI_CON_CESTINO = [
   "/api/squadre",
@@ -167,7 +166,9 @@ export function montaSelezioneMultipla(contenitore, cfg) {
     const tutte = caselle();
     const n = tutte.filter((c) => c.checked).length;
     tutte.forEach((c) =>
-      c.closest("tr, .squadra-card")?.classList.toggle("bulk-selected", c.checked),
+      c
+        .closest("tr, .squadra-card")
+        ?.classList.toggle("bulk-selected", c.checked),
     );
     const barra = contenitore.querySelector(".bulk-toolbar");
     if (barra) {
@@ -194,10 +195,7 @@ export function montaSelezioneMultipla(contenitore, cfg) {
       return;
     }
     const righe = saltati
-      .map(
-        (s) =>
-          `<li><strong>${esc(s.nome)}</strong> — ${esc(s.motivo)}</li>`,
-      )
+      .map((s) => `<li><strong>${esc(s.nome)}</strong> — ${esc(s.motivo)}</li>`)
       .join("");
     apriModal(`
       <h2>${esc(azione.titolo)}</h2>

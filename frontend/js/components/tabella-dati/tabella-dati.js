@@ -114,7 +114,11 @@ export function montaListaConForm(contenitore, cfg) {
   };
   const selezione = montaSelezioneMultipla(contenitore, {
     azioni: {
-      elimina: azioneElimina(cfg.apiPath, cfg.titolo.toLowerCase(), etichettaRiga),
+      elimina: azioneElimina(
+        cfg.apiPath,
+        cfg.titolo.toLowerCase(),
+        etichettaRiga,
+      ),
     },
     dopo: () => ricarica(),
   });
