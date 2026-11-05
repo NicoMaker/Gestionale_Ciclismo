@@ -23,12 +23,20 @@ import {
 } from "../entita-autocomplete/entita-autocomplete.js";
 import { icona, medaglia } from "../../core/icone.js";
 import {
+  htmlThSelezione,
+  htmlTdSelezione,
+  htmlBarraSelezione,
+  montaSelezioneMultipla,
+  azioneElimina,
+} from "../selezione-multipla/selezione-multipla.js";
+import {
   apriFormRitiro,
   riammettiCorridore,
   badgeStato,
 } from "../corridori/corridori.js";
 
 let tappaSelezionataId = null;
+let selezioneArrivo = null;
 
 async function renderArrivo(corpo) {
   await garantisciTappe();
@@ -42,13 +50,24 @@ async function renderArrivo(corpo) {
       ${htmlCampoRicerca("cerca corridore o squadra...")}
       <button class="btn-secondary btn-piccolo" id="btnAggiungiRisultato">${icona("aggiungi")}aggiungi risultato</button>
     </div>
+    ${htmlBarraSelezione()}
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Pos.</th><th>Pett.</th><th>Corridore</th><th>Squadra</th><th>Tempo</th><th>Distacco</th><th>Punti</th><th class="th-azioni"></th></tr></thead>
+        <thead><tr>${htmlThSelezione()}<th>Pos.</th><th>Pett.</th><th>Corridore</th><th>Squadra</th><th>Tempo</th><th>Distacco</th><th>Punti</th><th class="th-azioni"></th></tr></thead>
         <tbody id="tabellaRisultati"></tbody>
       </table>
     </div>
   `;
+
+  selezioneArrivo = montaSelezioneMultipla(corpo, {
+    azioni: {
+      elimina: azioneElimina("/api/risultati", "risultati", (id) => {
+        const r = risultatiCorrenti.find((x) => x.id === id);
+        return r ? `${r.posizione ?? "—"}° ${r.nome} ${r.cognome}` : `#${id}`;
+      }),
+    },
+    dopo: () => ricaricaArrivo(),
+  });
 
   // campo di ricerca al posto della semplice <select>: comodo quando il
   // giro ha molte tappe (stesso concetto usato per squadre/nazioni)
@@ -104,6 +123,7 @@ async function ricaricaArrivo() {
         const ritirato = !!corridoreInfo?.ritirato;
         return `
     <tr class="${ritirato ? "riga-ritirato" : ""}">
+      ${htmlTdSelezione(r.id)}
       <td>${m ? `<span class="medaglia-podio">${m}</span>` : (r.posizione ?? "—")}</td>
       <td>${r.numero_pettorale ?? "—"}</td>
       <td>
@@ -127,8 +147,9 @@ async function ricaricaArrivo() {
   `;
       })
       .join("") ||
-    `<tr><td colspan="8" class="stato-vuoto">${queryCorrente ? "Nessun risultato trovato" : "Nessun risultato per questa tappa"}</td></tr>`;
+    `<tr><td colspan="9" class="stato-vuoto">${queryCorrente ? "Nessun risultato trovato" : "Nessun risultato per questa tappa"}</td></tr>`;
 
+  selezioneArrivo?.aggiorna();
   tbody.querySelectorAll("[data-modifica]").forEach((b) =>
     b.addEventListener("click", async () => {
       await garantisciCorridori();

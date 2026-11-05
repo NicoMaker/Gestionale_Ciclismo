@@ -22,6 +22,12 @@ import {
 import { socket } from "../../core/socket.js";
 import { montaListaConForm } from "../tabella-dati/tabella-dati.js";
 import {
+  htmlCheckSelezione,
+  htmlBarraSelezione,
+  montaSelezioneMultipla,
+  azioneElimina,
+} from "../selezione-multipla/selezione-multipla.js";
+import {
   htmlCampoNazione,
   attivaCampoNazione,
 } from "../nazione-autocomplete/nazione-autocomplete.js";
@@ -34,14 +40,27 @@ import {
 
 let queryCorrente = "";
 
+let selezioneSquadre = null;
+
 function renderElenco(corpo) {
   corpo.innerHTML = `
     <div class="subtab-head">
       ${htmlCampoRicerca("cerca squadra o nazione...")}
       <button class="btn-secondary btn-piccolo" id="btnNuovaSquadra">${icona("aggiungi")}nuova squadra</button>
     </div>
+    ${htmlBarraSelezione()}
     <div class="cards-wrap" id="cardsSquadre"></div>
   `;
+  selezioneSquadre = montaSelezioneMultipla(corpo, {
+    azioni: {
+      elimina: azioneElimina(
+        "/api/squadre",
+        "squadre",
+        (id) => cache.squadre.find((s) => s.id === id)?.nome ?? `#${id}`,
+      ),
+    },
+    dopo: () => ricaricaElenco(),
+  });
   document
     .getElementById("btnNuovaSquadra")
     .addEventListener("click", async () => {
@@ -69,6 +88,7 @@ function disegnaElenco() {
       .map(
         (s) => `
     <div class="squadra-card" style="border-top-color:${s.colore || "#e6197f"}">
+      ${htmlCheckSelezione(s.id)}
       <h3><span class="dot-colore" style="background:${s.colore || "#e6197f"}"></span>${s.nome}</h3>
       <p>${s.nazione_codice ? `<span class="bandiera">${bandiera(s.nazione_codice)}</span>${s.nazione_nome}` : "nazione non specificata"}</p>
       <p class="conteggio-corridori">${icona("bici")}${s.numero_corridori ?? 0} corridori in rosa${s.numero_corridori && s.numero_corridori !== s.numero_corridori_in_gara ? ` · ${s.numero_corridori_in_gara ?? 0} in gara` : ""}</p>
@@ -83,6 +103,7 @@ function disegnaElenco() {
       .join("") ||
     `<p style="color:#999;">${queryCorrente ? "Nessuna squadra trovata" : "Nessuna squadra inserita"}</p>`;
 
+  selezioneSquadre?.aggiorna();
   wrap.querySelectorAll("[data-rosa]").forEach((b) =>
     b.addEventListener("click", () => {
       const s = cache.squadre.find((s) => s.id === +b.dataset.rosa);

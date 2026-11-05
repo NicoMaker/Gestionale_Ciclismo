@@ -13,11 +13,47 @@ import {
 } from "../../core/state.js";
 import { socket } from "../../core/socket.js";
 import { icona } from "../../core/icone.js";
+import {
+  htmlThSelezione,
+  htmlTdSelezione,
+  htmlBarraSelezione,
+  montaSelezioneMultipla,
+  eseguiInSequenza,
+} from "../selezione-multipla/selezione-multipla.js";
 
 let vociCorrenti = [];
 let queryCorrente = "";
 let tbodyGlobale = null;
 let contatoreGlobale = null;
+let selezione = null;
+
+// Ordine di ripristino: prima le entità da cui le altre dipendono
+// (nazioni/sponsor -> squadre -> tappe -> corridori), così se si selezionano
+// insieme una squadra e i suoi corridori, la squadra torna per prima.
+const ORDINE_RIPRISTINO = ["nazioni", "sponsor", "squadre", "tappe", "corridori"];
+const posRipristino = (voce) => {
+  const i = ORDINE_RIPRISTINO.indexOf(voce?.entita);
+  return i === -1 ? ORDINE_RIPRISTINO.length : i;
+};
+const nomeVoce = (id) => {
+  const v = vociCorrenti.find((x) => x.id === id);
+  return v ? `${v.etichetta}: ${v.descrizione}` : `#${id}`;
+};
+
+const AZIONI_CESTINO = [
+  {
+    chiave: "ripristina",
+    etichetta: "ripristina selezionati",
+    icona: "ripristina",
+    danger: false,
+  },
+  {
+    chiave: "elimina",
+    etichetta: "elimina definitivamente",
+    icona: "elimina_definitivo",
+    danger: true,
+  },
+];
 
 // Dopo un ripristino, la cache dell'entità coinvolta va ricaricata perché
 // le altre schermate leggono cache.* invece di rifare sempre la fetch.
@@ -66,6 +102,7 @@ function disegna() {
       .map(
         (v) => `
     <tr>
+      ${htmlTdSelezione(v.id)}
       <td><span class="badge badge-numero">${v.etichetta}</span></td>
       <td><strong>${v.descrizione}</strong></td>
       <td>${formattaData(v.eliminato_il)}</td>
@@ -78,11 +115,12 @@ function disegna() {
   `,
       )
       .join("") ||
-    `<tr><td colspan="5" class="stato-vuoto">${queryCorrente ? "Nessun elemento trovato" : "Il cestino è vuoto"}</td></tr>`;
+    `<tr><td colspan="6" class="stato-vuoto">${queryCorrente ? "Nessun elemento trovato" : "Il cestino è vuoto"}</td></tr>`;
 
   if (contatoreGlobale)
     contatoreGlobale.textContent = `${vociCorrenti.length} element${vociCorrenti.length === 1 ? "o" : "i"} nel cestino`;
 
+  selezione?.aggiorna();
   tbodyGlobale
     .querySelectorAll("[data-ripristina]")
     .forEach((b) =>
@@ -164,13 +202,68 @@ export function init(container) {
       Gli elementi eliminati restano qui per 15 giorni prima di essere rimossi automaticamente ogni notte.
       Un elemento può essere ripristinato solo se non genera conflitti (es. nome già in uso) o riferimenti a dati nel frattempo eliminati.
     </p>
+    ${htmlBarraSelezione(AZIONI_CESTINO)}
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Tipo</th><th>Elemento</th><th>Eliminato il</th><th>Scadenza</th><th class="th-azioni"></th></tr></thead>
+        <thead><tr>${htmlThSelezione()}<th>Tipo</th><th>Elemento</th><th>Eliminato il</th><th>Scadenza</th><th class="th-azioni"></th></tr></thead>
         <tbody id="tabellaCestino"></tbody>
       </table>
     </div>
   `;
+
+  selezione = montaSelezioneMultipla(container, {
+    azioni: {
+      // il server valida ogni ripristino (nome già in uso, riferimenti a dati
+      // eliminati...): solo le voci valide tornano, le altre restano nel
+      // cestino e vengono elencate con il motivo
+      ripristina: {
+        titolo: "Ripristino multiplo",
+        conferma: (n) =>
+          `Ripristinare ${n} ${n === 1 ? "elemento" : "elementi"}?\n\nTorneranno disponibili solo quelli che non generano conflitti; gli altri restano nel cestino e ti mostrerò il motivo.`,
+        esegui: async (ids) => {
+          const ordinati = [...ids].sort(
+            (a, b) =>
+              posRipristino(vociCorrenti.find((v) => v.id === a)) -
+              posRipristino(vociCorrenti.find((v) => v.id === b)),
+          );
+          const entita = new Set(
+            ordinati.map((id) => vociCorrenti.find((v) => v.id === id)?.entita),
+          );
+          const esito = await eseguiInSequenza(
+            ordinati,
+            (id) => apiPost(`/api/cestino/${id}/ripristina`, {}),
+            nomeVoce,
+            "Impossibile ripristinare",
+          );
+          // le altre schermate leggono cache.*: va riallineata
+          for (const e of entita) {
+            const ricaricaCache = RICARICA_PER_ENTITA[e];
+            if (ricaricaCache) await ricaricaCache();
+          }
+          return esito;
+        },
+        fatto: (n) =>
+          `${n} ${n === 1 ? "elemento ripristinato" : "elementi ripristinati"}`,
+        nonFatto: "Non ripristinabili (restano nel cestino)",
+      },
+      elimina: {
+        titolo: "Eliminazione definitiva",
+        conferma: (n) =>
+          `Eliminare DEFINITIVAMENTE ${n} ${n === 1 ? "elemento" : "elementi"}?\n\nL'operazione non è reversibile.`,
+        esegui: (ids) =>
+          eseguiInSequenza(
+            ids,
+            (id) => apiDelete(`/api/cestino/${id}`),
+            nomeVoce,
+            "Impossibile eliminare",
+          ),
+        fatto: (n) =>
+          `${n} ${n === 1 ? "elemento eliminato" : "elementi eliminati"} definitivamente`,
+        nonFatto: "Non eliminabili",
+      },
+    },
+    dopo: () => ricarica(),
+  });
 
   tbodyGlobale = container.querySelector("#tabellaCestino");
   contatoreGlobale = container.querySelector("#cestinoContatore");

@@ -38,7 +38,16 @@ export const MOTIVI_RITIRO = {
   altro: "Altro",
 };
 
+import {
+  htmlThSelezione,
+  htmlTdSelezione,
+  htmlBarraSelezione,
+  montaSelezioneMultipla,
+  azioneElimina,
+} from "../selezione-multipla/selezione-multipla.js";
+
 let queryCorrente = "";
+let selezione = null;
 
 function renderElenco(corpo) {
   corpo.innerHTML = `
@@ -46,9 +55,10 @@ function renderElenco(corpo) {
       ${htmlCampoRicerca("cerca corridore, nazione, squadra o motivo ritiro...")}
       <button class="btn-secondary btn-piccolo" id="btnNuovoCorridore">${icona("aggiungi")}nuovo corridore</button>
     </div>
+    ${htmlBarraSelezione()}
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Pett.</th><th>Nome</th><th>Età</th><th>Nazionalità</th><th>Squadra</th><th>Stato</th><th class="th-azioni"></th></tr></thead>
+        <thead><tr>${htmlThSelezione()}<th>Pett.</th><th>Nome</th><th>Età</th><th>Nazionalità</th><th>Squadra</th><th>Stato</th><th class="th-azioni"></th></tr></thead>
         <tbody id="tabellaCorridori"></tbody>
       </table>
     </div>
@@ -56,6 +66,15 @@ function renderElenco(corpo) {
   document
     .getElementById("btnNuovoCorridore")
     .addEventListener("click", () => apriFormCorridore(null));
+  selezione = montaSelezioneMultipla(corpo, {
+    azioni: {
+      elimina: azioneElimina("/api/corridori", "corridori", (id) => {
+        const c = cache.corridori.find((x) => x.id === id);
+        return c ? `${c.nome} ${c.cognome}` : `#${id}`;
+      }),
+    },
+    dopo: () => ricaricaElenco(),
+  });
   attivaCampoRicerca(corpo, (q) => {
     queryCorrente = q;
     disegnaElenco();
@@ -90,6 +109,7 @@ function disegnaElenco() {
         const giovane = eta != null && eta <= ETA_LIMITE_MAGLIA_BIANCA;
         return `
     <tr class="${c.ritirato ? "riga-ritirato" : ""}">
+      ${htmlTdSelezione(c.id)}
       <td><span class="badge badge-pettorale">${c.numero_pettorale ?? "—"}</span></td>
       <td><strong>${c.nome} ${c.cognome}</strong></td>
       <td>${eta != null ? `${eta} anni` : "—"}${giovane ? ' <span class="badge badge-giovane" title="Rientra nella classifica giovani (maglia bianca)">maglia bianca</span>' : ""}</td>
@@ -111,8 +131,9 @@ function disegnaElenco() {
   `;
       })
       .join("") ||
-    `<tr><td colspan="7" class="stato-vuoto">${queryCorrente ? "Nessun corridore trovato" : "Nessun corridore inserito"}</td></tr>`;
+    `<tr><td colspan="8" class="stato-vuoto">${queryCorrente ? "Nessun corridore trovato" : "Nessun corridore inserito"}</td></tr>`;
 
+  selezione?.aggiorna();
   tbody
     .querySelectorAll("[data-dettaglio]")
     .forEach((b) =>

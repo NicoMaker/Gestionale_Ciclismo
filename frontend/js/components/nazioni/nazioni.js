@@ -9,9 +9,17 @@ import {
 } from "../../core/utils.js";
 import { socket } from "../../core/socket.js";
 import { icona } from "../../core/icone.js";
+import {
+  htmlThSelezione,
+  htmlTdSelezione,
+  htmlBarraSelezione,
+  montaSelezioneMultipla,
+  azioneElimina,
+} from "../selezione-multipla/selezione-multipla.js";
 
 let nazioniCorrenti = [];
 let queryCorrente = "";
+let selezione = null;
 
 function disegna(tbody) {
   const filtrate = nazioniCorrenti.filter(
@@ -25,6 +33,7 @@ function disegna(tbody) {
       .map(
         (n) => `
     <tr>
+      ${htmlTdSelezione(n.id)}
       <td>${n.nome}</td>
       <td><span class="bandiera">${bandiera(n.codice_iso2, 28)}</span></td>
       <td class="td-azioni">
@@ -35,8 +44,9 @@ function disegna(tbody) {
   `,
       )
       .join("") ||
-    `<tr><td colspan="3" class="stato-vuoto">${queryCorrente ? "Nessuna nazione trovata" : "Nessuna nazione inserita"}</td></tr>`;
+    `<tr><td colspan="4" class="stato-vuoto">${queryCorrente ? "Nessuna nazione trovata" : "Nessuna nazione inserita"}</td></tr>`;
 
+  selezione?.aggiorna();
   tbody
     .querySelectorAll("[data-modifica]")
     .forEach((b) =>
@@ -140,9 +150,10 @@ export function init(container) {
       <div class="search-box">${icona("cerca")}<input type="text" class="search-input" placeholder="cerca nazione o codice..." autocomplete="off"></div>
       <button class="btn-secondary btn-piccolo" id="btnNuovaNazione">${icona("aggiungi")}nuova nazione</button>
     </div>
+    ${htmlBarraSelezione()}
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Nazione</th><th>Bandiera</th><th class="th-azioni"></th></tr></thead>
+        <thead><tr>${htmlThSelezione()}<th>Nazione</th><th>Bandiera</th><th class="th-azioni"></th></tr></thead>
         <tbody id="tabellaNazioni"></tbody>
       </table>
     </div>
@@ -152,6 +163,16 @@ export function init(container) {
     .querySelector("#btnNuovaNazione")
     .addEventListener("click", () => apriForm(null));
   const tbody = corpo.querySelector("#tabellaNazioni");
+  selezione = montaSelezioneMultipla(corpo, {
+    azioni: {
+      elimina: azioneElimina(
+        "/api/nazioni",
+        "nazioni",
+        (id) => nazioniCorrenti.find((n) => n.id === id)?.nome ?? `#${id}`,
+      ),
+    },
+    dopo: () => ricarica(tbody),
+  });
   attivaCampoRicerca(corpo, (q) => {
     queryCorrente = q;
     disegna(tbody);

@@ -17,6 +17,14 @@ import {
   attivaCampoEntita,
 } from "../entita-autocomplete/entita-autocomplete.js";
 
+import {
+  htmlThSelezione,
+  htmlTdSelezione,
+  htmlBarraSelezione,
+  montaSelezioneMultipla,
+  azioneElimina,
+} from "../selezione-multipla/selezione-multipla.js";
+
 const TIPI_ENTITA = ["squadra", "corridore", "tappa", "sponsor"];
 
 const MOTIVI_RITIRO_BREVE = {
@@ -76,9 +84,10 @@ export function montaListaConForm(contenitore, cfg) {
       ${htmlCampoRicerca("cerca in " + cfg.titolo.toLowerCase() + "...")}
       <button class="btn-secondary btn-piccolo" data-azione="nuovo">${icona("aggiungi")}aggiungi</button>
     </div>
+    ${htmlBarraSelezione()}
     <div class="table-wrap">
       <table>
-        <thead><tr>${cfg.colonne.map((c) => `<th>${c.label}</th>`).join("")}<th class="th-azioni"></th></tr></thead>
+        <thead><tr>${htmlThSelezione()}${cfg.colonne.map((c) => `<th>${c.label}</th>`).join("")}<th class="th-azioni"></th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -86,6 +95,29 @@ export function montaListaConForm(contenitore, cfg) {
   const tbody = contenitore.querySelector("tbody");
   let righeCorrenti = [];
   let query = "";
+
+  // etichetta leggibile (prime due colonne) usata nell'esito dell'eliminazione multipla
+  const etichettaRiga = (id) => {
+    const r = righeCorrenti.find((x) => x.id === id);
+    if (!r) return `#${id}`;
+    return (
+      cfg.colonne
+        .slice(0, 2)
+        .map((c) =>
+          String(risolviValore(c, r[c.key]) ?? "")
+            .replace(/<[^>]*>/g, "")
+            .trim(),
+        )
+        .filter((v) => v && v !== "—")
+        .join(" · ") || `#${id}`
+    );
+  };
+  const selezione = montaSelezioneMultipla(contenitore, {
+    azioni: {
+      elimina: azioneElimina(cfg.apiPath, cfg.titolo.toLowerCase(), etichettaRiga),
+    },
+    dopo: () => ricarica(),
+  });
 
   function corrisponde(r) {
     if (!query) return true;
@@ -104,6 +136,7 @@ export function montaListaConForm(contenitore, cfg) {
         .map(
           (r) => `
       <tr>
+        ${htmlTdSelezione(r.id)}
         ${cfg.colonne.map((c) => `<td>${risolviValore(c, r[c.key])}</td>`).join("")}
         <td class="td-azioni">
           <button class="btn-icon" title="modifica" data-azione="modifica" data-id="${r.id}">${icona("modifica")}</button>
@@ -113,7 +146,8 @@ export function montaListaConForm(contenitore, cfg) {
     `,
         )
         .join("") ||
-      `<tr><td colspan="${cfg.colonne.length + 1}" class="stato-vuoto">${query ? "Nessun risultato per la ricerca" : "Nessun dato"}</td></tr>`;
+      `<tr><td colspan="${cfg.colonne.length + 2}" class="stato-vuoto">${query ? "Nessun risultato per la ricerca" : "Nessun dato"}</td></tr>`;
+    selezione.aggiorna();
   }
 
   async function ricarica() {

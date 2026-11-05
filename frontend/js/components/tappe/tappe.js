@@ -13,7 +13,16 @@ import { socket } from "../../core/socket.js";
 import { montaListaConForm } from "../tabella-dati/tabella-dati.js";
 import { icona, iconaValore } from "../../core/icone.js";
 
+import {
+  htmlThSelezione,
+  htmlTdSelezione,
+  htmlBarraSelezione,
+  montaSelezioneMultipla,
+  azioneElimina,
+} from "../selezione-multipla/selezione-multipla.js";
+
 let queryCorrente = "";
+let selezione = null;
 
 function renderElenco(corpo) {
   corpo.innerHTML = `
@@ -21,9 +30,10 @@ function renderElenco(corpo) {
       ${htmlCampoRicerca("cerca tappa, città o tipo...")}
       <button class="btn-secondary btn-piccolo" id="btnNuovaTappa">${icona("aggiungi")}nuova tappa</button>
     </div>
+    ${htmlBarraSelezione()}
     <div class="table-wrap">
       <table>
-        <thead><tr><th>#</th><th>Nome</th><th>Percorso</th><th>Km</th><th>Dislivello</th><th>Tipo</th><th>Data</th><th>Stato</th><th class="th-azioni"></th></tr></thead>
+        <thead><tr>${htmlThSelezione()}<th>#</th><th>Nome</th><th>Percorso</th><th>Km</th><th>Dislivello</th><th>Tipo</th><th>Data</th><th>Stato</th><th class="th-azioni"></th></tr></thead>
         <tbody id="tabellaTappe"></tbody>
       </table>
     </div>
@@ -32,6 +42,15 @@ function renderElenco(corpo) {
   document
     .getElementById("btnNuovaTappa")
     .addEventListener("click", () => apriFormTappa(null));
+  selezione = montaSelezioneMultipla(corpo, {
+    azioni: {
+      elimina: azioneElimina("/api/tappe", "tappe", (id) => {
+        const t = cache.tappe.find((x) => x.id === id);
+        return t ? `Tappa ${t.numero_tappa} — ${t.nome}` : `#${id}`;
+      }),
+    },
+    dopo: () => ricaricaElenco(),
+  });
   attivaCampoRicerca(corpo, (q) => {
     queryCorrente = q;
     disegnaElenco();
@@ -53,6 +72,7 @@ function disegnaElenco() {
       .map(
         (t) => `
     <tr>
+      ${htmlTdSelezione(t.id)}
       <td><span class="badge badge-numero">${t.numero_tappa}</span></td>
       <td><strong>${t.nome}</strong></td>
       <td>${t.partenza} → ${t.arrivo}</td>
@@ -70,8 +90,9 @@ function disegnaElenco() {
   `,
       )
       .join("") ||
-    `<tr><td colspan="9" class="stato-vuoto">${queryCorrente ? "Nessuna tappa trovata" : "Nessuna tappa inserita"}</td></tr>`;
+    `<tr><td colspan="10" class="stato-vuoto">${queryCorrente ? "Nessuna tappa trovata" : "Nessuna tappa inserita"}</td></tr>`;
 
+  selezione?.aggiorna();
   tbody
     .querySelectorAll("[data-diretta]")
     .forEach((b) =>

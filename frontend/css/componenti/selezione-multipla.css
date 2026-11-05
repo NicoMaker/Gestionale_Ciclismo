@@ -1,0 +1,73 @@
+/* Selezione multipla: colonna checkbox, barra azioni, riga evidenziata */
+.bulk-col {
+  width: 40px;
+  min-width: 40px;
+  text-align: center;
+  padding-left: 10px;
+  padding-right: 6px;
+}
+.bulk-col input,
+.bulk-card-check input {
+  width: 17px;
+  height: 17px;
+  cursor: pointer;
+  accent-color: var(--primario);
+  vertical-align: middle;
+}
+tr.bulk-selected > td {
+  background: rgba(233, 30, 120, 0.06);
+}
+.bulk-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  background: var(--carta-soft);
+  border: 1px solid var(--bordo);
+  border-left: 4px solid var(--primario);
+  border-radius: var(--radius-sm);
+}
+.bulk-toolbar[hidden] {
+  display: none;
+}
+.bulk-count {
+  font-weight: 700;
+  font-size: 13px;
+  margin-right: auto;
+  color: var(--testo);
+}
+.bulk-toolbar button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+/* checkbox dentro le card (squadre) */
+.squadra-card {
+  position: relative;
+}
+.bulk-card-check {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  display: inline-flex;
+  z-index: 2;
+}
+.squadra-card.bulk-selected {
+  outline: 2px solid var(--primario);
+  outline-offset: -2px;
+}
+/* modale con l'esito */
+.bulk-esito-lista {
+  margin: 8px 0 4px;
+  padding-left: 18px;
+  max-height: 260px;
+  overflow: auto;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.bulk-esito-ok,
+.bulk-esito-ko {
+  margin: 6px 0;
+  font-weight: 600;
+}
